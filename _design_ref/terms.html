@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Умови використання — Calmi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sage:    #7A9E8E;
+      --sage-lt: #EDF4F0;
+      --sand:    #F7F3EE;
+      --sand-dk: #EDE6DB;
+      --ink:     #121614;
+      --ink-60:  #4d5751;
+      --white:   #FFFFFF;
+      --radius:  16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "Manrope", sans-serif;
+      font-weight: 400;
+      background: var(--sand);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px;
+      height: 64px;
+      background: rgba(247,243,238,.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--sand-dk);
+    }
+    .logo {
+      font-family: "Syne", sans-serif;
+      font-size: 1.5rem;
+      color: var(--ink);
+      letter-spacing: -.5px;
+      text-decoration: none;
+    }
+    .logo span { color: var(--sage); }
+
+    .page-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 64px 48px 96px;
+    }
+
+    .page-label {
+      font-size: .8rem; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--sage);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .updated {
+      font-size: .82rem;
+      color: var(--ink-60);
+      margin-bottom: 48px;
+    }
+
+    .doc-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 16px;
+    }
+
+    .doc-section h2 {
+      font-family: "Syne", sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+
+    .doc-section p {
+      font-size: .92rem;
+      color: var(--ink-60);
+      line-height: 1.75;
+      margin-bottom: 10px;
+    }
+    .doc-section p:last-child { margin-bottom: 0; }
+
+    .doc-section ul {
+      margin: 8px 0 10px 0;
+      padding-left: 20px;
+    }
+    .doc-section ul li {
+      font-size: .92rem;
+      color: var(--ink-60);
+      line-height: 1.75;
+      margin-bottom: 4px;
+    }
+
+    .highlight {
+      background: var(--sage-lt);
+      border-left: 3px solid var(--sage);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin-top: 12px;
+      font-size: .88rem;
+      color: var(--ink);
+    }
+
+    .contact-block {
+      background: var(--ink);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 16px;
+      color: var(--white);
+    }
+    .contact-block h2 {
+      font-family: "Syne", sans-serif;
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+      color: var(--white);
+    }
+    .contact-block p {
+      font-size: .92rem;
+      color: rgba(255,255,255,.6);
+      line-height: 1.75;
+      margin-bottom: 8px;
+    }
+    .contact-block a {
+      color: var(--sage);
+      text-decoration: none;
+    }
+    .contact-block a:hover { text-decoration: underline; }
+
+    footer {
+      border-top: 1px solid var(--sand-dk);
+      padding: 32px 48px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .82rem; color: var(--ink-60);
+    }
+    .footer-logo {
+      font-family: "Syne", sans-serif;
+      font-size: 1.1rem; color: var(--ink);
+    }
+    .footer-logo span { color: var(--sage); }
+    footer a { color: var(--ink-60); text-decoration: none; }
+    footer a:hover { color: var(--sage); }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .page-wrap { padding: 40px 20px 64px; }
+      footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">calm<span>i</span></a>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-label">Юридична інформація</div>
+  <h1>Умови використання</h1>
+  <p class="updated">Остання редакція: червень 2026 року</p>
+
+  <div class="doc-section">
+    <h2>1. Про цей сайт</h2>
+    <p>Цей вебсайт є інформаційним лендінгом платформи Calmi на етапі бета-запуску. Він призначений для психологів та психотерапевтів, які розглядають можливість партнерства з платформою.</p>
+    <p>Використовуючи цей сайт, ви погоджуєтесь з цими умовами. Якщо ви не погоджуєтесь — будь ласка, не використовуйте сайт.</p>
+  </div>
+
+  <div class="doc-section">
+    <h2>2. Що ви можете робити на сайті</h2>
+    <ul>
+      <li>Переглядати інформацію про платформу Calmi</li>
+      <li>Залишати заявку на партнерство через форму</li>
+      <li>Ознайомлюватись з умовами співпраці</li>
+    </ul>
+  </div>
+
+  <div class="doc-section">
+    <h2>3. Що заборонено</h2>
+    <ul>
+      <li>Копіювати, відтворювати або розповсюджувати контент сайту без дозволу</li>
+      <li>Використовувати сайт або його елементи в комерційних цілях</li>
+      <li>Надавати неправдиву інформацію у формі заявки</li>
+      <li>Намагатись зламати або порушити роботу сайту</li>
+    </ul>
+  </div>
+
+  <div class="doc-section">
+    <h2>4. Заявка на партнерство</h2>
+    <p>Заповнення форми на сайті не є офіційним договором і не гарантує автоматичного партнерства. Заявка означає вашу зацікавленість — ми розглянемо її і зв'яжемось з вами для обговорення умов співпраці.</p>
+    <div class="highlight">
+      Calmi перебуває на етапі бета-запуску. Умови співпраці, комісії та функціонал платформи можуть змінюватись до офіційного запуску.
+    </div>
+  </div>
+
+  <div class="doc-section">
+    <h2>5. Відповідальність</h2>
+    <p>Calmi надає інформацію на сайті в тому вигляді, в якому вона є, без жодних гарантій щодо результатів партнерства, кількості клієнтів або доходу.</p>
+    <p>Ми не несемо відповідальності за будь-які рішення, прийняті на основі інформації з цього сайту.</p>
+  </div>
+
+  <div class="doc-section">
+    <h2>6. Інтелектуальна власність</h2>
+    <p>Усі матеріали на сайті — назва, логотип, тексти, дизайн — є власністю платформи Calmi. Будь-яке використання без письмового дозволу заборонено.</p>
+  </div>
+
+  <div class="doc-section">
+    <h2>7. Зміни до умов</h2>
+    <p>Ми залишаємо за собою право змінювати ці умови в будь-який момент без попереднього повідомлення. Актуальна версія завжди доступна на цій сторінці. Продовження використання сайту після змін означає вашу згоду з новими умовами.</p>
+  </div>
+
+  <div class="contact-block">
+    <h2>Питання щодо умов</h2>
+    <p>Якщо у вас є запитання — напишіть нам:</p>
+    <p>Email: <a href="mailto:[ВАШ EMAIL]">calmi0620@gmail.com</a></p>
+    <p style="margin-top: 12px; font-size: .8rem;">Ми відповімо протягом 2 робочих днів.</p>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-logo">calm<span>i</span></div>
+  <div>© 2026 Calmi. Всі права захищені.</div>
+  <div style="display:flex;gap:20px;">
+    <a href="privacy.html">Політика конфіденційності</a>
+    <a href="terms.html">Умови використання</a>
+  </div>
+</footer>
+
+</body>
+</html>

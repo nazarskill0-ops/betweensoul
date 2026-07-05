@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calmi — Платформа для українських психологів та психотерапевтів</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.beta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1.5px solid var(--sand-dk);
+  border-radius: 100px;
+  padding: 8px 16px;
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(30,42,36,.06);
+}
+.beta-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e8a838;
+  flex-shrink: 0;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+    :root {
+      --sage:     #7A9E8E;
+      --sage-lt:  #EDF4F0;
+      --sand:     #F7F3EE;
+      --sand-dk:  #EDE6DB;
+      --ink:      #121614;
+      --ink-60:   #4d5751;
+      --rose:     #C97A6A;
+      --white:    #FFFFFF;
+      --radius:   16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "Manrope", sans-serif;
+      font-weight: 400;
+      background: var(--sand);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px;
+      height: 64px;
+      background: rgba(247,243,238,.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--sand-dk);
+
+    }
+    .logo {
+        font-family: "Syne", sans-serif;
+      font-size: 1.5rem;
+      color: var(--ink);
+      letter-spacing: -.5px;
+    }
+    .logo span { color: var(--sage); }
+    .nav-cta {
+      background: var(--ink);
+      color: var(--white);
+      border: none; border-radius: 100px;
+      padding: 10px 24px;
+      font-family: 'Inter', sans-serif;
+      font-size: .9rem; font-weight: 500;
+      cursor: pointer; transition: background .2s;
+      text-decoration: none;
+    }
+    .nav-cta:hover { background: var(--sage); }
+
+    /* ── HERO ── */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 96px 48px 80px;
+    }
+
+    h1 {
+
+        font-family: "Syne", sans-serif;
+      /* font-family: 'DM Serif Display', serif; */
+      font-size: clamp(2.4rem, 4vw, 3.4rem);
+      line-height: 1.15;
+      color: var(--ink);
+      margin-bottom: 20px;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--sage);
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--ink-60);
+      max-width: 440px;
+      margin-bottom: 36px;
+    }
+
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--sage);
+      color: var(--white);
+      border: none; border-radius: 100px;
+      padding: 14px 32px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: background .2s, transform .15s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-primary:hover { background: #6a8e7e; transform: translateY(-1px); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--sand-dk);
+      border-radius: 100px;
+      padding: 14px 28px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 500;
+      cursor: pointer; transition: border-color .2s;
+      text-decoration: none; display: inline-block;
+    }
+    .btn-ghost:hover { border-color: var(--sage); color: var(--sage); }
+
+    /* Hero visual */
+    .hero-visual {
+      position: relative;
+      display: flex; justify-content: center;
+    }
+    .card-mockup {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 28px;
+      width: 300px;
+      box-shadow: 0 8px 40px rgba(30,42,36,.1);
+    }
+    .card-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--sage-lt), var(--sage));
+      margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+    }
+    .card-name { font-weight: 600; font-size: 1rem; margin-bottom: 2px; }
+    .card-spec { font-size: .8rem; color: var(--ink-60); margin-bottom: 16px; }
+    .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+    .tag {
+      background: var(--sage-lt);
+      color: var(--sage);
+      border-radius: 100px;
+      padding: 4px 12px;
+      font-size: .75rem; font-weight: 500;
+    }
+    .card-price {
+      display: flex; justify-content: space-between; align-items: center;
+      border-top: 1px solid var(--sand-dk);
+      padding-top: 14px;
+    }
+    .card-price-val { font-weight: 600; color: var(--ink); }
+    .card-price-label { font-size: .78rem; color: var(--ink-60); }
+
+    .floating-badge {
+      position: absolute;
+      background: var(--white);
+      border-radius: 12px;
+      padding: 10px 14px;
+      box-shadow: 0 4px 20px rgba(30,42,36,.12);
+      font-size: .8rem; font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .badge-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .badge-top { top: -16px; right: -10px; }
+    .badge-bottom { bottom: 24px; left: -20px; }
+
+    /* ── HOW IT WORKS ── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 48px;
+    }
+    .section-label {
+      font-size: .8rem; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--sage);
+      margin-bottom: 12px;
+    }
+    h2 {
+        font-family: "Syne", sans-serif;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      line-height: 1.2;
+      margin-bottom: 48px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+    .step {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+    .step-num {
+        font-family: "Syne", sans-serif;
+      font-size: 3.5rem;
+      color: var(--sand-dk);
+      line-height: 1;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .step h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; }
+    .step p { font-size: .9rem; color: var(--ink-60); line-height: 1.6; }
+
+    .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .85rem;
+    color: var(--ink);
+    background: var(--sand);
+    border: 1.5px solid var(--sand-dk);
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    user-select: none;
+}
+.checkbox-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+
+    /* ── BENEFITS ── */
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .benefit {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 28px;
+      display: flex; gap: 16px; align-items: flex-start;
+    }
+    .benefit-icon {
+      width: 44px; height: 44px; flex-shrink: 0;
+      border-radius: 12px;
+      /* background: var(--sage-lt); */
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .benefit h3 { font-size: .95rem; font-weight: 600; margin-bottom: 4px; }
+    .benefit p { font-size: .85rem; color: var(--ink-60); }
+
+    /* ── DIVIDER BANNER ── */
+    .banner {
+      background: var(--ink);
+      padding: 64px 48px;
+      text-align: center;
+      margin: 0;
+    }
+    .banner h2 {
+        font-family: "Syne", sans-serif;
+      color: var(--white);
+      font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+      margin-bottom: 8px;
+    }
+    .banner p { color: rgba(255,255,255,.55); font-size: .95rem; margin-bottom: 28px; }
+
+    /* ── FORM ── */
+    #form {
+      background: var(--sage-lt);
+      padding: 80px 48px;
+    }
+    .form-inner {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .form-inner .section-label { text-align: center; }
+    .form-inner h2 { text-align: center; margin-bottom: 8px; }
+    .form-sub { text-align: center; color: var(--ink-60); font-size: .95rem; margin-bottom: 40px; }
+
+    .form-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 36px;
+      box-shadow: 0 4px 24px rgba(30,42,36,.06);
+    }
+
+    .field { margin-bottom: 18px; }
+.field label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--ink);
+}
+    .field input, .field select, .field textarea {
+      width: 100%;
+      background: var(--sand);
+      border: 1.5px solid var(--sand-dk);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: .95rem; color: var(--ink);
+      outline: none; transition: border-color .2s;
+    }
+    .field-input {
+      width: auto !important;
+    }
+
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--sage);
+    }
+    .field textarea { resize: vertical; min-height: 90px; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .consent {
+      display: flex; gap: 10px; align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .consent input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; accent-color: var(--sage); }
+    .consent label { font-size: .8rem; color: var(--ink-60); line-height: 1.5; }
+    .consent a { color: var(--sage); }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--sage);
+      color: var(--white);
+      border: none; border-radius: 100px;
+      padding: 15px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .submit-btn:hover { background: #6a8e7e; }
+
+    .form-note {
+      text-align: center;
+      font-size: .78rem; color: var(--ink-60);
+      margin-top: 14px;
+    }
+
+    /* ── SUCCESS STATE ── */
+    .success-msg {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .success-msg .check {
+      display: flex;
+        justify-content: center;
+        align-items: center;
+        justify-self: center;
+        margin-bottom: 16px;
+        width: 96px; 
+        height: 96px;
+    }
+    .success-msg h3 {
+        font-family: "Syne", sans-serif;
+      font-size: 1.6rem; margin-bottom: 8px;
+    }
+    .success-msg p { color: var(--ink-60); }
+
+    /* ── FAQ ── */
+    .faq-list { max-width: 680px; }
+    .faq-item {
+      border-bottom: 1px solid var(--sand-dk);
+      padding: 20px 0;
+    }
+    .faq-item summary {
+      list-style: none;
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 600; cursor: pointer;
+      font-size: .95rem;
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary::after {
+      content: '+';
+      font-size: 1.4rem; font-weight: 300; color: var(--sage);
+      transition: transform .2s;
+    }
+    .faq-item[open] summary::after { transform: rotate(45deg); }
+    .faq-item p {
+      font-size: .9rem; color: var(--ink-60);
+      margin-top: 12px; line-height: 1.7;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--sand-dk);
+      padding: 32px 48px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .82rem; color: var(--ink-60);
+      max-width: 100%;
+    }
+    .footer-logo {
+        font-family: "Syne", sans-serif;
+      font-size: 1.1rem; color: var(--ink);
+    }
+    .footer-logo span { color: var(--sage); }
+    footer a { color: var(--ink-60); text-decoration: none; }
+    footer a:hover { color: var(--sage); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .hero { grid-template-columns: 1fr; padding: 60px 20px 48px; gap: 40px; }
+      .hero-visual { display: none; }
+      .section { padding: 60px 20px; }
+      .steps { grid-template-columns: 1fr; }
+      .benefits-grid { grid-template-columns: 1fr; }
+      #form { padding: 60px 20px; }
+      .field-row { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 20px; }
+      .banner { padding: 48px 20px; }
+    }
+
+        .req {
+          color: red
+        }
+
+        .custom-select {
+      position: relative;
+      user-select: none;
+    }
+
+    .custom-select__trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border: 1.5px solid var(--sand-dk);
+      border-radius: 10px;
+      background: var(--sand);
+      cursor: pointer;
+      font-family: "Manrope", sans-serif;
+      font-size: .95rem;
+      color: var(--ink);
+      transition: border-color .2s;
+    }
+
+    .custom-select__trigger:hover {
+      border-color: var(--sage);
+    }
+
+    .custom-select.open .custom-select__trigger {
+      border-color: var(--sage);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .custom-select__placeholder {
+      color: #9ca3a0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .custom-select__placeholder.has-value {
+      color: var(--ink);
+    }
+
+    .custom-select__arrow {
+      width: 18px;
+      height: 18px;
+      color: var(--ink-60);
+      flex-shrink: 0;
+      margin-left: 8px;
+      transition: transform .2s;
+    }
+
+    .custom-select.open .custom-select__arrow {
+      transform: rotate(180deg);
+    }
+
+    .custom-select__dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border: 1.5px solid var(--sage);
+      border-top: none;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    .custom-select.open .custom-select__dropdown {
+      display: block;
+    }
+
+    .custom-select__dropdown::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-select__dropdown::-webkit-scrollbar-track {
+      background: var(--sand);
+    }
+    .custom-select__dropdown::-webkit-scrollbar-thumb {
+      background: var(--sand-dk);
+      border-radius: 4px;
+    }
+
+    .field-error {
+      display: block;
+      font-size: .78rem;
+      color: var(--rose);
+      margin-top: 5px;
+    }
+
+    .field input.field--error,
+    .field select.field--error {
+      border-color: var(--rose);
+    }
+
+    .custom-select__trigger.trigger--error {
+      border-color: var(--rose);
+    }
+
+    .consent .field-error {
+      margin-top: 6px;
+      align-self: center;
+    }
+
+    .submit-btn:disabled {
+      background: var(--ink-60);
+      cursor: not-allowed;
+    }
+
+    .custom-select__option:first-child {
+      margin-top: 4px;
+    }
+
+    .custom-select__option:last-child {
+      margin-bottom: 4px;
+    }
+
+    .custom-select__option input[type="checkbox"]:hover {
+      border-color: var(--sage);
+    }
+
+    .custom-select__option input[type="checkbox"]:checked {
+      background: var(--sage);
+      border-color: var(--sage);
+    }
+
+    /* Помилка під полями */
+    .field-error {
+      display: block;
+      font-size: .8rem;
+      color: var(--rose);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .field input.field--error,
+    .field select.field--error {
+      border-color: var(--rose);
+      background: #fdf6f5;
+    }
+
+    .custom-select__trigger.trigger--error {
+      border-color: var(--rose);
+      background: #fdf6f5;
+    }
+
+    /* Фікс consent — помилка йде на новий рядок під всім блоком */
+    .consent {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 20px;
+    }
+
+    .consent-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .consent-row input[type="checkbox"] {
+      margin-top: 3px;
+      flex-shrink: 0;
+      accent-color: var(--sage);
+    }
+
+    .consent-row label {
+      font-size: .8rem;
+      color: var(--ink-60);
+      line-height: 1.5;
+    }
+
+    .consent-row a {
+      color: var(--sage);
+    }
+
+    .consent .field-error {
+      margin-top: 6px;
+      margin-left: 0;
+    }
+
+    .submit-btn:disabled {
+      background: var(--ink-60);
+      cursor: not-allowed;
+    }
+    .custom-select__option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      font-family: "Manrope", sans-serif;
+      font-size: .9rem;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .custom-select__option:hover {
+      background: var(--sage-lt);
+    }
+
+    .custom-select__option span {
+      display: inline;
+      line-height: 1.2;
+    }
+
+    .custom-select__option input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      flex-shrink: 0;
+      margin: 0;
+      padding: 0;
+      border: 1.5px solid var(--sand-dk);
+      border-radius: 5px;
+      background: var(--white);
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      margin-right: 8px;
+    }
+
+    .custom-select__option input[type="checkbox"]:hover {
+      border-color: var(--sage);
+    }
+
+    .custom-select__option input[type="checkbox"]:checked {
+      background-color: var(--sage);
+      border-color: var(--sage);
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 8l3.5 3.5 6.5-7' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 12px 12px;
+    }
+    .custom-select__option,
+    .custom-select__option * {
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+    
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q4JQ7H4RGH"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-Q4JQ7H4RGH');
+</script>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">calm<span>i</span></div>
+  <a href="#form" class="nav-cta">Стати партнером</a>
+</nav>
+
+<!-- HERO -->
+<section>
+  <div class="hero">
+    <div class="hero-text">
+        <!-- BETA BADGE -->
+<div class="beta-badge">
+  <span class="beta-dot"></span>
+  Бета-доступ: залишилось <strong>12</strong>з 30 місць для партнерів-психологів
+</div>
+      <h1>Займайтесь терапією.<br>Маркетинг - <em>наша справа</em><br></h1>
+      <p class="hero-sub">Calmi активно залучає клієнтів через рекламні кампанії і направляє їх до вас. Ніякого маркетингу з вашого боку — лише готові клієнти і зручні сесії прямо на платформі.</p>
+      <div class="hero-actions">
+        <a href="#form" class="btn-primary">Залишити заявку</a>
+        <a href="#how" class="btn-ghost">Як це працює</a>
+      </div>
+    </div>
+  
+  </div>
+</section>
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <h2>Як працюватиме наша платформа?
+    Три кроки — і клієнти вже у вас</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Реєструєтесь безкоштовно</h3>
+      <p>Заповнюєте форму: спеціалізація, досвід, графік. Ми створюємо ваш профіль і запускаємо рекламу, яка веде клієнтів саме до вас.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Клієнт бронює і платить</h3>
+      <p>Клієнт знаходить вас через Calmi, обирає зручний час і одразу оплачує сесію на платформі. Ви отримуєте сповіщення — і більше нічого зайвого.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Проводите сесію на Calmi</h3>
+      <p>Відеосесія відбувається прямо на нашій платформі. Ніяких сторонніх застосунків, ніякого обміну контактами — все в одному місці.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFITS -->
+<section style="background: var(--white); padding: 0;">
+  <div class="section">
+    <h2>Ви фокусуєтесь на терапії —<br>ми активно шукаємо вам клієнтів</h2>
+    <div class="benefits-grid">
+      <div class="benefit">
+        <div class="benefit-icon"><svg viewBox="0 0 28 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#121614" stroke="#121614"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools --> <title>ic_fluent_people_community_28_regular</title> <desc>Created with Sketch.</desc> <g id="🔍-Product-Icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd"> <g id="ic_fluent_people_community_28_regular" fill="#121614" fill-rule="nonzero"> <path d="M17.25,18 C18.4926407,18 19.5,19.0073593 19.5,20.25 L19.5,21.7519766 L19.4921156,21.8604403 C19.1813607,23.9866441 17.2715225,25.0090369 14.0667905,25.0090369 C10.8736123,25.0090369 8.93330141,23.9983408 8.51446278,21.8965776 L8.5,21.75 L8.5,20.25 C8.5,19.0073593 9.50735931,18 10.75,18 L17.25,18 Z M17.25,19.5 L10.75,19.5 C10.3357864,19.5 10,19.8357864 10,20.25 L10,21.670373 C10.2797902,22.870787 11.550626,23.5090369 14.0667905,23.5090369 C16.582858,23.5090369 17.7966388,22.8777026 18,21.6931543 L18,20.25 C18,19.8357864 17.6642136,19.5 17.25,19.5 Z M18.2435553,11.9989081 L23.75,12 C24.9926407,12 26,13.0073593 26,14.25 L26,15.7519766 L25.9921156,15.8604403 C25.6813607,17.9866441 23.7715225,19.0090369 20.5667905,19.0090369 L20.2519278,19.0056708 L20.2519278,19.0056708 C19.9568992,18.2920884 19.4151086,17.7078172 18.7333573,17.3574924 C19.2481703,17.4584023 19.8580822,17.5090369 20.5667905,17.5090369 C23.082858,17.5090369 24.2966388,16.8777026 24.5,15.6931543 L24.5,14.25 C24.5,13.8357864 24.1642136,13.5 23.75,13.5 L18.5,13.5 C18.5,12.9736388 18.4096286,12.468385 18.2435553,11.9989081 Z M4.25,12 L9.75644465,11.9989081 C9.61805027,12.3901389 9.53222663,12.8062147 9.50746303,13.2386463 L9.5,13.5 L4.25,13.5 C3.83578644,13.5 3.5,13.8357864 3.5,14.25 L3.5,15.670373 C3.77979024,16.870787 5.05062598,17.5090369 7.5667905,17.5090369 C8.18886171,17.5090369 8.73132757,17.4704451 9.1985991,17.3944422 C8.5478391,17.7478373 8.03195873,18.3174175 7.74634871,19.0065739 L7.5667905,19.0090369 C4.37361228,19.0090369 2.43330141,17.9983408 2.01446278,15.8965776 L2,15.75 L2,14.25 C2,13.0073593 3.00735931,12 4.25,12 Z M14,10 C15.9329966,10 17.5,11.5670034 17.5,13.5 C17.5,15.4329966 15.9329966,17 14,17 C12.0670034,17 10.5,15.4329966 10.5,13.5 C10.5,11.5670034 12.0670034,10 14,10 Z M14,11.5 C12.8954305,11.5 12,12.3954305 12,13.5 C12,14.6045695 12.8954305,15.5 14,15.5 C15.1045695,15.5 16,14.6045695 16,13.5 C16,12.3954305 15.1045695,11.5 14,11.5 Z M20.5,4 C22.4329966,4 24,5.56700338 24,7.5 C24,9.43299662 22.4329966,11 20.5,11 C18.5670034,11 17,9.43299662 17,7.5 C17,5.56700338 18.5670034,4 20.5,4 Z M7.5,4 C9.43299662,4 11,5.56700338 11,7.5 C11,9.43299662 9.43299662,11 7.5,11 C5.56700338,11 4,9.43299662 4,7.5 C4,5.56700338 5.56700338,4 7.5,4 Z M20.5,5.5 C19.3954305,5.5 18.5,6.3954305 18.5,7.5 C18.5,8.6045695 19.3954305,9.5 20.5,9.5 C21.6045695,9.5 22.5,8.6045695 22.5,7.5 C22.5,6.3954305 21.6045695,5.5 20.5,5.5 Z M7.5,5.5 C6.3954305,5.5 5.5,6.3954305 5.5,7.5 C5.5,8.6045695 6.3954305,9.5 7.5,9.5 C8.6045695,9.5 9.5,8.6045695 9.5,7.5 C9.5,6.3954305 8.6045695,5.5 7.5,5.5 Z" id="🎨-Color"> </path> </g> </g> </g></svg></div>        
+        <div>
+          <h3>Активне залучення клієнтів</h3>
+          <p>Ми запускаємо рекламні кампанії в Google, Instagram та Facebook, щоб люди, які шукають психолога, знаходили саме вас. Це наша робота — не ваша.</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon"><svg fill="#121614" viewBox="0 0 35 35" data-name="Layer 2" id="Layer_2" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M17.5,34.44A3.07,3.07,0,0,1,15.89,34L9.82,30.45A14.79,14.79,0,0,1,2.25,17.7V8A3.2,3.2,0,0,1,4.34,5L16.4.57a3.2,3.2,0,0,1,2.2,0L30.66,5a3.2,3.2,0,0,1,2.09,3V17.7a14.79,14.79,0,0,1-7.57,12.75L19.11,34A3.07,3.07,0,0,1,17.5,34.44Zm0-31.56a.67.67,0,0,0-.24,0L5.2,7.33A.69.69,0,0,0,4.75,8V17.7a12.3,12.3,0,0,0,6.33,10.59l6.07,3.56a.73.73,0,0,0,.7,0l6.07-3.56h0A12.3,12.3,0,0,0,30.25,17.7V8a.69.69,0,0,0-.45-.65L17.74,2.92A.67.67,0,0,0,17.5,2.88Z"></path><path d="M16.4,22.35a1.3,1.3,0,0,1-.81-.29l-4.27-3.6a1.25,1.25,0,0,1,1.61-1.92l3.35,2.82L22,13.06a1.25,1.25,0,0,1,1.86,1.68l-6.48,7.2A1.27,1.27,0,0,1,16.4,22.35Z"></path></g></svg></div>
+        <div>
+          <h3>Захищений канал зв'язку</h3>
+          <p>Всі сесії проходять через нашу платформу. Клієнт не отримує ваш номер телефону або email — лише захищений відеозв'язок прямо на Calmi.</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon"><svg viewBox="0 0 24.00 24.00" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#121614" stroke-width="0.168"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M9.94358 3.25H14.0564C15.8942 3.24998 17.3498 3.24997 18.489 3.40314C19.6614 3.56076 20.6104 3.89288 21.3588 4.64124C22.1071 5.38961 22.4392 6.33856 22.5969 7.51098C22.6873 8.18385 22.7244 8.9671 22.7395 9.87428C22.7464 9.91516 22.75 9.95716 22.75 10C22.75 10.0353 22.7476 10.0699 22.7429 10.1039C22.75 10.6696 22.75 11.2818 22.75 11.9436V12.0564C22.75 13.8942 22.75 15.3498 22.5969 16.489C22.4392 17.6614 22.1071 18.6104 21.3588 19.3588C20.6104 20.1071 19.6614 20.4392 18.489 20.5969C17.3498 20.75 15.8942 20.75 14.0564 20.75H9.94359C8.10583 20.75 6.65019 20.75 5.51098 20.5969C4.33856 20.4392 3.38961 20.1071 2.64124 19.3588C1.89288 18.6104 1.56076 17.6614 1.40314 16.489C1.24997 15.3498 1.24998 13.8942 1.25 12.0564V11.9436C1.24999 11.2818 1.24999 10.6696 1.25714 10.1039C1.25243 10.0699 1.25 10.0352 1.25 10C1.25 9.95716 1.25359 9.91517 1.26049 9.87429C1.27564 8.96711 1.31267 8.18385 1.40314 7.51098C1.56076 6.33856 1.89288 5.38961 2.64124 4.64124C3.38961 3.89288 4.33856 3.56076 5.51098 3.40314C6.65019 3.24997 8.10582 3.24998 9.94358 3.25ZM2.75199 10.75C2.75009 11.1384 2.75 11.5541 2.75 12C2.75 13.9068 2.75159 15.2615 2.88976 16.2892C3.02502 17.2952 3.27869 17.8749 3.7019 18.2981C4.12511 18.7213 4.70476 18.975 5.71085 19.1102C6.73851 19.2484 8.09318 19.25 10 19.25H14C15.9068 19.25 17.2615 19.2484 18.2892 19.1102C19.2952 18.975 19.8749 18.7213 20.2981 18.2981C20.7213 17.8749 20.975 17.2952 21.1102 16.2892C21.2484 15.2615 21.25 13.9068 21.25 12C21.25 11.5541 21.2499 11.1384 21.248 10.75H2.75199ZM21.2239 9.25H2.77607C2.79564 8.66327 2.82987 8.15634 2.88976 7.71085C3.02502 6.70476 3.27869 6.12511 3.7019 5.7019C4.12511 5.27869 4.70476 5.02502 5.71085 4.88976C6.73851 4.75159 8.09318 4.75 10 4.75H14C15.9068 4.75 17.2615 4.75159 18.2892 4.88976C19.2952 5.02502 19.8749 5.27869 20.2981 5.7019C20.7213 6.12511 20.975 6.70476 21.1102 7.71085C21.1701 8.15634 21.2044 8.66327 21.2239 9.25ZM5.25 16C5.25 15.5858 5.58579 15.25 6 15.25H10C10.4142 15.25 10.75 15.5858 10.75 16C10.75 16.4142 10.4142 16.75 10 16.75H6C5.58579 16.75 5.25 16.4142 5.25 16ZM11.75 16C11.75 15.5858 12.0858 15.25 12.5 15.25H14C14.4142 15.25 14.75 15.5858 14.75 16C14.75 16.4142 14.4142 16.75 14 16.75H12.5C12.0858 16.75 11.75 16.4142 11.75 16Z" fill="#121614"></path> </g></svg></div>
+        <div>
+          <h3>Оплата одразу на платформі</h3>
+          <p>Клієнт платить через Calmi до початку сесії. Ви не займаєтесь збором грошей — кошти надходять вам автоматично після кожної сесії.</p>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#121614"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M5 21C5 17.134 8.13401 14 12 14C15.866 14 19 17.134 19 21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="#121614" stroke-width="1.512" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg></div>        
+        <div>
+          <h3>Тільки цільові клієнти</h3>
+          <p>До вас потрапляють люди, які вже готові до терапії і підходять за вашою спеціалізацією. Ніякого холодного пошуку — лише мотивовані клієнти.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BANNER -->
+<div class="banner">
+  <h2>Реєстрація для психологів та психотерапевтів — безкоштовна назавжди</h2>
+  <p>Ніяких підписок, авансів чи прихованих платежів.</p>
+  <a href="#form" class="btn-primary" style="background:var(--sage);">Залишити заявку</a>
+</div>
+
+
+<!-- FORM -->
+    <section id="form">
+      <div class="form-inner">
+        <h2 style="text-align:center;">Приєднатись до Calmi</h2>
+        <p class="form-sub">Заповніть форму — ми зв'яжемось з вами протягом доби</p>
+
+        <div class="form-card">
+    <form
+      action="https://formspree.io/f/xgojwrlq"
+      method="POST"
+       id="calmiForm" novalidate onsubmit="return submitForm(event)">
+            <div id="form-content">
+
+              <div class="field-row">
+                <div class="field">
+                  <label for="name">Ім'я та прізвище <span class="req">*</span></label>
+                  <input type="text" placeholder="Олена Коваленко" id="name" name="name" required />
+                </div>
+                <div class="field">
+                  <label for="phone">Телефон <span class="req">*</span></label>
+                  <input type="tel" placeholder="+380 XX XXX XXXX" id="phone" name="phone" required />
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="email">Email <span class="req">*</span></label>
+                <input type="email" placeholder="email@example.com" id="email" name="email" required />
+              </div>
+
+              <div class="field">
+                <label>Основна спеціалізація <span class="req">*</span></label>
+                <div class="custom-select" id="specSelect">
+                  <div class="custom-select__trigger" onclick="toggleDropdown('specSelect')">
+                    <span class="custom-select__placeholder" id="specPlaceholder">Оберіть напрямок</span>
+                    <svg class="custom-select__arrow" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                  <div class="custom-select__dropdown">
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="КПТ" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Когнітивно-поведінкова терапія (КПТ)</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Психоаналіз" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Психоаналіз</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Гештальт" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Гештальт-терапія </span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="EMDR" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>EMDR</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Сімейна терапія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Сімейна терапія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Дитяча психологія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Дитяча психологія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="НЛП" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span></span>НЛП</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Травматерапія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Травматерапія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Психодрама" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span></span>Психодрама</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Символдрама" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Символдрама</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Наративна психологія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Наративна психологія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Позитивна психотерапія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Позитивна психотерапія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Екзистенційний аналіз" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Екзистенційний аналіз та логотерапія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Транзактний аналіз" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Транзактний аналіз</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Арт-терапія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Арт-терапія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Клієнт-центрована терапія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Клієнт-центрована терапія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Тілесно-орієнтована терапія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Тілесно-орієнтована терапія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Системна сімейна терапія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Системна сімейна терапія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="ДПТ" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Діалектично-поведінкова терапія (ДПТ)</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Схема-терапія" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Схема-терапія</span>
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="spec" value="Інше" onchange="updatePlaceholder('specSelect', 'specPlaceholder', 'Оберіть напрямок')"> <span>Інше</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="exp">Досвід роботи <span class="req">*</span></label>
+                <select id="exp" name="exp" required>
+                  <option value="" disabled selected>Роки практики</option>
+                  <option>До 2 років</option>
+                  <option>2–5 років</option>
+                  <option>5–10 років</option>
+                  <option>10+ років</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>З якими категоріями клієнтів працюєте?</label>
+                <div class="custom-select" id="categoriesSelect">
+                  <div class="custom-select__trigger" onclick="toggleDropdown('categoriesSelect')">
+                    <span class="custom-select__placeholder" id="categoriesPlaceholder">Оберіть категорії</span>
+                    <svg class="custom-select__arrow" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </div>
+                  <div class="custom-select__dropdown">
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="categories" value="veterans" onchange="updatePlaceholder('categoriesSelect', 'categoriesPlaceholder', 'Оберіть категорії')"> Учасники бойових дій та ветерани
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="categories" value="couples" onchange="updatePlaceholder('categoriesSelect', 'categoriesPlaceholder', 'Оберіть категорії')"> Парна терапія
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="categories" value="disabilities" onchange="updatePlaceholder('categoriesSelect', 'categoriesPlaceholder', 'Оберіть категорії')"> Люди з інвалідністю
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="categories" value="chronic" onchange="updatePlaceholder('categoriesSelect', 'categoriesPlaceholder', 'Оберіть категорії')"> Тяжкі та хронічні захворювання
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="categories" value="business" onchange="updatePlaceholder('categoriesSelect', 'categoriesPlaceholder', 'Оберіть категорії')"> Бізнес та керівники
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="categories" value="children" onchange="updatePlaceholder('categoriesSelect', 'categoriesPlaceholder', 'Оберіть категорії')"> Діти та підлітки
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="categories" value="grief" onchange="updatePlaceholder('categoriesSelect', 'categoriesPlaceholder', 'Оберіть категорії')"> Втрата та горювання
+                    </label>
+                    <label class="custom-select__option">
+                      <input type="checkbox" name="categories" value="general" onchange="updatePlaceholder('categoriesSelect', 'categoriesPlaceholder', 'Оберіть категорії')"> Загальна аудиторія
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="about">Про себе (необов'язково)</label>
+                <textarea placeholder="Кілька слів про ваш підхід або з чим ви найчастіше працюєте..." id="about" name="about"></textarea>
+              </div>
+
+              <div class="consent">
+                <div class="consent-row">
+                  <input type="checkbox" id="agree" name="agree" required />
+                  <label for="agree">Я погоджуюсь з <a href="privacy.html">обробкою персональних даних</a> відповідно до Закону України та Політики конфіденційності Calmi</label>
+                </div>
+              </div>
+
+              <button class="submit-btn" type="submit" id="submitBtn">Надіслати заявку →</button>
+              <p class="form-note">Ваші дані надійно захищені та не передаються третім особам</p>
+            </div>
+          </form>
+
+          <div class="success-msg" id="success">
+            <div class="check"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M4 12.6111L8.92308 17.5L20 6.5" stroke="#121614" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg></div>
+            <h3>Заявку отримано!</h3>
+            <p>Ми зв'яжемось з вами.<br>Дякуємо, що обираєте Calmi.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+<!-- FAQ -->
+<section class="section">
+  <h2>Часті запитання</h2>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>Скільки коштує розміщення на платформі для психолога?</summary>
+      <p>Абсолютно безкоштовно — і назавжди. Ми не беремо жодної плати з психологів ні за реєстрацію, ні за профіль, ні за рекламу. Calmi заробляє лише сервісний збір з клієнта в момент оплати сесії — і лише тоді, коли реально привели вам людину.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Як Calmi знаходить клієнтів?</summary>
+      <p>Залучення клієнтів — це не додаткова функція платформи, це її головна задача. Ми запускаємо рекламні кампанії в Google, Instagram та Facebook, орієнтовані на людей, які вже шукають психологічну допомогу. Підбираємо підходящого спеціаліста і направляємо клієнта до нього. Вам не потрібно нічого робити для просування себе.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Як відбувається оплата і скільки я отримую?</summary>
+      <p>Клієнт оплачує сесію через Calmi ще до її початку. Ми утримуємо невеликий сервісний збір і переказуємо решту суми вам. Вам не потрібно самостійно виставляти рахунки або стежити за оплатами — все відбувається автоматично.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Як проходить сама сесія — через Zoom чи Telegram?</summary>
+      <p>Сесія проходить прямо на платформі Calmi через вбудований відеозв'язок. Ніяких сторонніх застосунків встановлювати не потрібно — ні вам, ні клієнту. Клієнт просто переходить за посиланням у своєму кабінеті, і сесія починається.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Чи отримає клієнт мій номер телефону або email?</summary>
+      <p>Ні. Вся комунікація і відеозв'язок відбуваються виключно через платформу Calmi. Клієнт не має доступу до ваших особистих контактів — це захищає і вас, і ваш робочий простір.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Чи можу я в будь-який момент призупинити прийом?</summary>
+      <p>Так, ви повністю контролюєте свій графік. Можна закрити прийом на будь-який термін без штрафів і пояснень — просто оновлюєте доступні слоти у своєму кабінеті.</p>
+    </details>
+    <details class="faq-item">
+      <summary>Що відбуватиметься після того як я залишу заявку?</summary>
+      <p>Ми зв'яжемось з вами особисто, розповімо деталі і підтвердимо участь. Заявка ні до чого не зобов'язує.</p>
+    </details>
+     <details class="faq-item">
+      <summary>Що від мене вимагається як від партнера?</summary>
+      <p>Нічого зайвого. Заповнений профіль і готовність проводити сесії онлайн.</p>
+    </details>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">calm<span>i</span></div>
+  <div>© 2026 Calmi. Всі права захищені.</div>
+  <div style="display:flex;gap:20px;">
+  <a href="privacy.html" target="_blank">Політика конфіденційності</a>
+  <a href="terms.html" target="_blank">Умови використання</a>
+</div>
+</footer>
+
+    <script>
+    function toggleDropdown(id) {
+      const el = document.getElementById(id);
+      const isOpen = el.classList.contains('open');
+      document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
+      if (!isOpen) el.classList.add('open');
+    }
+
+    function updatePlaceholder(selectId, placeholderId, defaultText) {
+      const select = document.getElementById(selectId);
+      const placeholder = document.getElementById(placeholderId);
+      const checked = select.querySelectorAll('input[type="checkbox"]:checked');
+
+      if (checked.length === 0) {
+        placeholder.textContent = defaultText;
+        placeholder.classList.remove('has-value');
+      } else {
+        const labels = Array.from(checked).map(cb => cb.closest('label').textContent.trim());
+        placeholder.textContent = labels.join(', ');
+        placeholder.classList.add('has-value');
+      }
+
+      clearError(selectId === 'specSelect' ? 'specSelect' : 'categoriesSelect');
+    }
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.custom-select')) {
+        document.querySelectorAll('.custom-select.open').forEach(s => s.classList.remove('open'));
+      }
+    });
+
+    function showError(fieldId, message) {
+      const field = document.getElementById(fieldId);
+      const existing = field.parentElement.querySelector('.field-error');
+      if (existing) existing.remove();
+
+      field.classList.add('field--error');
+
+      const err = document.createElement('span');
+      err.className = 'field-error';
+      err.textContent = message;
+      field.parentElement.appendChild(err);
+    }
+
+    function showSelectError(selectId, message) {
+      const select = document.getElementById(selectId);
+      const existing = select.parentElement.querySelector('.field-error');
+      if (existing) existing.remove();
+
+      select.querySelector('.custom-select__trigger').classList.add('trigger--error');
+
+      const err = document.createElement('span');
+      err.className = 'field-error';
+      err.textContent = message;
+      select.parentElement.appendChild(err);
+    }
+
+    function clearError(fieldId) {
+      const el = document.getElementById(fieldId);
+      if (!el) return;
+      el.classList.remove('field--error');
+      const trigger = el.querySelector('.custom-select__trigger');
+      if (trigger) trigger.classList.remove('trigger--error');
+      const err = el.parentElement ? el.parentElement.querySelector('.field-error') : null;
+      if (err) err.remove();
+    }
+
+    function clearNativeError(fieldId) {
+      const el = document.getElementById(fieldId);
+      if (!el) return;
+      el.classList.remove('field--error');
+      const err = el.parentElement.querySelector('.field-error');
+      if (err) err.remove();
+    }
+
+    // Очищення помилок при вводі
+    document.addEventListener('DOMContentLoaded', function() {
+      ['name', 'phone', 'email', 'exp'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', () => clearNativeError(id));
+        if (el) el.addEventListener('change', () => clearNativeError(id));
+      });
+    });
+
+    function submitForm(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('name');
+      const phone = document.getElementById('phone');
+      const email = document.getElementById('email');
+      const exp = document.getElementById('exp');
+      const agree = document.getElementById('agree');
+      const specChecked = document.querySelectorAll('#specSelect input[type="checkbox"]:checked');
+
+      let valid = true;
+
+      // Очищаємо старі помилки
+      ['name', 'phone', 'email', 'exp'].forEach(id => clearNativeError(id));
+      clearError('specSelect');
+
+      if (!name.value.trim()) {
+        showError('name', 'Введіть ім\'я та прізвище');
+        valid = false;
+      }
+
+      if (!phone.value.trim()) {
+        showError('phone', 'Введіть номер телефону');
+        valid = false;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email.value.trim()) {
+        showError('email', 'Введіть email');
+        valid = false;
+      } else if (!emailRegex.test(email.value.trim())) {
+        showError('email', 'Невірний формат email');
+        valid = false;
+      }
+
+      if (specChecked.length === 0) {
+        showSelectError('specSelect', 'Оберіть хоча б одну спеціалізацію');
+        valid = false;
+      }
+
+      if (!exp.value) {
+        showError('exp', 'Оберіть досвід роботи');
+        valid = false;
+      }
+
+    if (!agree.checked) {
+      const consentBlock = agree.closest('.consent');
+      const existing = consentBlock.querySelector('.field-error');
+      if (existing) existing.remove();
+      const err = document.createElement('span');
+      err.className = 'field-error';
+      err.textContent = 'Необхідно погодитись з обробкою даних';
+      consentBlock.appendChild(err);
+      valid = false;
+    } else {
+      const consentBlock = agree.closest('.consent');
+      const existing = consentBlock.querySelector('.field-error');
+      if (existing) existing.remove();
+    }
+
+      if (!valid) return false;
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Відправляємо...';
+
+      const form = document.getElementById('calmiForm');
+      const data = new FormData(form);
+
+      fetch(form.action, {
+        method: 'POST',
+        body: data,
+        headers: { 'Accept': 'application/json' }
+      }).then(res => {
+        if (res.ok) {
+          document.getElementById('form-content').style.display = 'none';
+          document.getElementById('success').style.display = 'block';
+        } else {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Надіслати заявку →';
+          showNetworkError();
+        }
+      }).catch(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Надіслати заявку →';
+        showNetworkError();
+      });
+
+      return false;
+    }
+
+    function showNetworkError() {
+      const existing = document.querySelector('.form-network-error');
+      if (existing) existing.remove();
+      const err = document.createElement('p');
+      err.className = 'form-network-error field-error';
+      err.style.textAlign = 'center';
+      err.style.marginBottom = '12px';
+      err.textContent = 'Помилка з\'єднання. Перевірте інтернет і спробуйте ще раз.';
+      document.getElementById('submitBtn').insertAdjacentElement('beforebegin', err);
+    }
+    </script>
+
+</body>
+</html>

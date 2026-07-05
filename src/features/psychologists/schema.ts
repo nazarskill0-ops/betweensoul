@@ -1,0 +1,178 @@
+import { z } from "zod";
+
+/*
+  Taxonomies mirror rozmova.me (наш продуктовый ориентир).
+  Значения хранятся в БД как строки — не переименовывать без миграции.
+*/
+
+/** Послуги. Каталог по умолчанию просит выбрать одну из первых трёх. */
+export const SERVICES = [
+  "Особиста терапія",
+  "Парна терапія",
+  "Дитяча терапія",
+  "Сексологія",
+  "Психіатрія",
+] as const;
+
+/** Три базовые услуги для стартового выбора в каталоге. */
+export const CORE_SERVICES = SERVICES.slice(0, 3);
+
+/** Теми запитів, сгруппированы как в мега-меню Rozmova. */
+export const TOPIC_GROUPS = [
+  {
+    group: "Стосунки з собою",
+    topics: [
+      "Дратівливість",
+      "Панічні атаки",
+      "Самотність",
+      "Спроби самогубства",
+      "Депресивні стани",
+      "Втома",
+      "Самооцінка та самоцінність",
+      "Нав'язливі думки та ритуали",
+      "Хімічні залежності",
+      "Психосоматика",
+      "Ставлення до їжі",
+      "Психолог ЛГБТ-френдлі",
+    ],
+  },
+  {
+    group: "Нові умови життя",
+    topics: [
+      "Втрата та горе",
+      "Адаптація, еміграція",
+      "Народження дитини",
+      "ПТСР",
+      "Кризи і травми",
+      "Репродуктивний психолог",
+      "Психолог для вагітних",
+      "Психолог для літніх людей",
+      "Психолог для військових та їхніх близьких",
+    ],
+  },
+  {
+    group: "Стосунки з іншими",
+    topics: [
+      "Сімейні стосунки",
+      "Співзалежність",
+      "Аб'юз, емоційне насилля",
+      "Психолог при розлученні",
+      "Психотерапевт з соціофобії",
+    ],
+  },
+  {
+    group: "Діяльність",
+    topics: [
+      "Емоційне вигорання",
+      "Ставлення до грошей",
+      "Прокрастинація",
+      "Мотиваційний психолог",
+      "Психолог з РДУГ",
+      "Психолог з профорієнтації",
+    ],
+  },
+] as const;
+
+/** Плоский список всех тем (для валидации и мультиселектов). */
+export const TOPICS = TOPIC_GROUPS.flatMap((g) => [...g.topics]);
+
+/** Методи терапії. */
+export const SPECIALIZATIONS = [
+  "КПТ",
+  "Психоаналіз",
+  "Гештальт",
+  "EMDR",
+  "Сімейна терапія",
+  "Дитяча психологія",
+  "НЛП",
+  "Травматерапія",
+  "Психодрама",
+  "Символдрама",
+  "Наративна психологія",
+  "Позитивна психотерапія",
+  "Екзистенційний аналіз",
+  "Транзактний аналіз",
+  "Арт-терапія",
+  "Клієнт-центрована терапія",
+  "Тілесно-орієнтована терапія",
+  "Системна сімейна терапія",
+  "ДПТ",
+  "Схема-терапія",
+  "Терапія прийняття і відповідальності (ACT)",
+  "Інше",
+] as const;
+
+export const CLIENT_CATEGORIES = [
+  { value: "veterans", label: "Учасники бойових дій та ветерани" },
+  { value: "couples", label: "Парна терапія" },
+  { value: "disabilities", label: "Люди з інвалідністю" },
+  { value: "chronic", label: "Тяжкі та хронічні захворювання" },
+  { value: "business", label: "Бізнес та керівники" },
+  { value: "children", label: "Діти та підлітки" },
+  { value: "grief", label: "Втрата та горювання" },
+  { value: "general", label: "Загальна аудиторія" },
+] as const;
+
+export const LANGUAGES = [
+  { value: "uk", label: "Українська" },
+  { value: "ru", label: "Російська" },
+  { value: "en", label: "English" },
+] as const;
+
+/** Психолог в списке каталога. */
+export const psychologistCardSchema = z.object({
+  profileId: z.string(),
+  fullName: z.string(),
+  headline: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  experienceYears: z.number().int().nonnegative().nullable(),
+  priceMinor: z.number().int().nonnegative(),
+  services: z.array(z.string()),
+  topics: z.array(z.string()),
+  specializations: z.array(z.string()),
+  languages: z.array(z.string()),
+});
+export type PsychologistCard = z.infer<typeof psychologistCardSchema>;
+
+/** Пункт образования («Вища та професійна освіта» / «Професійні курси» / «Інший досвід»). */
+export const educationItemSchema = z.object({
+  title: z.string(), // заведение или школа
+  speciality: z.string().optional(),
+  years: z.string().optional(), // "2022 – 2024"
+  certificateUrls: z.array(z.string()).default([]), // фото дипломов/сертификатов
+});
+export type EducationItem = z.infer<typeof educationItemSchema>;
+
+/** Отзыв клиента. */
+export const reviewSchema = z.object({
+  id: z.string(),
+  author: z.string(),
+  createdAt: z.string(), // ISO, UTC
+  rating: z.number().int().min(1).max(5),
+  topics: z.array(z.string()), // теги тем, с которыми работали
+  text: z.string(),
+});
+export type Review = z.infer<typeof reviewSchema>;
+
+/** Полный профиль психолога (страница /psychologist/[id]). */
+export const psychologistProfileSchema = psychologistCardSchema.extend({
+  bio: z.string(),
+  education: z.object({
+    higher: z.array(educationItemSchema),
+    courses: z.array(educationItemSchema),
+    other: z.array(educationItemSchema),
+  }),
+  reviews: z.array(reviewSchema),
+});
+export type PsychologistProfile = z.infer<typeof psychologistProfileSchema>;
+
+/** Фильтры каталога. 1:1 с search-параметрами URL. */
+export const psychologistFiltersSchema = z.object({
+  q: z.string().optional(), // поиск по имени
+  service: z.string().optional(),
+  topic: z.string().optional(),
+  specialization: z.string().optional(),
+  language: z.string().optional(),
+  priceMax: z.coerce.number().int().positive().optional(),
+});
+export type PsychologistFilters = z.infer<typeof psychologistFiltersSchema>;

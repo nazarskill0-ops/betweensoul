@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Політика конфіденційності — Calmi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Syne:wght@400..800&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sage:    #7A9E8E;
+      --sage-lt: #EDF4F0;
+      --sand:    #F7F3EE;
+      --sand-dk: #EDE6DB;
+      --ink:     #121614;
+      --ink-60:  #4d5751;
+      --white:   #FFFFFF;
+      --radius:  16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "Manrope", sans-serif;
+      font-weight: 400;
+      background: var(--sand);
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px;
+      height: 64px;
+      background: rgba(247,243,238,.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--sand-dk);
+    }
+    .logo {
+      font-family: "Syne", sans-serif;
+      font-size: 1.5rem;
+      color: var(--ink);
+      letter-spacing: -.5px;
+      text-decoration: none;
+    }
+    .logo span { color: var(--sage); }
+
+    /* CONTENT */
+    .page-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 64px 48px 96px;
+    }
+
+    .page-label {
+      font-size: .8rem; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--sage);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .updated {
+      font-size: .82rem;
+      color: var(--ink-60);
+      margin-bottom: 48px;
+    }
+
+    .doc-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 16px;
+    }
+
+    .doc-section h2 {
+      font-family: "Syne", sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--ink);
+    }
+
+    .doc-section p {
+      font-size: .92rem;
+      color: var(--ink-60);
+      line-height: 1.75;
+      margin-bottom: 10px;
+    }
+    .doc-section p:last-child { margin-bottom: 0; }
+
+    .doc-section ul {
+      margin: 8px 0 10px 0;
+      padding-left: 20px;
+    }
+    .doc-section ul li {
+      font-size: .92rem;
+      color: var(--ink-60);
+      line-height: 1.75;
+      margin-bottom: 4px;
+    }
+
+    .highlight {
+      background: var(--sage-lt);
+      border-left: 3px solid var(--sage);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 18px;
+      margin-top: 12px;
+      font-size: .88rem;
+      color: var(--ink);
+    }
+
+    .contact-block {
+      background: var(--ink);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 16px;
+      color: var(--white);
+    }
+    .contact-block h2 {
+      font-family: "Syne", sans-serif;
+      font-size: 1.05rem;
+      margin-bottom: 12px;
+      color: var(--white);
+    }
+    .contact-block p {
+      font-size: .92rem;
+      color: rgba(255,255,255,.6);
+      line-height: 1.75;
+      margin-bottom: 8px;
+    }
+    .contact-block a {
+      color: var(--sage);
+      text-decoration: none;
+    }
+    .contact-block a:hover { text-decoration: underline; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--sand-dk);
+      padding: 32px 48px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .82rem; color: var(--ink-60);
+    }
+    .footer-logo {
+      font-family: "Syne", sans-serif;
+      font-size: 1.1rem; color: var(--ink);
+    }
+    .footer-logo span { color: var(--sage); }
+    footer a { color: var(--ink-60); text-decoration: none; }
+    footer a:hover { color: var(--sage); }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 20px; }
+      .page-wrap { padding: 40px 20px 64px; }
+      footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">calm<span>i</span></a>
+</nav>
+
+<div class="page-wrap">
+  <div class="page-label">Юридична інформація</div>
+  <h1>Політика конфіденційності</h1>
+  <p class="updated">Остання редакція: червень 2026 року</p>
+
+  <div class="doc-section">
+    <h2>1. Загальні положення</h2>
+    <p>Ця Політика конфіденційності описує, як платформа Calmi (далі — «ми», «платформа») збирає, використовує та захищає персональні дані, які ви надаєте під час заповнення форми реєстрації партнера.</p>
+    <p>Використовуючи форму на нашому сайті та натискаючи кнопку «Надіслати заявку», ви підтверджуєте, що ознайомились з цією Політикою та погоджуєтесь з умовами обробки ваших персональних даних відповідно до Закону України «Про захист персональних даних» №2297-VI.</p>
+  </div>
+
+  <div class="doc-section">
+    <h2>2. Які дані ми збираємо</h2>
+    <p>Під час заповнення форми ми збираємо наступні персональні дані:</p>
+    <ul>
+      <li>Ім'я та прізвище</li>
+      <li>Номер телефону</li>
+      <li>Адреса електронної пошти (email)</li>
+      <li>Спеціалізація та роки практики</li>
+      <li>Категорії клієнтів, з якими ви працюєте</li>
+      <li>Коротка інформація про себе (якщо ви її надали)</li>
+    </ul>
+    <p>Ми не збираємо платіжну інформацію, дані документів або будь-які чутливі категорії даних на цьому етапі.</p>
+  </div>
+
+  <div class="doc-section">
+    <h2>3. З якою метою ми обробляємо дані</h2>
+    <p>Ваші дані використовуються виключно для:</p>
+    <ul>
+      <li>зв'язку з вами щодо партнерства на платформі Calmi</li>
+      <li>формування бази потенційних партнерів-психологів та психотерапевтів</li>
+      <li>надсилання інформації про запуск платформи та умови співпраці</li>
+    </ul>
+    <p>Ми не використовуємо ваші дані для автоматизованого прийняття рішень або профілювання.</p>
+  </div>
+
+  <div class="doc-section">
+    <h2>4. Як і де зберігаються ваші дані</h2>
+    <p>Дані, надіслані через форму, передаються та зберігаються через сервіс Formspree (formspree.io) — третю сторону, яка виступає технічним обробником даних. Formspree дотримується стандартів GDPR.</p>
+    <p>Ми не продаємо, не передаємо та не розкриваємо ваші персональні дані іншим третім особам без вашої явної згоди, крім випадків, передбачених законодавством України.</p>
+    <div class="highlight">
+      Ваші дані зберігаються лише до моменту запуску платформи або до отримання вашого запиту на видалення — залежно від того, що настане раніше.
+    </div>
+  </div>
+
+  <div class="doc-section">
+    <h2>5. Ваші права як суб'єкта даних</h2>
+    <p>Відповідно до Закону України «Про захист персональних даних», ви маєте право:</p>
+    <ul>
+      <li><strong>Знати</strong> — отримати підтвердження того, що ми обробляємо ваші дані</li>
+      <li><strong>Доступу</strong> — отримати копію своїх персональних даних</li>
+      <li><strong>Виправлення</strong> — попросити виправити неточні або неповні дані</li>
+      <li><strong>Видалення</strong> — вимагати видалення ваших даних у будь-який момент</li>
+      <li><strong>Відкликання згоди</strong> — відкликати надану згоду без пояснення причин</li>
+    </ul>
+    <p>Для реалізації будь-якого з цих прав напишіть нам на електронну адресу, вказану нижче.</p>
+  </div>
+
+  <div class="doc-section">
+    <h2>6. Файли cookie</h2>
+    <p>Наш сайт використовує Google Analytics (gtag.js) для збору знеособленої статистики відвідувань — кількість переглядів, джерела трафіку, поведінка на сторінці. Ці дані не дозволяють ідентифікувати вас особисто.</p>
+    <p>Ви можете заблокувати cookie у налаштуваннях свого браузера, однак це може вплинути на коректну роботу окремих елементів сайту.</p>
+  </div>
+
+  <div class="doc-section">
+    <h2>7. Зміни до цієї Політики</h2>
+    <p>Ми залишаємо за собою право вносити зміни до цієї Політики конфіденційності. У разі суттєвих змін ми повідомимо вас електронним листом, якщо ви залишили свій email. Актуальна версія завжди доступна на цій сторінці.</p>
+  </div>
+
+  <div class="contact-block">
+    <h2>Контакти для запитів щодо даних</h2>
+    <p>Якщо у вас є запитання щодо обробки ваших персональних даних або ви хочете скористатись будь-яким зі своїх прав — напишіть нам:</p>
+    <p>Email: <a href="mailto:[ВАШ EMAIL]">calmi0620@gmail.com</a></p>
+    <p style="margin-top: 12px; font-size: .8rem;">Ми відповімо протягом 2 робочих днів.</p>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-logo">calm<span>i</span></div>
+  <div>© 2026 Calmi. Всі права захищені.</div>
+  <div style="display:flex;gap:20px;">
+    <a href="privacy.html">Політика конфіденційності</a>
+    <a href="terms.html">Умови використання</a>
+  </div>
+</footer>
+
+</body>
+</html>

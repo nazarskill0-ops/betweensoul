@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/*
+  Design tokens for Calmi.
+  These come from the original landing design (_design_ref/index.html).
+  Exposed to Tailwind via @theme so you can use them as utilities:
+  bg-sage, text-ink, border-sand-dk, rounded-card, font-display, etc.
+  Change a value here once and it updates everywhere.
+*/
+@theme {
+  --color-sage: #7a9e8e;
+  --color-sage-light: #edf4f0;
+  --color-sand: #f7f3ee;
+  --color-sand-dark: #ede6db;
+  --color-ink: #121614;
+  --color-ink-muted: #4d5751;
+  --color-rose: #c97a6a;
+
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-display: var(--font-syne), system-ui, sans-serif;
+
+  --radius-card: 16px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-sand);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
