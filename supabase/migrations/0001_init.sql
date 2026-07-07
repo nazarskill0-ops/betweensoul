@@ -11,7 +11,13 @@
 -- ============================================================================
 
 -- ---------- enums ----------
-create type user_role as enum ('client', 'psychologist', 'admin');
+-- 'admin' — глав. админ (дашборд для фаундера), 'manager' — задел на будущее,
+-- функционал появится в конце проекта. Роли admin/manager НЕ назначаются при
+-- регистрации — только руками через UPDATE в БД (см. триггер handle_new_user).
+create type user_role as enum ('client', 'psychologist', 'admin', 'manager');
+create type gender_type as enum ('female', 'male');
+-- Квалификация специалиста. Расширяемо (сексолог и т.п. добавим при нужде).
+create type qualification_type as enum ('psychologist', 'psychotherapist', 'psychiatrist');
 create type psychologist_status as enum ('pending', 'approved', 'rejected');
 create type slot_status as enum ('open', 'held', 'booked');
 create type booking_status as enum ('pending_payment', 'confirmed', 'completed', 'cancelled');
@@ -29,6 +35,33 @@ create table profiles (
   created_at  timestamptz not null default now()
 );
 
+-- При регистрации через Supabase Auth автоматически создаём строку в profiles.
+-- ВАЖНО: роль из метаданных принимаем только client/psychologist. admin и
+-- manager назначаются вручную (UPDATE profiles SET role='admin' WHERE id=...) —
+-- иначе любой мог бы зарегистрироваться админом, подсунув метаданные.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  insert into public.profiles (id, full_name, role)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data ->> 'full_name', ''),
+    case
+      when new.raw_user_meta_data ->> 'role' = 'psychologist' then 'psychologist'::user_role
+      else 'client'::user_role
+    end
+  );
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
 -- ---------- psychologists ----------
 -- Extra data for profiles whose role = 'psychologist'.
 -- Public listing only shows rows where status = 'approved'.
@@ -37,24 +70,34 @@ create table psychologists (
   status            psychologist_status not null default 'pending',
   headline          text,                       -- short tagline
   bio               text,
+  gender            gender_type,
+  qualification     qualification_type,         -- психолог / психотерапевт / психіатр
   experience_years  int,
-  price_minor       int not null default 0,     -- per session, in kopiykas
+  price_minor       int not null default 0,     -- ціна за годину, в копейках
+  -- Формат приёма. Сейчас всегда '{online}', но заложено на офлайн-будущее.
+  formats           text[] not null default '{online}',
   -- Filter facets. Arrays + GIN index = simple filtering for a small team.
-  -- Values come from the fixed taxonomies in the app (see _design_ref form).
+  -- Values come from the fixed taxonomies in the app (features/psychologists/schema.ts).
   services          text[] not null default '{}',   -- 'Особиста терапія', 'Парна терапія', ...
-  topics            text[] not null default '{}',   -- 'Панічні атаки', 'ПТСР', ... (что беспокоит клиента)
-  specializations   text[] not null default '{}',   -- 'КПТ', 'Гештальт', ... (метод терапии)
+  topics            text[] not null default '{}',   -- «Основна експертиза»: темы, где психолог силён
+  topics_secondary  text[] not null default '{}',   -- «Я також працюю з»: темы второго порядка
+  topics_excluded   text[] not null default '{}',   -- «З чим я не працюю»
+  specializations   text[] not null default '{}',   -- методы/подходы: 'КПТ', 'Гештальт', ...
   client_categories text[] not null default '{}',   -- 'couples', 'children', ...
   -- Образование: { higher: [...], courses: [...], other: [...] },
-  -- каждый пункт { title, speciality?, years?, certificateUrls[] }.
+  -- каждый пункт { title, speciality?, years?, description?, certificateUrls[] }.
   -- jsonb, потому что структура редактируется целиком в профиле и не фильтруется.
   education         jsonb not null default '{"higher":[],"courses":[],"other":[]}',
   languages         text[] not null default '{}',   -- 'uk', 'ru', 'en'
+  -- Денормализованный счётчик проведённых сессий (бейдж на профиле).
+  -- Инкрементится ТОЛЬКО сервером после завершённой сессии.
+  sessions_count    int not null default 0,
   verified_at       timestamptz,
   created_at        timestamptz not null default now()
 );
 create index psychologists_services_idx on psychologists using gin (services);
 create index psychologists_topics_idx on psychologists using gin (topics);
+create index psychologists_topics_secondary_idx on psychologists using gin (topics_secondary);
 create index psychologists_specializations_idx on psychologists using gin (specializations);
 create index psychologists_categories_idx on psychologists using gin (client_categories);
 create index psychologists_price_idx on psychologists (price_minor);
@@ -149,8 +192,10 @@ create policy "psychologists: self upsert" on psychologists
   for insert with check (profile_id = auth.uid());
 create policy "psychologists: self update" on psychologists
   for update using (profile_id = auth.uid());
--- NOTE: changing `status` to 'approved' must be admin-only. Enforce that with a
--- trigger or a separate admin-only policy — do NOT let a psychologist self-approve.
+-- NOTE (harden before launch): changing `status` to 'approved' and bumping
+-- `sessions_count` must be server/admin-only. Enforce with a trigger or
+-- column-level checks — do NOT let a psychologist self-approve or inflate
+-- their session counter.
 
 -- availability_slots: open slots are public; the owner manages their own.
 create policy "slots: public read" on availability_slots

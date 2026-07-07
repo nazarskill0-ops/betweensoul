@@ -119,14 +119,35 @@ export const LANGUAGES = [
   { value: "en", label: "English" },
 ] as const;
 
-/** Психолог в списке каталога. */
+export const QUALIFICATIONS = [
+  { value: "psychologist", label: "Психолог" },
+  { value: "psychotherapist", label: "Психотерапевт" },
+  { value: "psychiatrist", label: "Психіатр" },
+] as const;
+
+export const GENDERS = [
+  { value: "female", label: "Жінка" },
+  { value: "male", label: "Чоловік" },
+] as const;
+
+/** Формат приёма. Пока только онлайн, но поле заложено на будущее. */
+export const FORMATS = [
+  { value: "online", label: "Онлайн" },
+  { value: "offline", label: "Офлайн" },
+] as const;
+
+/** Психолог в списке каталога. `topics` — это «Основна експертиза». */
 export const psychologistCardSchema = z.object({
   profileId: z.string(),
   fullName: z.string(),
   headline: z.string().nullable(),
   avatarUrl: z.string().nullable(),
+  gender: z.enum(["female", "male"]),
+  qualification: z.enum(["psychologist", "psychotherapist", "psychiatrist"]),
   experienceYears: z.number().int().nonnegative().nullable(),
-  priceMinor: z.number().int().nonnegative(),
+  priceMinor: z.number().int().nonnegative(), // ціна за годину
+  sessionsCount: z.number().int().nonnegative(), // проведено сесій (бейдж доверия)
+  formats: z.array(z.string()), // пока всегда ['online']
   services: z.array(z.string()),
   topics: z.array(z.string()),
   specializations: z.array(z.string()),
@@ -139,6 +160,7 @@ export const educationItemSchema = z.object({
   title: z.string(), // заведение или школа
   speciality: z.string().optional(),
   years: z.string().optional(), // "2022 – 2024"
+  description: z.string().optional(),
   certificateUrls: z.array(z.string()).default([]), // фото дипломов/сертификатов
 });
 export type EducationItem = z.infer<typeof educationItemSchema>;
@@ -157,6 +179,8 @@ export type Review = z.infer<typeof reviewSchema>;
 /** Полный профиль психолога (страница /psychologist/[id]). */
 export const psychologistProfileSchema = psychologistCardSchema.extend({
   bio: z.string(),
+  topicsSecondary: z.array(z.string()), // «Я також працюю з»
+  topicsExcluded: z.array(z.string()), // «З чим я не працюю»
   education: z.object({
     higher: z.array(educationItemSchema),
     courses: z.array(educationItemSchema),
@@ -170,9 +194,11 @@ export type PsychologistProfile = z.infer<typeof psychologistProfileSchema>;
 export const psychologistFiltersSchema = z.object({
   q: z.string().optional(), // поиск по имени
   service: z.string().optional(),
-  topic: z.string().optional(),
+  topic: z.string().optional(), // ищет и в основной, и во вторичной экспертизе
   specialization: z.string().optional(),
   language: z.string().optional(),
+  gender: z.string().optional(),
+  qualification: z.string().optional(),
   priceMax: z.coerce.number().int().positive().optional(),
 });
 export type PsychologistFilters = z.infer<typeof psychologistFiltersSchema>;
