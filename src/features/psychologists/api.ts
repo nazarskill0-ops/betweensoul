@@ -27,7 +27,13 @@ export async function fetchPsychologists(
       return false;
     }
     if (filters.service && !p.services.includes(filters.service)) return false;
-    if (filters.topic && !p.topics.includes(filters.topic)) return false;
+    if (
+      filters.topic &&
+      !p.topics.includes(filters.topic) &&
+      !p.topicsSecondary.includes(filters.topic)
+    ) {
+      return false;
+    }
     if (
       filters.specialization &&
       !p.specializations.includes(filters.specialization)
@@ -35,6 +41,9 @@ export async function fetchPsychologists(
       return false;
     }
     if (filters.language && !p.languages.includes(filters.language))
+      return false;
+    if (filters.gender && p.gender !== filters.gender) return false;
+    if (filters.qualification && p.qualification !== filters.qualification)
       return false;
     if (filters.priceMax && p.priceMinor > filters.priceMax) return false;
     return true;
