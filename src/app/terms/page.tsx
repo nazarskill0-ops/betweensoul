@@ -1,7 +1,58 @@
-/*
-  Placeholder. Port the real copy from _design_ref/terms.html.
-*/
 export const metadata = { title: "Умови використання — Calmi" };
+
+const SECTIONS = [
+  {
+    h: "1. Про цей сайт",
+    p: [
+      "Цей вебсайт є інформаційним лендінгом платформи Calmi на етапі бета-запуску. Він призначений для психологів та психотерапевтів, які розглядають можливість партнерства з платформою.",
+      "Використовуючи цей сайт, ви погоджуєтесь з цими умовами. Якщо ви не погоджуєтесь — будь ласка, не використовуйте сайт.",
+    ],
+  },
+  {
+    h: "2. Що ви можете робити на сайті",
+    ul: [
+      "Переглядати інформацію про платформу Calmi",
+      "Залишати заявку на партнерство через форму",
+      "Ознайомлюватись з умовами співпраці",
+    ],
+  },
+  {
+    h: "3. Що заборонено",
+    ul: [
+      "Копіювати, відтворювати або розповсюджувати контент сайту без дозволу",
+      "Використовувати сайт або його елементи в комерційних цілях",
+      "Надавати неправдиву інформацію у формі заявки",
+      "Намагатись зламати або порушити роботу сайту",
+    ],
+  },
+  {
+    h: "4. Заявка на партнерство",
+    p: [
+      "Заповнення форми на сайті не є офіційним договором і не гарантує автоматичного партнерства. Заявка означає вашу зацікавленість — ми розглянемо її і зв'яжемось з вами для обговорення умов співпраці.",
+    ],
+    highlight:
+      "Calmi перебуває на етапі бета-запуску. Умови співпраці, комісії та функціонал платформи можуть змінюватись до офіційного запуску.",
+  },
+  {
+    h: "5. Відповідальність",
+    p: [
+      "Calmi надає інформацію на сайті в тому вигляді, в якому вона є, без жодних гарантій щодо результатів партнерства, кількості клієнтів або доходу.",
+      "Ми не несемо відповідальності за будь-які рішення, прийняті на основі інформації з цього сайту.",
+    ],
+  },
+  {
+    h: "6. Інтелектуальна власність",
+    p: [
+      "Усі матеріали на сайті — назва, логотип, тексти, дизайн — є власністю платформи Calmi. Будь-яке використання без письмового дозволу заборонено.",
+    ],
+  },
+  {
+    h: "7. Зміни до умов",
+    p: [
+      "Ми залишаємо за собою право змінювати ці умови в будь-який момент без попереднього повідомлення. Актуальна версія завжди доступна на цій сторінці. Продовження використання сайту після змін означає вашу згоду з новими умовами.",
+    ],
+  },
+];
 
 export default function TermsPage() {
   return (
@@ -9,10 +60,54 @@ export default function TermsPage() {
       <a href="/" className="text-sm text-sage hover:underline">
         ← На головну
       </a>
-      <h1 className="mt-4 font-display text-3xl">Умови використання</h1>
-      <p className="mt-4 text-ink-muted">
-        Текст умов буде перенесено з макета (_design_ref/terms.html).
+
+      <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-sage">
+        Юридична інформація
+      </div>
+      <h1 className="font-display text-3xl md:text-4xl">
+        Умови використання
+      </h1>
+      <p className="mb-10 mt-2 text-sm text-ink-muted">
+        Остання редакція: липень 2026 року
       </p>
+
+      {SECTIONS.map((s) => (
+        <div key={s.h} className="mb-4 rounded-2xl bg-white p-8">
+          <h2 className="mb-3 font-display text-lg font-bold">{s.h}</h2>
+          {s.p?.map((t) => (
+            <p key={t} className="mb-2.5 text-sm leading-relaxed text-ink-muted">
+              {t}
+            </p>
+          ))}
+          {s.ul && (
+            <ul className="list-disc space-y-1 pl-5">
+              {s.ul.map((li) => (
+                <li key={li} className="text-sm leading-relaxed text-ink-muted">
+                  {li}
+                </li>
+              ))}
+            </ul>
+          )}
+          {s.highlight && (
+            <div className="mt-3 rounded-r-lg border-l-[3px] border-sage bg-sage-light px-4.5 py-3.5 text-sm">
+              {s.highlight}
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div className="mb-4 rounded-2xl bg-ink p-8 text-white">
+        <h2 className="mb-3 font-display text-lg">Питання щодо умов</h2>
+        <p className="mb-2 text-sm leading-relaxed text-white/60">
+          Якщо у вас є запитання — напишіть нам:
+        </p>
+        <p className="text-sm text-white/60">
+          Email: <a href="mailto:calmi0620@gmail.com" className="text-sage hover:underline">calmi0620@gmail.com</a>
+        </p>
+        <p className="mt-3 text-xs text-white/60">
+          Ми відповімо протягом 2 робочих днів.
+        </p>
+      </div>
     </main>
   );
 }

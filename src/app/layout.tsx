@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope, Syne } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body className="min-h-dvh">
         <Providers>{children}</Providers>
       </body>
+      <GoogleAnalytics gaId="G-Q4JQ7H4RGH" />
     </html>
   );
 }
