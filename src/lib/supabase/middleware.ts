@@ -8,10 +8,14 @@ const PROTECTED_PREFIXES = ["/dashboard"];
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // Missing config must not take the whole site down — just pass through.
+  if (!supabaseUrl || !supabaseKey) return response;
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -26,22 +30,25 @@ export async function updateSession(request: NextRequest) {
           );
         },
       },
+    });
+
+    // getUser() also refreshes an expired access token — keep this call.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const isProtected = PROTECTED_PREFIXES.some((p) =>
+      request.nextUrl.pathname.startsWith(p)
+    );
+    if (isProtected && !user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
     }
-  );
 
-  // getUser() also refreshes an expired access token — keep this call.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const isProtected = PROTECTED_PREFIXES.some((p) =>
-    request.nextUrl.pathname.startsWith(p)
-  );
-  if (isProtected && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return response;
+  } catch {
+    // Never crash the whole app on an auth hiccup.
+    return response;
   }
-
-  return response;
 }
