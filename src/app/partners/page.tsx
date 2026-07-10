@@ -121,11 +121,6 @@ export default function LandingPage() {
       {/* HERO */}
       <section className="mx-auto max-w-5xl px-5 pt-16 pb-20 md:px-12 md:pt-24">
         <div className="max-w-2xl">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-sand-dark bg-white px-4 py-2 text-sm font-medium shadow-sm">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-            Бета-доступ: залишилось <strong>6</strong> з 30 місць для
-            партнерів-психологів
-          </div>
           <h1 className="mb-5 font-display text-4xl leading-tight md:text-5xl">
             Займайтесь терапією.
             <br />

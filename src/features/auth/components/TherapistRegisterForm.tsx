@@ -56,8 +56,8 @@ export function TherapistRegisterForm() {
       noValidate
       className="w-full rounded-[20px] bg-white p-8 shadow-sm"
     >
-      <h1 className="mb-1 font-display text-2xl">Реєстрація психолога</h1>
-      <p className="mb-6 text-sm text-ink-muted">
+      <h1 className="mb-1 font-display text-2xl text-center">Реєстрація спеціаліста</h1>
+      <p className="mb-6 text-sm text-ink-muted text-center">
         Приєднуйтесь до Calmi як фахівець
       </p>
 
@@ -83,7 +83,8 @@ export function TherapistRegisterForm() {
       {errors.email && <span className={errorClass}>{errors.email.message}</span>}
 
       <label className="mt-4 mb-1.5 block text-sm font-medium">Пароль</label>
-      <input type="password" className={inputClass} {...register("password")} />
+      <input type="password"
+      placeholder="••••••••" className={inputClass} {...register("password")} />
       {errors.password && (
         <span className={errorClass}>{errors.password.message}</span>
       )}
@@ -122,11 +123,15 @@ export function TherapistRegisterForm() {
             {...register("consent")}
           />
           <span>
-            Я погоджуюсь з{" "}
-            <Link href="/privacy" target="_blank" className="text-sage underline">
-              обробкою персональних даних
-            </Link>{" "}
-            згідно з Політикою конфіденційності Calmi
+          Я даю згоду на обробку моїх персональних даних, погоджуюсь з{" "}
+          <Link href="/privacy" target="_blank" className="text-sage underline">
+            Політикою конфіденційності
+          </Link>{" "}
+          та{" "}
+          <Link href="/terms" target="_blank" className="text-sage underline">
+            Умовами використання
+          </Link>{" "}
+          платформи Calmi, і підтверджую, що мені виповнилося 18 років
           </span>
         </label>
         {errors.consent && (
@@ -145,7 +150,7 @@ export function TherapistRegisterForm() {
         disabled={mutation.isPending}
         className="mt-6 w-full rounded-full bg-sage py-3.5 font-semibold text-white transition-colors hover:bg-sage/90 disabled:cursor-not-allowed disabled:bg-ink-muted"
       >
-        {mutation.isPending ? "Створюємо..." : "Зареєструватись як психолог"}
+        {mutation.isPending ? "Створюємо..." : "Створити аккаунт"}
       </button>
 
       <p className="mt-5 text-center text-sm text-ink-muted">

@@ -53,8 +53,8 @@ export function RegisterForm() {
       noValidate
       className="w-full rounded-[20px] bg-white p-8 shadow-sm"
     >
-      <h1 className="mb-1 font-display text-2xl">Реєстрація</h1>
-      <p className="mb-6 text-sm text-ink-muted">Створіть акаунт за хвилину</p>
+      <h1 className="mb-1 font-display text-2xl text-center">Реєстрація</h1>
+      <p className="mb-6 text-sm text-ink-muted text-center">Створіть акаунт за хвилину</p>
 
       <label className="mb-1.5 block text-sm font-medium">Ім&apos;я та прізвище</label>
       <input placeholder="Олена Коваленко" className={inputClass} {...register("fullName")} />
@@ -72,7 +72,8 @@ export function RegisterForm() {
       {errors.email && <span className={errorClass}>{errors.email.message}</span>}
 
       <label className="mt-4 mb-1.5 block text-sm font-medium">Пароль</label>
-      <input type="password" className={inputClass} {...register("password")} />
+      <input type="password"
+      placeholder="••••••••" className={inputClass} {...register("password")} />
       {errors.password && (
         <span className={errorClass}>{errors.password.message}</span>
       )}
@@ -85,11 +86,15 @@ export function RegisterForm() {
             {...register("consent")}
           />
           <span>
-            Я погоджуюсь з{" "}
+            Я даю згоду на обробку моїх персональних даних, погоджуюсь з{" "}
             <Link href="/privacy" target="_blank" className="text-sage underline">
-              обробкою персональних даних
+              Політикою конфіденційності
             </Link>{" "}
-            згідно з Політикою конфіденційності Calmi
+            та{" "}
+            <Link href="/terms" target="_blank" className="text-sage underline">
+              Умовами використання
+            </Link>{" "}
+            платформи Calmi, і підтверджую, що мені виповнилося 18 років
           </span>
         </label>
         {errors.consent && (
