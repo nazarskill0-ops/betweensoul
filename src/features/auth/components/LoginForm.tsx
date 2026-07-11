@@ -34,8 +34,8 @@ export function LoginForm() {
       noValidate
       className="w-full rounded-[20px] bg-white p-8 shadow-sm"
     >
-      <h1 className="mb-1 font-display text-2xl">Вхід</h1>
-      <p className="mb-6 text-sm text-ink-muted">Раді бачити вас знову</p>
+      <h1 className="mb-1 font-display text-2xl text-center">Вхід</h1>
+      <p className="mb-6 text-sm text-ink-muted text-center">Раді бачити вас знову</p>
 
       <label className="mb-1.5 block text-sm font-medium">Email</label>
       <input
