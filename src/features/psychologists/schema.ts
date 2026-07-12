@@ -152,6 +152,7 @@ export const psychologistCardSchema = z.object({
   topics: z.array(z.string()),
   specializations: z.array(z.string()),
   languages: z.array(z.string()),
+  bio: z.string().optional(),
 });
 export type PsychologistCard = z.infer<typeof psychologistCardSchema>;
 
@@ -194,11 +195,12 @@ export type PsychologistProfile = z.infer<typeof psychologistProfileSchema>;
 export const psychologistFiltersSchema = z.object({
   q: z.string().optional(), // поиск по имени
   service: z.string().optional(),
-  topic: z.string().optional(), // ищет и в основной, и во вторичной экспертизе
-  specialization: z.string().optional(),
-  language: z.string().optional(),
+  topics: z.array(z.string()).optional(), // ищет и в основной, и во вторичной экспертизе
+  specializations: z.array(z.string()).optional(),
+  languages: z.array(z.string()).optional(),
   gender: z.string().optional(),
   qualification: z.string().optional(),
+  priceMin: z.coerce.number().int().nonnegative().optional(),
   priceMax: z.coerce.number().int().positive().optional(),
 });
 export type PsychologistFilters = z.infer<typeof psychologistFiltersSchema>;
