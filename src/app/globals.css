@@ -8,12 +8,12 @@
   Change a value here once and it updates everywhere.
 */
 @theme {
-  --color-sage: #7a9b76;
-  --color-sage-light: #e8efe6;
-  --color-sand: #f5f1ea;
+  --color-sage: #7a9e8e;
+  --color-sage-light: #edf4f0;
+  --color-sand: #f7f3ee;
   --color-sand-dark: #ede6db;
-  --color-ink: #2b332e;
-  --color-ink-muted: #6e6b62;
+  --color-ink: #121614;
+  --color-ink-muted: #4d5751;
   --color-rose: #c97a6a;
   --color-card: #fefdfb;
 

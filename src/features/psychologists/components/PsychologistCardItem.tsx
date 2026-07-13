@@ -45,6 +45,56 @@ function getBioExcerpt(bio: string): string {
   return `${bio.slice(0, 97).trimEnd()}…`;
 }
 
+function ShieldIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" />
+    </svg>
+  );
+}
+
+function ClockIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 3" />
+    </svg>
+  );
+}
+
+function ArrowRightIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M5 12h14" />
+      <path d="M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 export function PsychologistCardItem({
   psychologist,
 }: {
@@ -73,19 +123,22 @@ export function PsychologistCardItem({
           <h3 className="font-display text-2xl leading-tight text-ink">
             {psychologist.fullName}
           </h3>
-          {(psychologist.experienceYears !== null || qualificationLabel) && (
-            <div className="text-sm">
+          {(qualificationLabel || psychologist.experienceYears !== null) && (
+            <div className="flex items-center gap-1.5 text-sm">
+              {qualificationLabel && (
+                <>
+                  <ShieldIcon className="h-4 w-4 shrink-0 text-sage" />
+                  <span className="text-base font-medium text-ink">
+                    {qualificationLabel}
+                  </span>
+                </>
+              )}
+              {qualificationLabel && psychologist.experienceYears !== null && (
+                <span className="text-ink-muted"> · </span>
+              )}
               {psychologist.experienceYears !== null && (
                 <span className="text-ink-muted">
                   {formatExperienceYears(psychologist.experienceYears)}
-                </span>
-              )}
-              {psychologist.experienceYears !== null && qualificationLabel && (
-                <span className="text-ink-muted"> · </span>
-              )}
-              {qualificationLabel && (
-                <span className="text-base font-medium text-ink">
-                  {qualificationLabel}
                 </span>
               )}
             </div>
@@ -110,20 +163,38 @@ export function PsychologistCardItem({
         </div>
 
         {psychologist.bio && (
-          <p className="rounded-card bg-sage-light p-4 text-sm text-ink-muted italic">
-            “{getBioExcerpt(psychologist.bio)}”
-          </p>
+          <div className="relative rounded-card bg-sage-light p-4">
+            <span
+              aria-hidden
+              className="absolute left-3 top-0 font-display text-3xl leading-none text-sage/40"
+            >
+              “
+            </span>
+            <p className="px-4 text-sm text-ink-muted italic">
+              {getBioExcerpt(psychologist.bio)}
+            </p>
+            <span
+              aria-hidden
+              className="absolute bottom-0 right-3 font-display text-3xl leading-none text-sage/40"
+            >
+              ”
+            </span>
+          </div>
         )}
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-1">
-          <span className="text-base font-semibold text-ink">
-            Сесія 50 хв — {priceUah} ₴
+          <span className="flex items-center gap-1.5 text-base">
+            <ClockIcon className="h-4 w-4 shrink-0 text-ink-muted" />
+            <span className="text-ink-muted">50 хв</span>
+            <span className="text-ink-muted"> · </span>
+            <span className="font-semibold text-ink">{priceUah} ₴</span>
           </span>
           <Link
             href={`/psychologist/${psychologist.profileId}`}
-            className="rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sage"
+            className="flex items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sage"
           >
             Переглянути профіль
+            <ArrowRightIcon className="h-4 w-4 shrink-0" />
           </Link>
         </div>
       </div>
