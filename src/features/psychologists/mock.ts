@@ -31,6 +31,8 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["КПТ", "Схема-терапія"],
     languages: ["uk", "en"],
     bio: "Працюю в когнітивно-поведінковому підході з тривожними та депресивними станами. Вірю, що терапія — це навички, які залишаються з вами назавжди.",
+    clientCategories: ["general"],
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
         {
@@ -87,12 +89,14 @@ export const mockPsychologists: PsychologistProfile[] = [
     sessionsCount: 1180,
     formats: ["online"],
     services: ["Особиста терапія", "Парна терапія"],
-    topics: ["Сімейні стосунки", "Співзалежність", "Психолог при розлученні"],
+    topics: ["Сімейні стосунки", "Співзалежність"],
     topicsSecondary: ["Самотність", "Дратівливість"],
     topicsExcluded: ["Хімічні залежності", "ПТСР"],
     specializations: ["Гештальт", "Сімейна терапія"],
     languages: ["uk", "ru"],
     bio: "Допомагаю парам і окремим людям розібратись у стосунках — з іншими та з собою. Працюю чесно, без загальних порад.",
+    clientCategories: ["general"],
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -141,12 +145,14 @@ export const mockPsychologists: PsychologistProfile[] = [
     sessionsCount: 320,
     formats: ["online"],
     services: ["Дитяча терапія"],
-    topics: ["Психолог з РДУГ", "Самооцінка та самоцінність", "Ставлення до їжі"],
-    topicsSecondary: ["Дратівливість", "Психотерапевт з соціофобії"],
+    topics: ["РДУГ", "Самооцінка та самоцінність", "Ставлення до їжі"],
+    topicsSecondary: ["Дратівливість", "Соціофобія"],
     topicsExcluded: ["Хімічні залежності"],
     specializations: ["Дитяча психологія", "Арт-терапія"],
     languages: ["uk"],
     bio: "Працюю з дітьми від 6 років та підлітками. Через гру та творчість допомагаю дитині впоратись з тим, що словами поки не виходить.",
+    clientCategories: ["teens"],
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -209,12 +215,14 @@ export const mockPsychologists: PsychologistProfile[] = [
     sessionsCount: 870,
     formats: ["online"],
     services: ["Особиста терапія"],
-    topics: ["ПТСР", "Кризи і травми", "Психолог для військових та їхніх близьких", "Втрата та горе"],
+    topics: ["ПТСР", "Кризи і травми", "Втрата та горе"],
     topicsSecondary: ["Панічні атаки", "Нав'язливі думки та ритуали"],
     topicsExcluded: ["Ставлення до їжі"],
     specializations: ["EMDR", "Травматерапія"],
     languages: ["uk", "en"],
     bio: "Спеціалізуюсь на роботі з травмою — бойовою, втратою, насиллям. EMDR-терапевтка, сертифікована Europe EMDR Association.",
+    clientCategories: ["veterans", "abuse_survivors", "grief"],
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
         {
@@ -264,11 +272,13 @@ export const mockPsychologists: PsychologistProfile[] = [
     formats: ["online"],
     services: ["Особиста терапія"],
     topics: ["Самотність", "Ставлення до грошей", "Прокрастинація"],
-    topicsSecondary: ["Емоційне вигорання", "Психолог з профорієнтації"],
+    topicsSecondary: ["Емоційне вигорання", "Профорієнтація"],
     topicsExcluded: ["Спроби самогубства", "Хімічні залежності"],
     specializations: ["Психоаналіз", "Екзистенційний аналіз"],
     languages: ["uk", "ru", "en"],
     bio: "П'ятнадцять років приватної практики. Працюю з глибинними запитами: сенс, самотність, повторювані життєві сценарії.",
+    clientCategories: ["general"],
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -312,11 +322,13 @@ export const mockPsychologists: PsychologistProfile[] = [
     formats: ["online"],
     services: ["Парна терапія", "Особиста терапія"],
     topics: ["Сімейні стосунки", "Народження дитини", "Аб'юз, емоційне насилля"],
-    topicsSecondary: ["Співзалежність", "Психолог при розлученні"],
-    topicsExcluded: ["Психолог з РДУГ"],
+    topicsSecondary: ["Співзалежність"],
+    topicsExcluded: ["РДУГ"],
     specializations: ["Системна сімейна терапія"],
     languages: ["uk"],
     bio: "Системна сімейна терапевтка. Працюю з парами на всіх етапах — від кризи перших років до синдрому порожнього гнізда.",
+    clientCategories: ["abuse_survivors"],
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -350,12 +362,14 @@ export const mockPsychologists: PsychologistProfile[] = [
     sessionsCount: 280,
     formats: ["online"],
     services: ["Особиста терапія"],
-    topics: ["Ставлення до їжі", "Психосоматика", "Самооцінка та самоцінність"],
+    topics: ["Ставлення до їжі", "Самооцінка та самоцінність"],
     topicsSecondary: ["Втома", "Депресивні стани"],
     topicsExcluded: ["ПТСР", "Хімічні залежності"],
     specializations: ["Тілесно-орієнтована терапія", "КПТ"],
     languages: ["uk", "ru"],
     bio: "Допомагаю відновити нормальні стосунки з їжею та власним тілом. Без дієт, без сорому, без «просто візьми себе в руки».",
+    clientCategories: ["eating_disorders"],
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
         {
@@ -398,12 +412,14 @@ export const mockPsychologists: PsychologistProfile[] = [
     sessionsCount: 540,
     formats: ["online"],
     services: ["Особиста терапія"],
-    topics: ["Емоційне вигорання", "Ставлення до грошей", "Прокрастинація", "Мотиваційний психолог"],
-    topicsSecondary: ["Психолог з профорієнтації"],
+    topics: ["Емоційне вигорання", "Ставлення до грошей", "Прокрастинація", "Мотивація"],
+    topicsSecondary: ["Профорієнтація"],
     topicsExcluded: ["Втрата та горе", "Спроби самогубства"],
     specializations: ["КПТ", "Терапія прийняття і відповідальності (ACT)"],
     languages: ["uk", "en"],
     bio: "Десять років у бізнесі до психології — знаю вигорання зсередини. Працюю з фаундерами, керівниками та тими, хто тягне забагато.",
+    clientCategories: ["business"],
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -446,12 +462,14 @@ export const mockPsychologists: PsychologistProfile[] = [
     sessionsCount: 930,
     formats: ["online"],
     services: ["Особиста терапія", "Парна терапія"],
-    topics: ["Народження дитини", "Психолог для вагітних", "Репродуктивний психолог", "Втрата та горе"],
+    topics: ["Народження дитини", "Вагітність", "Репродуктивне здоров'я", "Втрата та горе"],
     topicsSecondary: ["Сімейні стосунки"],
-    topicsExcluded: ["Хімічні залежності", "Психолог з РДУГ"],
+    topicsExcluded: ["Хімічні залежності", "РДУГ"],
     specializations: ["Клієнт-центрована терапія", "Символдрама"],
     languages: ["uk"],
     bio: "Супроводжую жінок та пари на шляху до батьківства: вагітність, пологи, втрати, репродуктивні складнощі, післяпологовий період.",
+    clientCategories: ["grief", "general"],
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -502,10 +520,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     services: ["Особиста терапія"],
     topics: ["Хімічні залежності", "Співзалежність", "Дратівливість"],
     topicsSecondary: ["Ставлення до грошей", "Самотність"],
-    topicsExcluded: ["Народження дитини", "Психолог для вагітних"],
+    topicsExcluded: ["Народження дитини", "Вагітність"],
     specializations: ["Транзактний аналіз", "Гештальт"],
     languages: ["uk", "ru"],
     bio: "Чотирнадцять років працюю із залежностями та людьми поруч із залежними. Без моралізаторства — тільки робота.",
+    clientCategories: ["general"],
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -554,12 +574,14 @@ export const mockPsychologists: PsychologistProfile[] = [
     sessionsCount: 190,
     formats: ["online"],
     services: ["Особиста терапія"],
-    topics: ["Адаптація, еміграція", "Самотність", "Втома"],
+    topics: ["Самотність", "Втома"],
     topicsSecondary: ["Панічні атаки", "Депресивні стани"],
     topicsExcluded: ["ПТСР"],
     specializations: ["Клієнт-центрована терапія", "Позитивна психотерапія"],
     languages: ["uk", "en"],
     bio: "Сама пройшла еміграцію 2022 року — знаю, як воно. Працюю з українцями за кордоном: адаптація, провина вцілілого, туга за домом.",
+    clientCategories: ["adaptation"],
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
         {
@@ -602,12 +624,14 @@ export const mockPsychologists: PsychologistProfile[] = [
     sessionsCount: 85,
     formats: ["online"],
     services: ["Дитяча терапія", "Особиста терапія"],
-    topics: ["Самооцінка та самоцінність", "Дратівливість", "Психотерапевт з соціофобії"],
+    topics: ["Самооцінка та самоцінність", "Дратівливість", "Соціофобія"],
     topicsSecondary: ["Прокрастинація"],
     topicsExcluded: ["Хімічні залежності", "ПТСР"],
     specializations: ["КПТ", "Наративна психологія"],
     languages: ["uk"],
     bio: "Працюю з підлітками 12+ та молодими дорослими. Тривога, сором'язливість, конфлікти з батьками — приходьте, розберемось.",
+    clientCategories: ["teens", "separation"],
+    videoUrl: null,
     education: {
       higher: [
         {

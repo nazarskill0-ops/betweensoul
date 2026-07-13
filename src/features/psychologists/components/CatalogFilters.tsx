@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { TOPICS, SPECIALIZATIONS, LANGUAGES, GENDERS } from "../schema";
+import { TOPICS, SPECIALIZATIONS, LANGUAGES, GENDERS, CLIENT_CATEGORIES } from "../schema";
 
 const PRICE_THRESHOLD_MINOR = 170000; // 1700 грн
 
@@ -75,6 +75,7 @@ export function CatalogFilters() {
   const selectedTopics = getArrayParam("topics");
   const selectedSpecializations = getArrayParam("specializations");
   const selectedLanguages = getArrayParam("languages");
+  const selectedClientCategories = getArrayParam("clientCategories");
   const selectedGender = searchParams.get("gender") ?? "";
   const priceRangeValue =
     searchParams.get("priceMax") === String(PRICE_THRESHOLD_MINOR)
@@ -110,6 +111,15 @@ export function CatalogFilters() {
         selectedValues={selectedLanguages}
         onToggle={(value) => toggleArrayValue("languages", value)}
         onClear={() => setArrayParam("languages", [])}
+      />
+
+      <FilterDropdown
+        label="Особливі запити"
+        mode="multi"
+        options={CLIENT_CATEGORIES.map((c) => ({ value: c.value, label: c.label }))}
+        selectedValues={selectedClientCategories}
+        onToggle={(value) => toggleArrayValue("clientCategories", value)}
+        onClear={() => setArrayParam("clientCategories", [])}
       />
 
       <FilterDropdown

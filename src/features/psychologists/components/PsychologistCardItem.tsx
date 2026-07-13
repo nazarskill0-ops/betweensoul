@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { QUALIFICATIONS, type PsychologistCard } from "../schema";
 
@@ -11,6 +14,13 @@ function formatExperienceYears(years: number): string {
     return `${years} роки досвіду`;
   }
   return `${years} років досвіду`;
+}
+
+function getYoutubeVideoId(url: string): string | null {
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  return match ? match[1] : null;
 }
 
 function BadgeGroup({
@@ -95,28 +105,71 @@ function ArrowRightIcon({ className }: { className?: string }) {
   );
 }
 
+function PlayIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <circle cx="12" cy="12" r="10" fillOpacity={0.9} />
+      <path d="M10 8.5v7l6-3.5-6-3.5z" fill="white" />
+    </svg>
+  );
+}
+
+function CloseIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M6 6l12 12" />
+      <path d="M18 6L6 18" />
+    </svg>
+  );
+}
+
 export function PsychologistCardItem({
   psychologist,
 }: {
   psychologist: PsychologistCard;
 }) {
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
   const priceUah = psychologist.priceMinor / 100;
   const qualificationLabel = QUALIFICATIONS.find(
     (q) => q.value === psychologist.qualification
   )?.label;
+  const videoId = psychologist.videoUrl
+    ? getYoutubeVideoId(psychologist.videoUrl)
+    : null;
 
   return (
     <div className="flex flex-col gap-5 rounded-card border-[1.5px] border-sand-dark bg-white p-5 sm:flex-row sm:gap-6">
-      {psychologist.avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={psychologist.avatarUrl}
-          alt={psychologist.fullName}
-          className="h-56 w-full rounded-card object-cover sm:h-auto sm:w-56 sm:shrink-0"
-        />
-      ) : (
-        <div className="h-56 w-full rounded-card bg-sage-light sm:h-auto sm:w-56 sm:shrink-0" />
-      )}
+      <div className="relative h-56 w-full shrink-0 sm:h-auto sm:w-56">
+        {psychologist.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={psychologist.avatarUrl}
+            alt={psychologist.fullName}
+            className="h-full w-full rounded-card object-cover"
+          />
+        ) : (
+          <div className="h-full w-full rounded-card bg-sage-light" />
+        )}
+
+        {psychologist.videoUrl && (
+          <button
+            type="button"
+            onClick={() => setIsVideoOpen(true)}
+            aria-label="Переглянути відео психолога"
+            className="absolute bottom-2 right-2 text-sage transition-transform hover:scale-105"
+          >
+            <PlayIcon className="h-10 w-10 drop-shadow" />
+          </button>
+        )}
+      </div>
 
       <div className="flex flex-1 flex-col gap-5">
         <div className="flex flex-col gap-1.5">
@@ -128,9 +181,7 @@ export function PsychologistCardItem({
               {qualificationLabel && (
                 <>
                   <ShieldIcon className="h-4 w-4 shrink-0 text-sage" />
-                  <span className="text-base font-medium text-ink">
-                    {qualificationLabel}
-                  </span>
+                  <span className="font-normal text-ink">{qualificationLabel}</span>
                 </>
               )}
               {qualificationLabel && psychologist.experienceYears !== null && (
@@ -149,36 +200,24 @@ export function PsychologistCardItem({
           {psychologist.specializations.length > 0 && (
             <BadgeGroup
               items={psychologist.specializations}
-              className="rounded-full border-[1.5px] border-transparent bg-sage-light px-4 py-2 text-base text-ink"
+              className="rounded-full border-[1.5px] border-transparent bg-sage-light px-3 py-1.5 text-sm text-ink"
             />
           )}
 
           {psychologist.topics.length > 0 && (
             <BadgeGroup
               items={psychologist.topics}
-              className="rounded-full border-[1.5px] border-sand-dark bg-white px-2.5 py-1 text-xs text-ink-muted"
+              className="rounded-full border-[1.5px] border-sand-dark bg-white px-3 py-1.5 text-sm text-ink-muted"
               gapClassName="gap-2"
             />
           )}
         </div>
 
         {psychologist.bio && (
-          <div className="relative rounded-card bg-sage-light p-4">
-            <span
-              aria-hidden
-              className="absolute left-3 top-0 font-display text-3xl leading-none text-sage/40"
-            >
-              “
-            </span>
-            <p className="px-4 text-sm text-ink-muted italic">
-              {getBioExcerpt(psychologist.bio)}
+          <div className="rounded-card bg-sage-light p-4">
+            <p className="text-sm text-ink-muted italic">
+              "{getBioExcerpt(psychologist.bio)}"
             </p>
-            <span
-              aria-hidden
-              className="absolute bottom-0 right-3 font-display text-3xl leading-none text-sage/40"
-            >
-              ”
-            </span>
           </div>
         )}
 
@@ -187,7 +226,7 @@ export function PsychologistCardItem({
             <ClockIcon className="h-4 w-4 shrink-0 text-ink-muted" />
             <span className="text-ink-muted">50 хв</span>
             <span className="text-ink-muted"> · </span>
-            <span className="font-semibold text-ink">{priceUah} ₴</span>
+            <span className="font-normal text-ink-muted">{priceUah} ₴</span>
           </span>
           <Link
             href={`/psychologist/${psychologist.profileId}`}
@@ -198,6 +237,47 @@ export function PsychologistCardItem({
           </Link>
         </div>
       </div>
+
+      {isVideoOpen && videoId && psychologist.videoUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setIsVideoOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl rounded-card bg-white p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setIsVideoOpen(false)}
+              aria-label="Закрити"
+              className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white"
+            >
+              <CloseIcon className="h-4 w-4" />
+            </button>
+
+            <div className="aspect-video w-full overflow-hidden rounded-card">
+              <iframe
+                src={`https://www.youtube.com/embed/${videoId}`}
+                title={`Відео ${psychologist.fullName}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full"
+              />
+            </div>
+
+            <a
+              href={psychologist.videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex w-fit items-center gap-1.5 text-sm font-medium text-sage transition-colors hover:text-sage/80"
+            >
+              Перейти на YouTube
+              <ArrowRightIcon className="h-4 w-4 shrink-0" />
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

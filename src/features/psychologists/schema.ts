@@ -31,23 +31,19 @@ export const TOPIC_GROUPS = [
       "Самооцінка та самоцінність",
       "Нав'язливі думки та ритуали",
       "Хімічні залежності",
-      "Психосоматика",
       "Ставлення до їжі",
-      "Психолог ЛГБТ-френдлі",
     ],
   },
   {
     group: "Нові умови життя",
     topics: [
       "Втрата та горе",
-      "Адаптація, еміграція",
       "Народження дитини",
       "ПТСР",
       "Кризи і травми",
-      "Репродуктивний психолог",
-      "Психолог для вагітних",
-      "Психолог для літніх людей",
-      "Психолог для військових та їхніх близьких",
+      "Репродуктивне здоров'я",
+      "Вагітність",
+      "Літній вік",
     ],
   },
   {
@@ -56,8 +52,7 @@ export const TOPIC_GROUPS = [
       "Сімейні стосунки",
       "Співзалежність",
       "Аб'юз, емоційне насилля",
-      "Психолог при розлученні",
-      "Психотерапевт з соціофобії",
+      "Соціофобія",
     ],
   },
   {
@@ -66,9 +61,9 @@ export const TOPIC_GROUPS = [
       "Емоційне вигорання",
       "Ставлення до грошей",
       "Прокрастинація",
-      "Мотиваційний психолог",
-      "Психолог з РДУГ",
-      "Психолог з профорієнтації",
+      "Мотивація",
+      "РДУГ",
+      "Профорієнтація",
     ],
   },
 ] as const;
@@ -103,14 +98,24 @@ export const SPECIALIZATIONS = [
 ] as const;
 
 export const CLIENT_CATEGORIES = [
-  { value: "veterans", label: "Учасники бойових дій та ветерани" },
-  { value: "couples", label: "Парна терапія" },
-  { value: "disabilities", label: "Люди з інвалідністю" },
-  { value: "chronic", label: "Тяжкі та хронічні захворювання" },
-  { value: "business", label: "Бізнес та керівники" },
-  { value: "children", label: "Діти та підлітки" },
-  { value: "grief", label: "Втрата та горювання" },
   { value: "general", label: "Загальна аудиторія" },
+  { value: "veterans", label: "Учасники бойових дій та ветерани" },
+  { value: "lgbtq", label: "ЛГБТК+ спільнота" },
+  { value: "military_families", label: "Родини військових" },
+  { value: "disabilities", label: "Люди з інвалідністю" },
+  { value: "business", label: "Бізнес та керівники" },
+  { value: "grief", label: "Втрата та горювання" },
+  { value: "eating_disorders", label: "Розлади харчової поведінки (РХП)" },
+  {
+    value: "chronic_illness",
+    label: "Тяжкі та хронічні захворювання (включно з психосоматикою)",
+  },
+  { value: "idp", label: "ВПО (внутрішньо переміщені особи)" },
+  { value: "abuse_survivors", label: "Пережили домашнє/сексуальне насильство" },
+  { value: "divorce", label: "Розлучення та вихід зі стосунків" },
+  { value: "separation", label: "Сепарація від батьків" },
+  { value: "adaptation", label: "Адаптація та еміграція" },
+  { value: "addiction", label: "Залежність (алкогольна, наркотична, ігрова)" },
 ] as const;
 
 export const LANGUAGES = [
@@ -153,6 +158,8 @@ export const psychologistCardSchema = z.object({
   specializations: z.array(z.string()),
   languages: z.array(z.string()),
   bio: z.string().optional(),
+  clientCategories: z.array(z.string()).default([]),
+  videoUrl: z.string().nullable().default(null),
 });
 export type PsychologistCard = z.infer<typeof psychologistCardSchema>;
 
@@ -198,6 +205,7 @@ export const psychologistFiltersSchema = z.object({
   topics: z.array(z.string()).optional(), // ищет и в основной, и во вторичной экспертизе
   specializations: z.array(z.string()).optional(),
   languages: z.array(z.string()).optional(),
+  clientCategories: z.array(z.string()).optional(),
   gender: z.string().optional(),
   qualification: z.string().optional(),
   priceMin: z.coerce.number().int().nonnegative().optional(),

@@ -50,6 +50,13 @@ export async function fetchPsychologists(
     ) {
       return false;
     }
+    if (
+      filters.clientCategories &&
+      filters.clientCategories.length > 0 &&
+      !filters.clientCategories.some((c) => p.clientCategories.includes(c))
+    ) {
+      return false;
+    }
     if (filters.gender && p.gender !== filters.gender) return false;
     if (filters.qualification && p.qualification !== filters.qualification)
       return false;
