@@ -1,92 +1,46 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  WEEKDAY_LABELS,
+  formatWeekRange,
+  generateWeekSlots,
+  getWeekStart,
+  type SelectedSlot,
+  type SlotServiceType,
+} from "../utils/generateFakeSlots";
 
-const TIME_SLOTS_POOL = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-  "18:00", "18:30", "19:00", "19:30",
-];
+const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 
-const WEEKDAY_LABELS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
-
-type DaySlot = { time: string; isBooked: boolean };
-type DayColumn = { date: Date; slots: DaySlot[] };
-type SelectedSlot = { dateIso: string; time: string } | null;
-
-function seededRandom(seed: string) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) {
-    h = (Math.imul(31, h) + seed.charCodeAt(i)) | 0;
-  }
-  return () => {
-    h = Math.imul(h ^ (h >>> 15), h | 1);
-    h ^= h + Math.imul(h ^ (h >>> 7), h | 61);
-    return ((h ^ (h >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function shuffle<T>(items: T[], rand: () => number): T[] {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
-function getWeekStart(offset: number): Date {
-  const now = new Date();
-  const diffToMonday = (now.getDay() + 6) % 7;
-  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  monday.setDate(monday.getDate() - diffToMonday + offset * 7);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
-}
-
-function generateWeekSlots(weekStart: Date): DayColumn[] {
-  return Array.from({ length: 7 }).map((_, i) => {
-    const date = new Date(weekStart);
-    date.setDate(date.getDate() + i);
-    const seed = date.toISOString().slice(0, 10);
-    const rand = seededRandom(seed);
-    const count = 3 + Math.floor(rand() * 3); // 3-5
-    const times = shuffle(TIME_SLOTS_POOL, rand)
-      .slice(0, count)
-      .sort();
-    const slots: DaySlot[] = times.map((time) => ({
-      time,
-      isBooked: rand() < 0.3,
-    }));
-    return { date, slots };
-  });
-}
-
-function formatWeekRange(weekStart: Date): string {
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
-  const sameMonth = weekStart.getMonth() === weekEnd.getMonth();
-  const startStr = weekStart.toLocaleDateString(
-    "uk-UA",
-    sameMonth ? { day: "numeric" } : { day: "numeric", month: "long" }
-  );
-  const endStr = weekEnd.toLocaleDateString("uk-UA", {
-    day: "numeric",
-    month: "long",
-  });
-  return `${startStr} – ${endStr}`;
-}
-
-export function SlotPicker({ psychologistId }: { psychologistId: string }) {
+export function SlotPicker({
+  psychologistId,
+  individualPriceMinor,
+  couplePriceMinor,
+  coupleSessionDurationMinutes,
+}: {
+  psychologistId: string;
+  individualPriceMinor: number;
+  couplePriceMinor: number | null;
+  coupleSessionDurationMinutes: number | null;
+}) {
+  const hasCoupleTherapy = couplePriceMinor !== null;
+  const [serviceType, setServiceType] = useState<SlotServiceType>("individual");
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot>(null);
 
   const weekStart = useMemo(() => getWeekStart(weekOffset), [weekOffset]);
-  const days = useMemo(() => generateWeekSlots(weekStart), [weekStart]);
+  const days = useMemo(
+    () => generateWeekSlots(weekStart, serviceType),
+    [weekStart, serviceType]
+  );
 
   const changeWeek = (delta: number) => {
     setWeekOffset((o) => o + delta);
+    setSelectedSlot(null);
+  };
+
+  const changeServiceType = (type: SlotServiceType) => {
+    setServiceType(type);
     setSelectedSlot(null);
   };
 
@@ -98,14 +52,55 @@ export function SlotPicker({ psychologistId }: { psychologistId: string }) {
     );
   };
 
+  const activeDurationMinutes =
+    serviceType === "couple"
+      ? (coupleSessionDurationMinutes ?? INDIVIDUAL_SESSION_DURATION_MINUTES)
+      : INDIVIDUAL_SESSION_DURATION_MINUTES;
+  const activePriceMinor =
+    serviceType === "couple" ? (couplePriceMinor ?? individualPriceMinor) : individualPriceMinor;
+  const activePriceUah = activePriceMinor / 100;
+
   const handleBooking = () => {
     // eslint-disable-next-line no-console
-    console.log("Booking requested:", { psychologistId, slot: selectedSlot });
+    console.log("Booking requested:", {
+      psychologistId,
+      serviceType,
+      slot: selectedSlot,
+      durationMinutes: activeDurationMinutes,
+      priceMinor: activePriceMinor,
+    });
   };
 
   return (
     <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
       <h2 className="font-display text-2xl text-ink">Оберіть зручний час</h2>
+
+      {hasCoupleTherapy && (
+        <div className="flex w-fit gap-2 rounded-full border-[1.5px] border-sand-dark p-1">
+          <button
+            type="button"
+            onClick={() => changeServiceType("individual")}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              serviceType === "individual"
+                ? "bg-sage text-white"
+                : "text-ink hover:text-sage"
+            }`}
+          >
+            Особиста терапія
+          </button>
+          <button
+            type="button"
+            onClick={() => changeServiceType("couple")}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              serviceType === "couple"
+                ? "bg-sage text-white"
+                : "text-ink hover:text-sage"
+            }`}
+          >
+            Парна терапія
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between gap-3">
         <button
@@ -176,14 +171,19 @@ export function SlotPicker({ psychologistId }: { psychologistId: string }) {
         })}
       </div>
 
-      <button
-        type="button"
-        disabled={!selectedSlot}
-        onClick={handleBooking}
-        className="w-fit rounded-full bg-ink px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-sage disabled:cursor-not-allowed disabled:bg-sand-dark disabled:text-ink-muted"
-      >
-        Забронювати
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="text-sm text-ink-muted">
+          {activeDurationMinutes} хв · {activePriceUah} ₴
+        </span>
+        <button
+          type="button"
+          disabled={!selectedSlot}
+          onClick={handleBooking}
+          className="w-fit rounded-full bg-ink px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-sage disabled:cursor-not-allowed disabled:bg-sand-dark disabled:text-ink-muted"
+        >
+          Забронювати
+        </button>
+      </div>
     </div>
   );
 }

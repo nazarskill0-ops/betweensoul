@@ -74,7 +74,12 @@ export function PsychologistProfileView({ id }: { id: string }) {
         <ReviewsList reviews={data.reviews} />
 
         <div id="booking">
-          <SlotPicker psychologistId={data.profileId} />
+          <SlotPicker
+            psychologistId={data.profileId}
+            individualPriceMinor={data.priceMinor}
+            couplePriceMinor={data.couplePriceMinor}
+            coupleSessionDurationMinutes={data.coupleSessionDurationMinutes}
+          />
         </div>
 
         <FAQAccordion />
