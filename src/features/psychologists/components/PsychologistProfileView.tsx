@@ -23,7 +23,7 @@ export function PsychologistProfileView({ id }: { id: string }) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_380px]">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="order-2 flex flex-col gap-8 lg:order-1">
         <VideoIntroBlock
           videoUrl={data.videoUrl}
