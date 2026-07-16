@@ -6,8 +6,7 @@ import { PsychologistSidebarCard } from "./PsychologistSidebarCard";
 import { VideoIntroBlock } from "./VideoIntroBlock";
 import { TopicsHighlight } from "./TopicsHighlight";
 import { GeneralInfoBlock } from "./GeneralInfoBlock";
-import { AboutSections } from "./AboutSections";
-import { QualificationMethods } from "./QualificationMethods";
+import { ProfileInfoSections } from "./ProfileInfoSections";
 import { EducationTimeline } from "./EducationTimeline";
 import { ReviewsList } from "./ReviewsList";
 import { SlotPicker } from "./SlotPicker";
@@ -39,8 +38,7 @@ export function PsychologistProfileView({ id }: { id: string }) {
           <TopicsHighlight topics={data.topics} />
           <GeneralInfoBlock psychologist={data} />
 
-          <AboutSections psychologist={data} />
-          <QualificationMethods psychologist={data} />
+          <ProfileInfoSections psychologist={data} />
           <EducationTimeline education={data.education} />
           <ReviewsList reviews={data.reviews} />
 

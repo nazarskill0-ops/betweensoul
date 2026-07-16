@@ -20,10 +20,12 @@ function ChevronDownIcon({ className }: { className?: string }) {
 
 export function CollapsibleSection({
   title,
+  icon,
   defaultOpen = false,
   children,
 }: {
   title: string;
+  icon?: ReactNode;
   defaultOpen?: boolean;
   children: ReactNode;
 }) {
@@ -36,7 +38,14 @@ export function CollapsibleSection({
         onClick={() => setIsOpen((o) => !o)}
         className="flex w-full items-center justify-between gap-3 p-5 text-left"
       >
-        <h2 className="font-display text-xl text-ink">{title}</h2>
+        <div className="flex items-center gap-3">
+          {icon && (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-light">
+              {icon}
+            </span>
+          )}
+          <h2 className="font-display text-xl text-ink">{title}</h2>
+        </div>
         <ChevronDownIcon
           className={`h-5 w-5 shrink-0 text-ink-muted transition-transform ${
             isOpen ? "rotate-180" : ""
