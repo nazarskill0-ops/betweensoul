@@ -43,20 +43,20 @@ export function PsychologistProfileView({ id }: { id: string }) {
           <QualificationMethods psychologist={data} />
           <EducationTimeline education={data.education} />
           <ReviewsList reviews={data.reviews} />
+
+          <div id="booking">
+            <SlotPicker
+              psychologistId={data.profileId}
+              individualPriceMinor={data.priceMinor}
+              couplePriceMinor={data.couplePriceMinor}
+              coupleSessionDurationMinutes={data.coupleSessionDurationMinutes}
+            />
+          </div>
         </div>
 
         <div className="order-1 lg:sticky lg:top-24 lg:order-2 lg:self-start">
           <PsychologistSidebarCard psychologist={data} />
         </div>
-      </div>
-
-      <div id="booking">
-        <SlotPicker
-          psychologistId={data.profileId}
-          individualPriceMinor={data.priceMinor}
-          couplePriceMinor={data.couplePriceMinor}
-          coupleSessionDurationMinutes={data.coupleSessionDurationMinutes}
-        />
       </div>
 
       <FAQAccordion />

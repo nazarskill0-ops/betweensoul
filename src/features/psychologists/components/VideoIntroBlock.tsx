@@ -52,8 +52,6 @@ export function VideoIntroBlock({
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="font-display text-2xl text-ink">Знайомство</h2>
-
       <button
         type="button"
         onClick={() => setIsOpen(true)}

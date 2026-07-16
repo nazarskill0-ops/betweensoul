@@ -3,6 +3,8 @@ import { formatAge, formatExperienceYears } from "../utils/formatters";
 import { InfoRow } from "./InfoRow";
 import { BriefcaseIcon, ClockIcon, GlobeIcon, PersonIcon } from "./icons";
 
+const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
+
 export function GeneralInfoBlock({
   psychologist,
 }: {
@@ -40,19 +42,26 @@ export function GeneralInfoBlock({
             value={languageLabels.join(", ")}
           />
         )}
-        <InfoRow
-          icon={<ClockIcon className="h-5 w-5 shrink-0 text-sage" />}
-          label="Ціна (індивідуальна)"
-          value={`${priceUah} ₴`}
-        />
-        {couplePriceUah !== null && (
-          <InfoRow
-            icon={<ClockIcon className="h-5 w-5 shrink-0 text-sage" />}
-            label="Ціна (парна)"
-            value={`${couplePriceUah} ₴`}
-          />
-        )}
       </div>
+
+      <div className="flex items-center gap-1.5 text-lg">
+        <ClockIcon className="h-5 w-5 shrink-0 text-sage" />
+        <span className="text-ink-muted">{INDIVIDUAL_SESSION_DURATION_MINUTES} хв</span>
+        <span className="text-ink-muted"> · </span>
+        <span className="font-bold text-ink">{priceUah} ₴</span>
+      </div>
+
+      {couplePriceUah !== null && (
+        <div className="flex items-center gap-1.5 text-lg">
+          <ClockIcon className="h-5 w-5 shrink-0 text-sage" />
+          <span className="text-ink-muted">
+            {psychologist.coupleSessionDurationMinutes ?? INDIVIDUAL_SESSION_DURATION_MINUTES} хв
+            (парна)
+          </span>
+          <span className="text-ink-muted"> · </span>
+          <span className="font-bold text-ink">{couplePriceUah} ₴</span>
+        </div>
+      )}
     </div>
   );
 }

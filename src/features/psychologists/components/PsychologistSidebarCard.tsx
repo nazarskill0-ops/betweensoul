@@ -130,16 +130,23 @@ export function PsychologistSidebarCard({
         )}
       </div>
 
-      {isGeneralInfoVisible ? (
+      {/*
+        Обидва варіанти лишаються змонтованими постійно — вмикаємо/вимикаємо
+        через клас display:none. Умовний рендер РІЗНИХ типів компонентів тут
+        змушував React повністю демонтувати/монтувати DOM при кожному
+        спрацюванні IntersectionObserver, що й було справжньою причиною лагу.
+      */}
+      <div className={isGeneralInfoVisible ? "" : "hidden"}>
         <NearestTimeWidget
           nearestDay={nearestDay}
           selectedTime={selectedTime}
           onSelectTime={setSelectedTime}
           durationMinutes={INDIVIDUAL_SESSION_DURATION_MINUTES}
         />
-      ) : (
+      </div>
+      <div className={isGeneralInfoVisible ? "hidden" : ""}>
         <CompactInfoSummary psychologist={psychologist} languageLabels={languageLabels} />
-      )}
+      </div>
 
       <button
         type="button"
