@@ -111,16 +111,10 @@ export function findNearestFreeDay(
   return null;
 }
 
-/** "14:00" + 50 хв → "14:50". */
-function addMinutesToTime(time: string, minutes: number): string {
+/** День (з generateWeekSlots) + "14:00" → Date на 14:00 того дня — для formatSlotRange. */
+export function combineDateAndTime(date: Date, time: string): Date {
   const [h, m] = time.split(":").map(Number);
-  const total = h * 60 + m + minutes;
-  const hh = Math.floor(total / 60) % 24;
-  const mm = total % 60;
-  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
-}
-
-/** "14:00" + 50 хв → "14:00–14:50". */
-export function formatSlotTimeRange(time: string, durationMinutes: number): string {
-  return `${time}–${addMinutesToTime(time, durationMinutes)}`;
+  const combined = new Date(date);
+  combined.setHours(h, m, 0, 0);
+  return combined;
 }

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   WEEKDAY_LABELS,
+  combineDateAndTime,
   formatWeekRange,
   generateWeekSlots,
   getWeekStart,
@@ -10,6 +11,7 @@ import {
   type SelectedSlot,
   type SlotServiceType,
 } from "../utils/generateFakeSlots";
+import { formatSlotRange } from "../utils/formatSlotRange";
 
 const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 
@@ -162,7 +164,10 @@ export function SlotPicker({
                             : "border-sand-dark text-ink hover:border-sage"
                       }`}
                     >
-                      {slot.time}
+                      {formatSlotRange(
+                        combineDateAndTime(day.date, slot.time),
+                        activeDurationMinutes
+                      )}
                     </button>
                   );
                 })}

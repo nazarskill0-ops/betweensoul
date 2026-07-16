@@ -1,116 +1,51 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LANGUAGES, QUALIFICATIONS, type PsychologistProfile } from "../schema";
-import { findNearestFreeDay, formatSlotTimeRange } from "../utils/generateFakeSlots";
+import { combineDateAndTime, findNearestFreeDay, toLocalDateIso } from "../utils/generateFakeSlots";
+import { formatSlotRange } from "../utils/formatSlotRange";
+import { formatAge, formatExperienceYears } from "../utils/formatters";
+import { BriefcaseIcon, ClockIcon, CloseIcon, GlobeIcon, PersonIcon } from "./icons";
+import { InfoRow } from "./InfoRow";
+import { NearestTimeWidget } from "./NearestTimeWidget";
 
 const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 
-function formatExperienceYears(years: number): string {
-  const mod100 = years % 100;
-  const mod10 = years % 10;
-  if (mod10 === 1 && mod100 !== 11) return `${years} рік`;
-  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
-    return `${years} роки`;
-  }
-  return `${years} років`;
-}
-
-function formatAge(age: number): string {
-  const mod100 = age % 100;
-  const mod10 = age % 10;
-  if (mod10 === 1 && mod100 !== 11) return `${age} рік`;
-  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
-    return `${age} роки`;
-  }
-  return `${age} років`;
-}
-
-function PersonIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
-    </svg>
-  );
-}
-
-function BriefcaseIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <rect x="3" y="7" width="18" height="13" rx="2" />
-      <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-      <path d="M3 13h18" />
-    </svg>
-  );
-}
-
-function GlobeIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18" />
-      <path d="M12 3c3 3 3 15 0 18" />
-      <path d="M12 3c-3 3-3 15 0 18" />
-    </svg>
-  );
-}
-
-function ClockIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 3" />
-    </svg>
-  );
-}
-
-function InfoRow({
-  icon,
-  label,
-  value,
+function CompactInfoSummary({
+  psychologist,
+  languageLabels,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
+  psychologist: PsychologistProfile;
+  languageLabels: string[];
 }) {
+  const priceUah = psychologist.priceMinor / 100;
+
   return (
-    <div className="flex items-center gap-2.5">
-      {icon}
-      <span className="text-sm text-ink-muted">{label}</span>
-      <span className="ml-auto text-sm font-semibold text-ink">{value}</span>
+    <div className="flex flex-col gap-1.5 rounded-card bg-sand p-3">
+      <InfoRow
+        icon={<PersonIcon className="h-4 w-4 shrink-0 text-sage" />}
+        label="Вік"
+        value={formatAge(psychologist.age)}
+      />
+      {psychologist.experienceYears !== null && (
+        <InfoRow
+          icon={<BriefcaseIcon className="h-4 w-4 shrink-0 text-sage" />}
+          label="Досвід"
+          value={formatExperienceYears(psychologist.experienceYears)}
+        />
+      )}
+      {languageLabels.length > 0 && (
+        <InfoRow
+          icon={<GlobeIcon className="h-4 w-4 shrink-0 text-sage" />}
+          label="Мова"
+          value={languageLabels.join(", ")}
+        />
+      )}
+      <InfoRow
+        icon={<ClockIcon className="h-4 w-4 shrink-0 text-sage" />}
+        label="Ціна"
+        value={`${priceUah} ₴`}
+      />
     </div>
   );
 }
@@ -125,18 +60,51 @@ export function PsychologistSidebarCard({
     (q) => q.value === psychologist.qualification
   )?.label;
 
+  const [isGeneralInfoVisible, setIsGeneralInfoVisible] = useState(true);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  const languageLabels: string[] = psychologist.languages
+    .map((code) => LANGUAGES.find((l) => l.value === code)?.label)
+    .filter((label): label is NonNullable<typeof label> => label !== undefined);
+
+  const nearestDay = useMemo(() => findNearestFreeDay("individual"), []);
+
+  useEffect(() => {
+    const target = document.getElementById("general-info");
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsGeneralInfoVisible(entry.isIntersecting),
+      { rootMargin: "-96px 0px 0px 0px" }
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
   const scrollToBooking = () => {
     document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const languageLabels = psychologist.languages
-    .map((code) => LANGUAGES.find((l) => l.value === code)?.label)
-    .filter(Boolean);
+  const handleMainButtonClick = () => {
+    if (selectedTime) {
+      setIsConfirmModalOpen(true);
+    } else {
+      scrollToBooking();
+    }
+  };
 
-  const nearestDay = useMemo(() => findNearestFreeDay("individual"), []);
-  const nearestFreeSlots = nearestDay
-    ? nearestDay.slots.filter((s) => !s.isBooked).slice(0, 2)
-    : [];
+  const handlePayment = () => {
+    if (!nearestDay || !selectedTime) return;
+    // eslint-disable-next-line no-console
+    console.log("Payment initiated:", {
+      psychologistId: psychologist.profileId,
+      date: toLocalDateIso(nearestDay.date),
+      time: selectedTime,
+      durationMinutes: INDIVIDUAL_SESSION_DURATION_MINUTES,
+      priceMinor: psychologist.priceMinor,
+    });
+  };
 
   return (
     <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
@@ -162,66 +130,89 @@ export function PsychologistSidebarCard({
         )}
       </div>
 
-      <div className="flex flex-col gap-2.5 rounded-card bg-sand p-3">
-        <InfoRow
-          icon={<PersonIcon className="h-5 w-5 shrink-0 text-sage" />}
-          label="Вік"
-          value={formatAge(psychologist.age)}
+      {isGeneralInfoVisible ? (
+        <NearestTimeWidget
+          nearestDay={nearestDay}
+          selectedTime={selectedTime}
+          onSelectTime={setSelectedTime}
+          durationMinutes={INDIVIDUAL_SESSION_DURATION_MINUTES}
         />
-        {psychologist.experienceYears !== null && (
-          <InfoRow
-            icon={<BriefcaseIcon className="h-5 w-5 shrink-0 text-sage" />}
-            label="Досвід"
-            value={formatExperienceYears(psychologist.experienceYears)}
-          />
-        )}
-        {languageLabels.length > 0 && (
-          <InfoRow
-            icon={<GlobeIcon className="h-5 w-5 shrink-0 text-sage" />}
-            label="Мова"
-            value={languageLabels.join(", ")}
-          />
-        )}
-      </div>
-
-      <div className="flex items-center gap-1.5 text-lg">
-        <ClockIcon className="h-4 w-4 shrink-0 text-ink-muted" />
-        <span className="text-ink-muted">50 хв</span>
-        <span className="text-ink-muted"> · </span>
-        <span className="font-semibold text-ink">{priceUah} ₴</span>
-      </div>
-
-      {nearestDay && nearestFreeSlots.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-card bg-sage-light p-4">
-          <span className="text-sm font-medium text-ink-muted">Найближчий час</span>
-          <span className="font-display text-lg font-bold text-ink">
-            {nearestDay.date.toLocaleDateString("uk-UA", {
-              day: "numeric",
-              month: "long",
-            })}
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {nearestFreeSlots.map((slot) => (
-              <button
-                key={slot.time}
-                type="button"
-                onClick={scrollToBooking}
-                className="rounded-full border-[1.5px] border-sage bg-white px-3 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-sage hover:text-white"
-              >
-                {formatSlotTimeRange(slot.time, INDIVIDUAL_SESSION_DURATION_MINUTES)}
-              </button>
-            ))}
-          </div>
-        </div>
+      ) : (
+        <CompactInfoSummary psychologist={psychologist} languageLabels={languageLabels} />
       )}
 
       <button
         type="button"
-        onClick={scrollToBooking}
-        className="w-full rounded-full bg-ink px-6 py-3 text-sm font-medium text-sand transition-colors hover:bg-sage"
+        onClick={handleMainButtonClick}
+        className={`w-full rounded-full px-6 py-3 text-sm font-medium text-sand transition-colors ${
+          selectedTime ? "bg-sage hover:bg-sage/90" : "bg-ink hover:bg-sage"
+        }`}
       >
-        Обрати час
+        {selectedTime ? "Забронювати" : "Обрати час"}
       </button>
+
+      {isConfirmModalOpen && nearestDay && selectedTime && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setIsConfirmModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-sm rounded-card bg-white p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setIsConfirmModalOpen(false)}
+              aria-label="Закрити"
+              className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-ink text-white"
+            >
+              <CloseIcon className="h-4 w-4" />
+            </button>
+
+            <h3 className="font-display text-xl text-ink">Підтвердження бронювання</h3>
+
+            <div className="mt-4 flex flex-col gap-2 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-ink-muted">Психолог</span>
+                <span className="font-medium text-ink">{psychologist.fullName}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-ink-muted">Дата й час</span>
+                <span className="font-medium text-ink">
+                  {nearestDay.date.toLocaleDateString("uk-UA", {
+                    day: "numeric",
+                    month: "long",
+                  })}
+                  ,{" "}
+                  {formatSlotRange(
+                    combineDateAndTime(nearestDay.date, selectedTime),
+                    INDIVIDUAL_SESSION_DURATION_MINUTES
+                  )}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-ink-muted">Тривалість</span>
+                <span className="font-medium text-ink">
+                  {INDIVIDUAL_SESSION_DURATION_MINUTES} хв
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-ink-muted">Ціна</span>
+                <span className="font-medium text-ink">{priceUah} ₴</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handlePayment}
+              className="mt-4 w-full rounded-full bg-sage px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-sage/90"
+            >
+              Оплатити
+            </button>
+            <p className="mt-2 text-center text-xs text-ink-muted">Оплата в розробці</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

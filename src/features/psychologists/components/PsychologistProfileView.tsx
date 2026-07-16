@@ -5,6 +5,7 @@ import { usePsychologist } from "../hooks/usePsychologist";
 import { PsychologistSidebarCard } from "./PsychologistSidebarCard";
 import { VideoIntroBlock } from "./VideoIntroBlock";
 import { TopicsHighlight } from "./TopicsHighlight";
+import { GeneralInfoBlock } from "./GeneralInfoBlock";
 import { AboutSections } from "./AboutSections";
 import { QualificationMethods } from "./QualificationMethods";
 import { EducationTimeline } from "./EducationTimeline";
@@ -36,6 +37,7 @@ export function PsychologistProfileView({ id }: { id: string }) {
           />
 
           <TopicsHighlight topics={data.topics} />
+          <GeneralInfoBlock psychologist={data} />
 
           <AboutSections psychologist={data} />
           <QualificationMethods psychologist={data} />
