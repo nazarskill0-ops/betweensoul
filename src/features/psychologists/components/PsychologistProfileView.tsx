@@ -6,6 +6,7 @@ import { PsychologistProfileHeader } from "./PsychologistProfileHeader";
 import { EducationAccordion } from "./EducationAccordion";
 import { ReviewsList } from "./ReviewsList";
 import { SlotPicker } from "./SlotPicker";
+import { FAQAccordion } from "./FAQAccordion";
 
 export function PsychologistProfileView({ id }: { id: string }) {
   const { data, isLoading } = usePsychologist(id);
@@ -26,6 +27,7 @@ export function PsychologistProfileView({ id }: { id: string }) {
       <EducationAccordion education={data.education} />
       <ReviewsList reviews={data.reviews} />
       <SlotPicker psychologistId={data.profileId} />
+      <FAQAccordion />
     </div>
   );
 }
