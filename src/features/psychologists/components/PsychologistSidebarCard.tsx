@@ -1,6 +1,6 @@
 "use client";
 
-import { QUALIFICATIONS, type PsychologistProfile } from "../schema";
+import { LANGUAGES, QUALIFICATIONS, type PsychologistProfile } from "../schema";
 
 function formatExperienceYears(years: number): string {
   const mod100 = years % 100;
@@ -10,6 +10,16 @@ function formatExperienceYears(years: number): string {
     return `${years} роки досвіду`;
   }
   return `${years} років досвіду`;
+}
+
+function formatAge(age: number): string {
+  const mod100 = age % 100;
+  const mod10 = age % 10;
+  if (mod10 === 1 && mod100 !== 11) return `${age} рік`;
+  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
+    return `${age} роки`;
+  }
+  return `${age} років`;
 }
 
 function ClockIcon({ className }: { className?: string }) {
@@ -43,6 +53,10 @@ export function PsychologistSidebarCard({
     document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const languageLabels = psychologist.languages
+    .map((code) => LANGUAGES.find((l) => l.value === code)?.label)
+    .filter(Boolean);
+
   return (
     <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-card">
@@ -68,9 +82,14 @@ export function PsychologistSidebarCard({
         <h1 className="font-display text-xl leading-tight text-ink">
           {psychologist.fullName}
         </h1>
-        {psychologist.experienceYears !== null && (
+        <span className="text-sm text-ink-muted">
+          {formatAge(psychologist.age)}
+          {psychologist.experienceYears !== null &&
+            ` · ${formatExperienceYears(psychologist.experienceYears)}`}
+        </span>
+        {languageLabels.length > 0 && (
           <span className="text-sm text-ink-muted">
-            {formatExperienceYears(psychologist.experienceYears)}
+            {languageLabels.join(", ")}
           </span>
         )}
       </div>

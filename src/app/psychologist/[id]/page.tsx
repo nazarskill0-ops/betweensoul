@@ -11,7 +11,7 @@ export default async function PsychologistProfilePage({
   return (
     <>
       <AppHeader />
-      <main className="mx-auto max-w-4xl px-5 py-8">
+      <main className="mx-auto max-w-6xl px-5 py-8">
         <PsychologistProfileView id={id} />
       </main>
     </>
