@@ -43,6 +43,17 @@ function shuffle<T>(items: T[], rand: () => number): T[] {
   return copy;
 }
 
+/**
+ * "YYYY-MM-DD" з локальної дати — на відміну від `date.toISOString()`, не
+ * зсуває день назад у часових поясах попереду UTC (наприклад Київ, UTC+2/+3).
+ */
+export function toLocalDateIso(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 export function getWeekStart(offset: number): Date {
   const now = new Date();
   const diffToMonday = (now.getDay() + 6) % 7;
@@ -59,7 +70,7 @@ export function generateWeekSlots(
   return Array.from({ length: 7 }).map((_, i) => {
     const date = new Date(weekStart);
     date.setDate(date.getDate() + i);
-    const seed = `${date.toISOString().slice(0, 10)}-${serviceType}`;
+    const seed = `${toLocalDateIso(date)}-${serviceType}`;
     const rand = seededRandom(seed);
     const count = 3 + Math.floor(rand() * 3); // 3-5
     const times = shuffle(TIME_SLOTS_POOL, rand).slice(0, count).sort();
@@ -86,17 +97,30 @@ export function formatWeekRange(weekStart: Date): string {
   return `${startStr} – ${endStr}`;
 }
 
-/** Перший вільний слот, починаючи з поточного тижня — для "найближчий вільний час". */
-export function findNearestFreeSlot(
+/** Перший день з вільними слотами, починаючи з поточного тижня — для "найближчий час". */
+export function findNearestFreeDay(
   serviceType: SlotServiceType = "individual",
   weeksToSearch = 4
-): { date: Date; time: string } | null {
+): DayColumn | null {
   for (let w = 0; w < weeksToSearch; w++) {
     const days = generateWeekSlots(getWeekStart(w), serviceType);
     for (const day of days) {
-      const freeSlot = day.slots.find((s) => !s.isBooked);
-      if (freeSlot) return { date: day.date, time: freeSlot.time };
+      if (day.slots.some((s) => !s.isBooked)) return day;
     }
   }
   return null;
+}
+
+/** "14:00" + 50 хв → "14:50". */
+function addMinutesToTime(time: string, minutes: number): string {
+  const [h, m] = time.split(":").map(Number);
+  const total = h * 60 + m + minutes;
+  const hh = Math.floor(total / 60) % 24;
+  const mm = total % 60;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+}
+
+/** "14:00" + 50 хв → "14:00–14:50". */
+export function formatSlotTimeRange(time: string, durationMinutes: number): string {
+  return `${time}–${addMinutesToTime(time, durationMinutes)}`;
 }

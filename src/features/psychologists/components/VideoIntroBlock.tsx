@@ -74,8 +74,6 @@ export function VideoIntroBlock({
         </div>
       </button>
 
-      <p className="text-sm text-ink-muted">Коротко про мене та мій підхід</p>
-
       {isOpen && videoId && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"

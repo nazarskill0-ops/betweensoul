@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { EducationItem, PsychologistProfile } from "../schema";
+import { CollapsibleSection } from "./CollapsibleSection";
 
 type Category = "higher" | "courses" | "other";
 
@@ -88,9 +89,7 @@ export function EducationTimeline({
   if (entries.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
-      <h2 className="font-display text-2xl text-ink">Моя освіта</h2>
-
+    <CollapsibleSection title="Моя освіта">
       <div className="flex flex-col gap-6 border-l-2 border-sand-dark pl-6">
         {entries.map((entry, i) => (
           <div key={i} className="relative flex flex-col gap-1.5">
@@ -197,6 +196,6 @@ export function EducationTimeline({
           </div>
         </div>
       )}
-    </div>
+    </CollapsibleSection>
   );
 }

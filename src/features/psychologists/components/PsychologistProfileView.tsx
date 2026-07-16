@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { usePsychologist } from "../hooks/usePsychologist";
 import { PsychologistSidebarCard } from "./PsychologistSidebarCard";
 import { VideoIntroBlock } from "./VideoIntroBlock";
+import { TopicsHighlight } from "./TopicsHighlight";
 import { AboutSections } from "./AboutSections";
+import { QualificationMethods } from "./QualificationMethods";
 import { EducationTimeline } from "./EducationTimeline";
 import { ReviewsList } from "./ReviewsList";
 import { SlotPicker } from "./SlotPicker";
@@ -24,34 +26,38 @@ export function PsychologistProfileView({ id }: { id: string }) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <div className="order-2 flex flex-col gap-8 lg:order-1">
-        <VideoIntroBlock
-          videoUrl={data.videoUrl}
-          avatarUrl={data.avatarUrl}
-          fullName={data.fullName}
-        />
-
-        <AboutSections psychologist={data} />
-
-        <EducationTimeline education={data.education} />
-        <ReviewsList reviews={data.reviews} />
-
-        <div id="booking">
-          <SlotPicker
-            psychologistId={data.profileId}
-            individualPriceMinor={data.priceMinor}
-            couplePriceMinor={data.couplePriceMinor}
-            coupleSessionDurationMinutes={data.coupleSessionDurationMinutes}
+    <div className="flex flex-col gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="order-2 flex flex-col gap-8 lg:order-1">
+          <VideoIntroBlock
+            videoUrl={data.videoUrl}
+            avatarUrl={data.avatarUrl}
+            fullName={data.fullName}
           />
+
+          <TopicsHighlight topics={data.topics} />
+
+          <AboutSections psychologist={data} />
+          <QualificationMethods psychologist={data} />
+          <EducationTimeline education={data.education} />
+          <ReviewsList reviews={data.reviews} />
         </div>
 
-        <FAQAccordion />
+        <div className="order-1 lg:sticky lg:top-24 lg:order-2 lg:self-start">
+          <PsychologistSidebarCard psychologist={data} />
+        </div>
       </div>
 
-      <div className="order-1 lg:sticky lg:top-24 lg:order-2 lg:self-start">
-        <PsychologistSidebarCard psychologist={data} />
+      <div id="booking">
+        <SlotPicker
+          psychologistId={data.profileId}
+          individualPriceMinor={data.priceMinor}
+          couplePriceMinor={data.couplePriceMinor}
+          coupleSessionDurationMinutes={data.coupleSessionDurationMinutes}
+        />
       </div>
+
+      <FAQAccordion />
     </div>
   );
 }

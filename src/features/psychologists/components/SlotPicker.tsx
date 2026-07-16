@@ -6,6 +6,7 @@ import {
   formatWeekRange,
   generateWeekSlots,
   getWeekStart,
+  toLocalDateIso,
   type SelectedSlot,
   type SlotServiceType,
 } from "../utils/generateFakeSlots";
@@ -124,7 +125,7 @@ export function SlotPicker({
 
       <div className="flex gap-3 overflow-x-auto pb-2">
         {days.map((day, i) => {
-          const dateIso = day.date.toISOString().slice(0, 10);
+          const dateIso = toLocalDateIso(day.date);
           return (
             <div
               key={dateIso}
@@ -170,6 +171,20 @@ export function SlotPicker({
           );
         })}
       </div>
+
+      {selectedSlot && (
+        <p className="text-sm font-medium text-ink">
+          Ви обрали:{" "}
+          {(() => {
+            const [year, month, day] = selectedSlot.dateIso.split("-").map(Number);
+            return new Date(year, month - 1, day).toLocaleDateString("uk-UA", {
+              day: "numeric",
+              month: "long",
+            });
+          })()}
+          , {selectedSlot.time}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="text-sm text-ink-muted">
