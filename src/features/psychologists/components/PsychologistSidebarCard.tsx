@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { LANGUAGES, QUALIFICATIONS, type PsychologistProfile } from "../schema";
+import { findNearestFreeSlot } from "../utils/generateFakeSlots";
 
 function formatExperienceYears(years: number): string {
   const mod100 = years % 100;
@@ -57,6 +59,11 @@ export function PsychologistSidebarCard({
     .map((code) => LANGUAGES.find((l) => l.value === code)?.label)
     .filter(Boolean);
 
+  const nearestSlot = useMemo(() => findNearestFreeSlot("individual"), []);
+  const nearestSlotLabel = nearestSlot
+    ? `${nearestSlot.date.toLocaleDateString("uk-UA", { day: "numeric", month: "long" })}, ${nearestSlot.time}`
+    : null;
+
   return (
     <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-card">
@@ -100,6 +107,21 @@ export function PsychologistSidebarCard({
         <span className="text-ink-muted"> · </span>
         <span className="font-semibold text-ink">{priceUah} ₴</span>
       </div>
+
+      {nearestSlotLabel && (
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-ink-muted">
+            Найближчий вільний час: {nearestSlotLabel}
+          </span>
+          <button
+            type="button"
+            onClick={scrollToBooking}
+            className="w-fit text-sm font-medium text-sage underline-offset-2 transition-colors hover:text-sage/80 hover:underline"
+          >
+            Інші варіанти
+          </button>
+        </div>
+      )}
 
       <button
         type="button"
