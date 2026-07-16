@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { usePsychologist } from "../hooks/usePsychologist";
 import { PsychologistSidebarCard } from "./PsychologistSidebarCard";
 import { VideoIntroBlock } from "./VideoIntroBlock";
+import { AboutSections } from "./AboutSections";
 import { EducationTimeline } from "./EducationTimeline";
 import { ReviewsList } from "./ReviewsList";
 import { SlotPicker } from "./SlotPicker";
@@ -31,44 +32,7 @@ export function PsychologistProfileView({ id }: { id: string }) {
           fullName={data.fullName}
         />
 
-        <div className="flex flex-col gap-4">
-          {data.aboutMe && (
-            <div className="rounded-card bg-sage-light p-4">
-              <p className="text-sm italic text-ink-muted">"{data.aboutMe}"</p>
-            </div>
-          )}
-
-          {data.specializations.length > 0 && (
-            <div className="flex flex-col gap-2 rounded-card bg-sage-light p-4">
-              <span className="text-xs font-medium uppercase tracking-wide text-sage">
-                Методи роботи
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {data.specializations.map((spec) => (
-                  <span
-                    key={spec}
-                    className="rounded-full bg-white px-3 py-1.5 text-sm text-ink"
-                  >
-                    {spec}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {data.topics.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {data.topics.map((topic) => (
-                <span
-                  key={topic}
-                  className="rounded-full border-[1.5px] border-sand-dark px-3 py-1.5 text-sm text-ink-muted"
-                >
-                  {topic}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+        <AboutSections psychologist={data} />
 
         <EducationTimeline education={data.education} />
         <ReviewsList reviews={data.reviews} />
