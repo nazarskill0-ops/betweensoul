@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { usePsychologist } from "../hooks/usePsychologist";
 import { PsychologistProfileHeader } from "./PsychologistProfileHeader";
 import { EducationAccordion } from "./EducationAccordion";
+import { ReviewsList } from "./ReviewsList";
 
 export function PsychologistProfileView({ id }: { id: string }) {
   const { data, isLoading } = usePsychologist(id);
@@ -22,6 +23,7 @@ export function PsychologistProfileView({ id }: { id: string }) {
     <div className="flex flex-col gap-8">
       <PsychologistProfileHeader psychologist={data} />
       <EducationAccordion education={data.education} />
+      <ReviewsList reviews={data.reviews} />
     </div>
   );
 }
