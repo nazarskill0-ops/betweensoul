@@ -30,6 +30,7 @@ export function SlotPicker({
   const [serviceType, setServiceType] = useState<SlotServiceType>("individual");
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot>(null);
+  const [selectedDayIso, setSelectedDayIso] = useState<string | null>(null);
 
   const weekStart = useMemo(() => getWeekStart(weekOffset), [weekOffset]);
   const days = useMemo(
@@ -37,14 +38,27 @@ export function SlotPicker({
     [weekStart, serviceType]
   );
 
+  const selectedDayIndex = useMemo(() => {
+    if (selectedDayIso) {
+      const idx = days.findIndex((d) => toLocalDateIso(d.date) === selectedDayIso);
+      if (idx !== -1) return idx;
+    }
+    const firstFreeIdx = days.findIndex((d) => d.slots.some((s) => !s.isBooked));
+    return firstFreeIdx !== -1 ? firstFreeIdx : 0;
+  }, [days, selectedDayIso]);
+
+  const selectedDay = days[selectedDayIndex];
+
   const changeWeek = (delta: number) => {
     setWeekOffset((o) => o + delta);
     setSelectedSlot(null);
+    setSelectedDayIso(null);
   };
 
   const changeServiceType = (type: SlotServiceType) => {
     setServiceType(type);
     setSelectedSlot(null);
+    setSelectedDayIso(null);
   };
 
   const toggleSlot = (dateIso: string, time: string) => {
@@ -125,54 +139,62 @@ export function SlotPicker({
         </button>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="flex gap-2 overflow-x-auto pb-2">
         {days.map((day, i) => {
           const dateIso = toLocalDateIso(day.date);
+          const isActive = i === selectedDayIndex;
           return (
-            <div
+            <button
               key={dateIso}
-              className="flex w-36 shrink-0 flex-col gap-2 rounded-card border-[1.5px] border-sand-dark p-3"
+              type="button"
+              onClick={() => setSelectedDayIso(dateIso)}
+              className={`flex shrink-0 flex-col items-center gap-0.5 rounded-card border-[1.5px] px-4 py-2.5 transition-colors ${
+                isActive
+                  ? "border-sage bg-sage text-white"
+                  : "border-sand-dark text-ink hover:border-sage"
+              }`}
             >
-              <div className="text-center">
-                <div className="text-xs font-medium uppercase tracking-wide text-ink-muted">
-                  {WEEKDAY_LABELS[i]}
-                </div>
-                <div className="text-sm font-semibold text-ink">
-                  {day.date.toLocaleDateString("uk-UA", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                {day.slots.map((slot) => {
-                  const isSelected =
-                    selectedSlot?.dateIso === dateIso &&
-                    selectedSlot.time === slot.time;
-                  return (
-                    <button
-                      key={slot.time}
-                      type="button"
-                      disabled={slot.isBooked}
-                      onClick={() => toggleSlot(dateIso, slot.time)}
-                      className={`rounded-full border-[1.5px] px-2 py-1.5 text-sm transition-colors ${
-                        slot.isBooked
-                          ? "cursor-not-allowed border-sand-dark text-ink-muted/50 line-through"
-                          : isSelected
-                            ? "border-sage bg-sage text-white"
-                            : "border-sand-dark text-ink hover:border-sage"
-                      }`}
-                    >
-                      {formatSlotRange(
-                        combineDateAndTime(day.date, slot.time),
-                        activeDurationMinutes
-                      )}
-                    </button>
-                  );
+              <span className="text-xs font-medium uppercase tracking-wide">
+                {WEEKDAY_LABELS[i]}
+              </span>
+              <span className="text-sm font-semibold">
+                {day.date.toLocaleDateString("uk-UA", {
+                  day: "numeric",
+                  month: "short",
                 })}
-              </div>
-            </div>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        {selectedDay.slots.length === 0 && (
+          <p className="text-sm text-ink-muted">Немає вільних слотів цього дня.</p>
+        )}
+        {selectedDay.slots.map((slot) => {
+          const dateIso = toLocalDateIso(selectedDay.date);
+          const isSelected =
+            selectedSlot?.dateIso === dateIso && selectedSlot.time === slot.time;
+          return (
+            <button
+              key={slot.time}
+              type="button"
+              disabled={slot.isBooked}
+              onClick={() => toggleSlot(dateIso, slot.time)}
+              className={`w-full rounded-full border-[1.5px] px-6 py-4 text-base font-medium transition-colors ${
+                slot.isBooked
+                  ? "cursor-not-allowed border-sand-dark text-ink-muted/50 line-through"
+                  : isSelected
+                    ? "border-sage bg-sage text-white"
+                    : "border-sand-dark text-ink hover:border-sage"
+              }`}
+            >
+              {formatSlotRange(
+                combineDateAndTime(selectedDay.date, slot.time),
+                activeDurationMinutes
+              )}
+            </button>
           );
         })}
       </div>

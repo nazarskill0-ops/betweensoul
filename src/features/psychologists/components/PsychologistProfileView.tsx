@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { usePsychologist } from "../hooks/usePsychologist";
 import { PsychologistSidebarCard } from "./PsychologistSidebarCard";
 import { VideoIntroBlock } from "./VideoIntroBlock";
-import { TopicsHighlight } from "./TopicsHighlight";
 import { GeneralInfoBlock } from "./GeneralInfoBlock";
 import { ProfileInfoSections } from "./ProfileInfoSections";
 import { EducationTimeline } from "./EducationTimeline";
@@ -35,7 +34,6 @@ export function PsychologistProfileView({ id }: { id: string }) {
             fullName={data.fullName}
           />
 
-          <TopicsHighlight topics={data.topics} />
           <GeneralInfoBlock psychologist={data} />
 
           <ProfileInfoSections psychologist={data} />

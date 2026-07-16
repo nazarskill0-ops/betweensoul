@@ -18,9 +18,11 @@ export function NearestTimeWidget({
   if (freeSlots.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2 rounded-card bg-sage-light p-4">
-      <span className="text-sm font-medium text-ink-muted">Найближчий час</span>
-      <span className="font-display text-lg font-bold text-ink">
+    <div className="rounded-card bg-sage-light p-4">
+      <span className="mb-3 block text-xs font-medium uppercase tracking-wide text-ink-muted">
+        Найближчий час
+      </span>
+      <span className="mb-4 block font-display text-lg font-bold text-ink">
         {nearestDay.date.toLocaleDateString("uk-UA", {
           day: "numeric",
           month: "long",
@@ -34,7 +36,7 @@ export function NearestTimeWidget({
               key={slot.time}
               type="button"
               onClick={() => onSelectTime(isSelected ? null : slot.time)}
-              className={`rounded-full border-[1.5px] border-sage px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-full border-[1.5px] border-sage px-6 py-4 text-base font-medium transition-colors ${
                 isSelected
                   ? "bg-sage text-white"
                   : "bg-white text-ink hover:bg-sage hover:text-white"
