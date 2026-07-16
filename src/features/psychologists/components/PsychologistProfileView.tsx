@@ -32,9 +32,9 @@ export function PsychologistProfileView({ id }: { id: string }) {
         />
 
         <div className="flex flex-col gap-4">
-          {data.bio && (
+          {data.aboutMe && (
             <div className="rounded-card bg-sage-light p-4">
-              <p className="text-sm italic text-ink-muted">"{data.bio}"</p>
+              <p className="text-sm italic text-ink-muted">"{data.aboutMe}"</p>
             </div>
           )}
 
