@@ -152,6 +152,7 @@ export const psychologistCardSchema = z.object({
   topics: z.array(z.string()),
   specializations: z.array(z.string()),
   languages: z.array(z.string()),
+  videoUrl: z.string().nullable().default(null),
 });
 export type PsychologistCard = z.infer<typeof psychologistCardSchema>;
 

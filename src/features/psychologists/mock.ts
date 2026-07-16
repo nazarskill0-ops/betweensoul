@@ -31,6 +31,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["КПТ", "Схема-терапія"],
     languages: ["uk", "en"],
     bio: "Працюю в когнітивно-поведінковому підході з тривожними та депресивними станами. Вірю, що терапія — це навички, які залишаються з вами назавжди.",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
         {
@@ -93,6 +94,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["Гештальт", "Сімейна терапія"],
     languages: ["uk", "ru"],
     bio: "Допомагаю парам і окремим людям розібратись у стосунках — з іншими та з собою. Працюю чесно, без загальних порад.",
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -147,6 +149,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["Дитяча психологія", "Арт-терапія"],
     languages: ["uk"],
     bio: "Працюю з дітьми від 6 років та підлітками. Через гру та творчість допомагаю дитині впоратись з тим, що словами поки не виходить.",
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -215,6 +218,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["EMDR", "Травматерапія"],
     languages: ["uk", "en"],
     bio: "Спеціалізуюсь на роботі з травмою — бойовою, втратою, насиллям. EMDR-терапевтка, сертифікована Europe EMDR Association.",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
         {
@@ -269,6 +273,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["Психоаналіз", "Екзистенційний аналіз"],
     languages: ["uk", "ru", "en"],
     bio: "П'ятнадцять років приватної практики. Працюю з глибинними запитами: сенс, самотність, повторювані життєві сценарії.",
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -317,6 +322,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["Системна сімейна терапія"],
     languages: ["uk"],
     bio: "Системна сімейна терапевтка. Працюю з парами на всіх етапах — від кризи перших років до синдрому порожнього гнізда.",
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -356,6 +362,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["Тілесно-орієнтована терапія", "КПТ"],
     languages: ["uk", "ru"],
     bio: "Допомагаю відновити нормальні стосунки з їжею та власним тілом. Без дієт, без сорому, без «просто візьми себе в руки».",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
         {
@@ -404,6 +411,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["КПТ", "Терапія прийняття і відповідальності (ACT)"],
     languages: ["uk", "en"],
     bio: "Десять років у бізнесі до психології — знаю вигорання зсередини. Працюю з фаундерами, керівниками та тими, хто тягне забагато.",
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -452,6 +460,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["Клієнт-центрована терапія", "Символдрама"],
     languages: ["uk"],
     bio: "Супроводжую жінок та пари на шляху до батьківства: вагітність, пологи, втрати, репродуктивні складнощі, післяпологовий період.",
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -506,6 +515,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["Транзактний аналіз", "Гештальт"],
     languages: ["uk", "ru"],
     bio: "Чотирнадцять років працюю із залежностями та людьми поруч із залежними. Без моралізаторства — тільки робота.",
+    videoUrl: null,
     education: {
       higher: [
         {
@@ -560,6 +570,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["Клієнт-центрована терапія", "Позитивна психотерапія"],
     languages: ["uk", "en"],
     bio: "Сама пройшла еміграцію 2022 року — знаю, як воно. Працюю з українцями за кордоном: адаптація, провина вцілілого, туга за домом.",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
         {
@@ -608,6 +619,7 @@ export const mockPsychologists: PsychologistProfile[] = [
     specializations: ["КПТ", "Наративна психологія"],
     languages: ["uk"],
     bio: "Працюю з підлітками 12+ та молодими дорослими. Тривога, сором'язливість, конфлікти з батьками — приходьте, розберемось.",
+    videoUrl: null,
     education: {
       higher: [
         {
