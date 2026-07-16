@@ -3,6 +3,7 @@
 import { notFound } from "next/navigation";
 import { usePsychologist } from "../hooks/usePsychologist";
 import { PsychologistProfileHeader } from "./PsychologistProfileHeader";
+import { EducationAccordion } from "./EducationAccordion";
 
 export function PsychologistProfileView({ id }: { id: string }) {
   const { data, isLoading } = usePsychologist(id);
@@ -20,6 +21,7 @@ export function PsychologistProfileView({ id }: { id: string }) {
   return (
     <div className="flex flex-col gap-8">
       <PsychologistProfileHeader psychologist={data} />
+      <EducationAccordion education={data.education} />
     </div>
   );
 }
