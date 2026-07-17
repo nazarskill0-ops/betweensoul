@@ -1,5 +1,5 @@
 import { combineDateAndTime, type DayColumn } from "../utils/generateFakeSlots";
-import { formatRelativeDate } from "../utils/formatRelativeDate";
+import { formatRelativeDate, isToday } from "../utils/formatRelativeDate";
 import { formatSlotRange } from "../utils/formatSlotRange";
 import { CalendarIcon } from "./icons";
 
@@ -19,6 +19,8 @@ export function NearestTimeWidget({
   const freeSlots = nearestDay.slots.filter((s) => !s.isBooked).slice(0, 2);
   if (freeSlots.length === 0) return null;
 
+  const isSingleSlotToday = isToday(nearestDay.date) && freeSlots.length === 1;
+
   const scrollToBooking = () => {
     document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -32,7 +34,7 @@ export function NearestTimeWidget({
         </span>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-2">
+      <div className={isSingleSlotToday ? "flex justify-center" : "flex flex-wrap justify-center gap-2"}>
         {freeSlots.map((slot) => {
           const isSelected = selectedTime === slot.time;
           return (
