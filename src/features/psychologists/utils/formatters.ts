@@ -17,3 +17,17 @@ export function formatExperienceYears(years: number): string {
   }
   return `${years} років`;
 }
+
+const SESSIONS_BADGE_THRESHOLD = 50;
+
+/** 640 → 600, 1180 → 1000, 320 → 300 — округлення вниз до 1 значущої цифри. */
+function floorToSignificantDigit(value: number): number {
+  const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
+  return Math.floor(value / magnitude) * magnitude;
+}
+
+/** null, якщо сесій замало для бейджа довіри (0 і малі числа виглядають гірше, ніж його відсутність). */
+export function formatSessionsCountBadge(sessionsCount: number): string | null {
+  if (sessionsCount < SESSIONS_BADGE_THRESHOLD) return null;
+  return `${floorToSignificantDigit(sessionsCount)}+`;
+}

@@ -9,8 +9,8 @@ import {
   type SlotServiceType,
 } from "../utils/generateFakeSlots";
 import { formatSlotRange } from "../utils/formatSlotRange";
-import { formatAge, formatExperienceYears } from "../utils/formatters";
-import { BriefcaseIcon, ClockIcon, CloseIcon, GlobeIcon, PersonIcon } from "./icons";
+import { formatAge, formatExperienceYears, formatSessionsCountBadge } from "../utils/formatters";
+import { BriefcaseIcon, CheckIcon, ClockIcon, CloseIcon, GlobeIcon, PersonIcon } from "./icons";
 import { InfoRow } from "./InfoRow";
 import { NearestTimeWidget } from "./NearestTimeWidget";
 
@@ -80,6 +80,7 @@ export function PsychologistSidebarCard({
   const qualificationLabel = QUALIFICATIONS.find(
     (q) => q.value === psychologist.qualification
   )?.label;
+  const sessionsBadge = formatSessionsCountBadge(psychologist.sessionsCount);
 
   const [isGeneralInfoVisible, setIsGeneralInfoVisible] = useState(true);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -154,6 +155,19 @@ export function PsychologistSidebarCard({
         </h1>
         {qualificationLabel && (
           <span className="text-sm text-ink-muted">{qualificationLabel}</span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3 text-sm text-ink-muted">
+        <span className="flex items-center gap-1">
+          <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
+          Підтверджений диплом
+        </span>
+        {sessionsBadge && (
+          <span className="flex items-center gap-1">
+            <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
+            {sessionsBadge} проведених сесій
+          </span>
         )}
       </div>
 
