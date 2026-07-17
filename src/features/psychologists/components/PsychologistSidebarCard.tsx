@@ -13,6 +13,7 @@ import { formatAge, formatExperienceYears, formatSessionsCountBadge } from "../u
 import { BriefcaseIcon, CheckIcon, ClockIcon, CloseIcon, GlobeIcon, PersonIcon } from "./icons";
 import { InfoRow } from "./InfoRow";
 import { NearestTimeWidget } from "./NearestTimeWidget";
+import { ServiceTypeDropdown } from "./ServiceTypeDropdown";
 
 const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 
@@ -151,7 +152,7 @@ export function PsychologistSidebarCard({
 
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
-          <h1 className="font-display text-xl leading-tight text-ink">
+          <h1 className="font-display text-xl font-bold leading-tight text-ink">
             {psychologist.fullName}
           </h1>
           {qualificationLabel && (
@@ -170,8 +171,16 @@ export function PsychologistSidebarCard({
               {sessionsBadge} проведених сесій
             </span>
           )}
+          <span className="flex items-center gap-1">
+            <ClockIcon className="h-4 w-4 shrink-0 text-sage" />
+            {activeDurationMinutes} хв · {activePriceUah} ₴
+          </span>
         </div>
       </div>
+
+      {hasCoupleTherapy && (
+        <ServiceTypeDropdown serviceType={serviceType} onServiceTypeChange={handleServiceTypeChange} />
+      )}
 
       {/*
         Обидва варіанти лишаються змонтованими постійно — вмикаємо/вимикаємо
@@ -185,9 +194,6 @@ export function PsychologistSidebarCard({
           selectedTime={selectedTime}
           onSelectTime={setSelectedTime}
           durationMinutes={activeDurationMinutes}
-          hasCoupleTherapy={hasCoupleTherapy}
-          serviceType={serviceType}
-          onServiceTypeChange={handleServiceTypeChange}
         />
       </div>
       <div className={isGeneralInfoVisible ? "hidden" : ""}>

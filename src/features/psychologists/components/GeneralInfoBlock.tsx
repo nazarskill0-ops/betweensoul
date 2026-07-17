@@ -1,8 +1,6 @@
 import { LANGUAGES, type PsychologistProfile } from "../schema";
 import { formatAge, formatExperienceYears } from "../utils/formatters";
 
-const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
-
 type Stat = { value: string; label: string };
 
 function StatCell({ value, label, spanFull }: Stat & { spanFull?: boolean }) {
@@ -25,8 +23,6 @@ export function GeneralInfoBlock({
 }: {
   psychologist: PsychologistProfile;
 }) {
-  const priceUah = psychologist.priceMinor / 100;
-
   const languageLabels = psychologist.languages
     .map((code) => LANGUAGES.find((l) => l.value === code)?.label)
     .filter((label): label is NonNullable<typeof label> => label !== undefined);
@@ -38,18 +34,6 @@ export function GeneralInfoBlock({
       : []),
     ...(languageLabels.length > 0
       ? [{ value: languageLabels.join(", "), label: "Мова" }]
-      : []),
-    { value: `${INDIVIDUAL_SESSION_DURATION_MINUTES} хв`, label: "Тривалість" },
-    { value: `${priceUah} ₴`, label: "Ціна" },
-    ...(psychologist.couplePriceMinor !== null
-      ? [
-          {
-            value: `${
-              psychologist.coupleSessionDurationMinutes ?? INDIVIDUAL_SESSION_DURATION_MINUTES
-            } хв · ${psychologist.couplePriceMinor / 100} ₴`,
-            label: "Парна терапія",
-          },
-        ]
       : []),
   ];
 

@@ -9,10 +9,6 @@ export function ProfileInfoSections({
 }) {
   return (
     <div>
-      <h2 className="mb-3 font-display text-2xl font-bold text-sage">
-        Про терапевта
-      </h2>
-
       <div className="flex flex-col gap-3">
         {psychologist.topics.length > 0 && (
           <CollapsibleSection
