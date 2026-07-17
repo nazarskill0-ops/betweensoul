@@ -149,8 +149,8 @@ export function PsychologistSidebarCard({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div className="flex flex-col gap-1">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
           <h1 className="font-display text-xl leading-tight text-ink">
             {psychologist.fullName}
           </h1>
@@ -159,13 +159,13 @@ export function PsychologistSidebarCard({
           )}
         </div>
 
-        <div className="flex flex-col items-end gap-1 text-sm text-ink-muted">
-          <span className="flex items-center gap-1 whitespace-nowrap">
+        <div className="flex shrink-0 flex-col items-end gap-1 text-right text-sm text-ink-muted">
+          <span className="flex items-center gap-1">
             <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
             Підтверджений диплом
           </span>
           {sessionsBadge && (
-            <span className="flex items-center gap-1 whitespace-nowrap">
+            <span className="flex items-center gap-1">
               <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
               {sessionsBadge} проведених сесій
             </span>
