@@ -1,4 +1,4 @@
-import { combineDateAndTime, type DayColumn } from "../utils/generateFakeSlots";
+import { combineDateAndTime, type DayColumn, type SlotServiceType } from "../utils/generateFakeSlots";
 import { formatRelativeDate, isToday } from "../utils/formatRelativeDate";
 import { formatSlotRange } from "../utils/formatSlotRange";
 import { CalendarIcon } from "./icons";
@@ -8,11 +8,17 @@ export function NearestTimeWidget({
   selectedTime,
   onSelectTime,
   durationMinutes,
+  hasCoupleTherapy,
+  serviceType,
+  onServiceTypeChange,
 }: {
   nearestDay: DayColumn | null;
   selectedTime: string | null;
   onSelectTime: (time: string | null) => void;
   durationMinutes: number;
+  hasCoupleTherapy: boolean;
+  serviceType: SlotServiceType;
+  onServiceTypeChange: (type: SlotServiceType) => void;
 }) {
   if (!nearestDay) return null;
 
@@ -27,6 +33,29 @@ export function NearestTimeWidget({
 
   return (
     <div className="flex flex-col gap-4 rounded-card border border-sand-dark p-4">
+      {hasCoupleTherapy && (
+        <div className="mx-auto flex w-fit gap-1 rounded-full border-[1.5px] border-sand-dark p-1">
+          <button
+            type="button"
+            onClick={() => onServiceTypeChange("individual")}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              serviceType === "individual" ? "bg-sage text-white" : "text-ink hover:text-sage"
+            }`}
+          >
+            Особиста
+          </button>
+          <button
+            type="button"
+            onClick={() => onServiceTypeChange("couple")}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              serviceType === "couple" ? "bg-sage text-white" : "text-ink hover:text-sage"
+            }`}
+          >
+            Парна
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-1">
         <span className="block text-center text-sm text-ink-muted">Найближчий час</span>
         <span className="block text-center font-sans text-xl font-bold text-ink">

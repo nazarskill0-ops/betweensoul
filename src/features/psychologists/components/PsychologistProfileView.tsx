@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { notFound } from "next/navigation";
 import { usePsychologist } from "../hooks/usePsychologist";
 import { PsychologistSidebarCard } from "./PsychologistSidebarCard";
@@ -10,9 +11,11 @@ import { EducationTimeline } from "./EducationTimeline";
 import { ReviewsList } from "./ReviewsList";
 import { SlotPicker } from "./SlotPicker";
 import { FAQAccordion } from "./FAQAccordion";
+import type { SlotServiceType } from "../utils/generateFakeSlots";
 
 export function PsychologistProfileView({ id }: { id: string }) {
   const { data, isLoading } = usePsychologist(id);
+  const [serviceType, setServiceType] = useState<SlotServiceType>("individual");
 
   if (isLoading) {
     return (
@@ -46,12 +49,18 @@ export function PsychologistProfileView({ id }: { id: string }) {
               individualPriceMinor={data.priceMinor}
               couplePriceMinor={data.couplePriceMinor}
               coupleSessionDurationMinutes={data.coupleSessionDurationMinutes}
+              serviceType={serviceType}
+              onServiceTypeChange={setServiceType}
             />
           </div>
         </div>
 
         <div className="order-1 lg:sticky lg:top-24 lg:order-2 lg:self-start">
-          <PsychologistSidebarCard psychologist={data} />
+          <PsychologistSidebarCard
+            psychologist={data}
+            serviceType={serviceType}
+            onServiceTypeChange={setServiceType}
+          />
         </div>
       </div>
 

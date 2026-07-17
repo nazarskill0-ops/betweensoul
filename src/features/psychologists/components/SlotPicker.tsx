@@ -20,14 +20,17 @@ export function SlotPicker({
   individualPriceMinor,
   couplePriceMinor,
   coupleSessionDurationMinutes,
+  serviceType,
+  onServiceTypeChange,
 }: {
   psychologistId: string;
   individualPriceMinor: number;
   couplePriceMinor: number | null;
   coupleSessionDurationMinutes: number | null;
+  serviceType: SlotServiceType;
+  onServiceTypeChange: (type: SlotServiceType) => void;
 }) {
   const hasCoupleTherapy = couplePriceMinor !== null;
-  const [serviceType, setServiceType] = useState<SlotServiceType>("individual");
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot>(null);
   const [selectedDayIso, setSelectedDayIso] = useState<string | null>(null);
@@ -56,7 +59,7 @@ export function SlotPicker({
   };
 
   const changeServiceType = (type: SlotServiceType) => {
-    setServiceType(type);
+    onServiceTypeChange(type);
     setSelectedSlot(null);
     setSelectedDayIso(null);
   };
