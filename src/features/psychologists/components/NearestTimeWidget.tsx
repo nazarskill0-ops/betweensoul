@@ -1,5 +1,7 @@
 import { combineDateAndTime, type DayColumn } from "../utils/generateFakeSlots";
+import { formatRelativeDate } from "../utils/formatRelativeDate";
 import { formatSlotRange } from "../utils/formatSlotRange";
+import { CalendarIcon } from "./icons";
 
 export function NearestTimeWidget({
   nearestDay,
@@ -17,18 +19,20 @@ export function NearestTimeWidget({
   const freeSlots = nearestDay.slots.filter((s) => !s.isBooked).slice(0, 2);
   if (freeSlots.length === 0) return null;
 
+  const scrollToBooking = () => {
+    document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <div className="rounded-card bg-sage-light p-4">
-      <span className="mb-3 block text-center text-xs font-medium uppercase tracking-wide text-ink-muted">
-        Найближчий час
-      </span>
-      <span className="mb-4 block text-center font-display text-2xl font-bold text-ink">
-        {nearestDay.date.toLocaleDateString("uk-UA", {
-          day: "numeric",
-          month: "long",
-        })}
-      </span>
-      <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-4 border-b border-sand-dark pb-4">
+      <div className="flex flex-col gap-1">
+        <span className="block text-center text-sm text-ink-muted">Найближчий час</span>
+        <span className="block text-center font-sans text-xl font-bold text-ink">
+          {formatRelativeDate(nearestDay.date)}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap justify-center gap-2">
         {freeSlots.map((slot) => {
           const isSelected = selectedTime === slot.time;
           return (
@@ -36,10 +40,10 @@ export function NearestTimeWidget({
               key={slot.time}
               type="button"
               onClick={() => onSelectTime(isSelected ? null : slot.time)}
-              className={`rounded-full border-[1.5px] border-sage px-6 py-4 text-base font-medium transition-colors ${
+              className={`rounded-full border-[1.5px] bg-white px-6 py-4 text-base font-medium transition-colors ${
                 isSelected
-                  ? "bg-sage text-white"
-                  : "bg-white text-ink hover:bg-sage hover:text-white"
+                  ? "border-sage bg-sage text-white"
+                  : "border-sand-dark text-ink hover:border-sage"
               }`}
             >
               {formatSlotRange(combineDateAndTime(nearestDay.date, slot.time), durationMinutes)}
@@ -47,6 +51,15 @@ export function NearestTimeWidget({
           );
         })}
       </div>
+
+      <button
+        type="button"
+        onClick={scrollToBooking}
+        className="flex items-center justify-center gap-1.5 text-sm font-medium text-sage transition-colors hover:text-sage/80"
+      >
+        Інші варіанти
+        <CalendarIcon className="h-4 w-4" />
+      </button>
     </div>
   );
 }

@@ -12,7 +12,7 @@ function StatCell({ value, label, spanFull }: Stat & { spanFull?: boolean }) {
         spanFull ? "col-span-2 items-center text-center" : ""
       }`}
     >
-      <span className="font-sans text-2xl font-bold text-ink">{value}</span>
+      <span className="font-sans text-2xl font-semibold text-ink">{value}</span>
       <span className="text-xs font-medium uppercase tracking-wide text-ink-muted">
         {label}
       </span>
