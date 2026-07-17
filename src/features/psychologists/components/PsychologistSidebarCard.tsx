@@ -137,7 +137,7 @@ export function PsychologistSidebarCard({
 
   return (
     <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
-      <div className="aspect-[3/4] w-full overflow-hidden rounded-card">
+      <div className="h-64 w-full overflow-hidden rounded-card">
         {psychologist.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -171,7 +171,7 @@ export function PsychologistSidebarCard({
               {sessionsBadge} проведених сесій
             </span>
           )}
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 font-bold">
             <ClockIcon className="h-4 w-4 shrink-0 text-sage" />
             {activeDurationMinutes} хв · {activePriceUah} ₴
           </span>

@@ -59,7 +59,7 @@ export function NearestTimeWidget({
         onClick={scrollToBooking}
         className="flex items-center justify-center gap-1.5 text-sm font-medium text-sage transition-colors hover:text-sage/80"
       >
-        Інші варіанти
+        Усі доступні дати
         <CalendarIcon className="h-4 w-4" />
       </button>
     </div>
