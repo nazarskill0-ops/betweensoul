@@ -26,7 +26,7 @@ export function NearestTimeWidget({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-card border border-sand-dark p-4">
+    <div className="flex flex-col gap-3 rounded-card border border-sand-dark p-4">
       <div className="flex flex-col gap-1">
         <span className="block text-center text-sm text-ink-muted">Найближчий час</span>
         <span className="block text-center font-sans text-xl font-bold text-ink">
@@ -42,7 +42,7 @@ export function NearestTimeWidget({
               key={slot.time}
               type="button"
               onClick={() => onSelectTime(isSelected ? null : slot.time)}
-              className={`rounded-full border-[1.5px] px-6 py-4 text-base font-medium transition-colors ${
+              className={`rounded-full border-[1.5px] px-6 py-2.5 text-base font-medium transition-colors ${
                 isSelected
                   ? "border-sage bg-sage text-white"
                   : "border-sand-dark bg-white text-ink hover:border-sage"

@@ -127,8 +127,8 @@ export function PsychologistSidebarCard({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
-      <div className="h-64 w-full overflow-hidden rounded-card">
+    <div className="flex max-h-[calc(100vh-7.5rem)] flex-col gap-3 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
+      <div className="-mx-5 -mt-5 h-[300px] shrink-0 overflow-hidden rounded-t-[16px]">
         {psychologist.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -141,7 +141,7 @@ export function PsychologistSidebarCard({
         )}
       </div>
 
-      <div className="flex items-start justify-between gap-4">
+      <div className="-mt-1.5 flex shrink-0 items-start justify-between gap-4">
         <div className="flex-1">
           <h1 className="font-display text-xl font-bold leading-tight text-ink">
             {psychologist.fullName}
@@ -151,7 +151,7 @@ export function PsychologistSidebarCard({
           )}
         </div>
 
-        <div className="flex shrink-0 flex-col items-end gap-1 text-right text-sm text-ink-muted">
+        <div className="flex shrink-0 flex-col items-end gap-0.5 text-right text-sm leading-tight text-ink-muted">
           <span className="flex items-center gap-1">
             <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
             Підтверджений диплом
@@ -170,7 +170,9 @@ export function PsychologistSidebarCard({
       </div>
 
       {isGeneralInfoVisible && hasCoupleTherapy && (
-        <ServiceTypeDropdown serviceType={serviceType} onServiceTypeChange={handleServiceTypeChange} />
+        <div className="shrink-0">
+          <ServiceTypeDropdown serviceType={serviceType} onServiceTypeChange={handleServiceTypeChange} />
+        </div>
       )}
 
       {/*
@@ -178,24 +180,28 @@ export function PsychologistSidebarCard({
         через клас display:none. Умовний рендер РІЗНИХ типів компонентів тут
         змушував React повністю демонтувати/монтувати DOM при кожному
         спрацюванні IntersectionObserver, що й було справжньою причиною лагу.
+        Обгортка — flex-1 min-h-0 overflow-y-auto: якщо вміст не влазить у
+        видиму висоту картки, скролиться саме цей блок, а не кнопка нижче.
       */}
-      <div className={isGeneralInfoVisible ? "" : "hidden"}>
-        <NearestTimeWidget
-          nearestDay={nearestDay}
-          selectedTime={selectedTime}
-          onSelectTime={setSelectedTime}
-          durationMinutes={activeDurationMinutes}
-        />
-      </div>
-      <div className={isGeneralInfoVisible ? "hidden" : ""}>
-        <CompactInfoSummary psychologist={psychologist} languageLabels={languageLabels} />
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className={isGeneralInfoVisible ? "" : "hidden"}>
+          <NearestTimeWidget
+            nearestDay={nearestDay}
+            selectedTime={selectedTime}
+            onSelectTime={setSelectedTime}
+            durationMinutes={activeDurationMinutes}
+          />
+        </div>
+        <div className={isGeneralInfoVisible ? "hidden" : ""}>
+          <CompactInfoSummary psychologist={psychologist} languageLabels={languageLabels} />
+        </div>
       </div>
 
       {isGeneralInfoVisible && (
         <button
           type="button"
           onClick={handleMainButtonClick}
-          className={`w-full rounded-full px-6 py-3 text-sm font-medium text-sand transition-colors ${
+          className={`w-full shrink-0 rounded-full px-6 py-3 text-sm font-medium text-sand transition-colors ${
             selectedTime ? "bg-sage hover:bg-sage/90" : "bg-ink hover:bg-sage"
           }`}
         >
