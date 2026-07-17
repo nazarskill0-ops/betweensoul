@@ -20,13 +20,9 @@ const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 function CompactInfoSummary({
   psychologist,
   languageLabels,
-  durationMinutes,
-  priceUah,
 }: {
   psychologist: PsychologistProfile;
   languageLabels: string[];
-  durationMinutes: number;
-  priceUah: number;
 }) {
   return (
     <div className="flex flex-col gap-1.5 rounded-card bg-sand p-3">
@@ -49,11 +45,6 @@ function CompactInfoSummary({
           value={languageLabels.join(", ")}
         />
       )}
-      <InfoRow
-        icon={<ClockIcon className="h-4 w-4 shrink-0 text-sage" />}
-        label="Сесія"
-        value={`${durationMinutes} хв · ${priceUah} ₴`}
-      />
     </div>
   );
 }
@@ -197,12 +188,7 @@ export function PsychologistSidebarCard({
         />
       </div>
       <div className={isGeneralInfoVisible ? "hidden" : ""}>
-        <CompactInfoSummary
-          psychologist={psychologist}
-          languageLabels={languageLabels}
-          durationMinutes={activeDurationMinutes}
-          priceUah={activePriceUah}
-        />
+        <CompactInfoSummary psychologist={psychologist} languageLabels={languageLabels} />
       </div>
 
       {isGeneralInfoVisible && (
