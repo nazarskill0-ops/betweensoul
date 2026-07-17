@@ -178,7 +178,7 @@ export function PsychologistSidebarCard({
         </div>
       </div>
 
-      {hasCoupleTherapy && (
+      {isGeneralInfoVisible && hasCoupleTherapy && (
         <ServiceTypeDropdown serviceType={serviceType} onServiceTypeChange={handleServiceTypeChange} />
       )}
 
@@ -205,15 +205,17 @@ export function PsychologistSidebarCard({
         />
       </div>
 
-      <button
-        type="button"
-        onClick={handleMainButtonClick}
-        className={`w-full rounded-full px-6 py-3 text-sm font-medium text-sand transition-colors ${
-          selectedTime ? "bg-sage hover:bg-sage/90" : "bg-ink hover:bg-sage"
-        }`}
-      >
-        {selectedTime ? "Забронювати" : "Обрати час"}
-      </button>
+      {isGeneralInfoVisible && (
+        <button
+          type="button"
+          onClick={handleMainButtonClick}
+          className={`w-full rounded-full px-6 py-3 text-sm font-medium text-sand transition-colors ${
+            selectedTime ? "bg-sage hover:bg-sage/90" : "bg-ink hover:bg-sage"
+          }`}
+        >
+          {selectedTime ? "Забронювати" : "Обрати час"}
+        </button>
+      )}
 
       {isConfirmModalOpen && nearestDay && selectedTime && (
         <div

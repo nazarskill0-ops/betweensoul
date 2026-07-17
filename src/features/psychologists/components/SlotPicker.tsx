@@ -12,6 +12,7 @@ import {
   type SlotServiceType,
 } from "../utils/generateFakeSlots";
 import { formatSlotRange } from "../utils/formatSlotRange";
+import { ServiceTypeDropdown } from "./ServiceTypeDropdown";
 
 const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 
@@ -93,34 +94,15 @@ export function SlotPicker({
 
   return (
     <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
-      <h2 className="font-display text-2xl text-ink">Оберіть зручний час</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-2xl text-ink">Оберіть зручний час</h2>
 
-      {hasCoupleTherapy && (
-        <div className="flex w-fit gap-2 rounded-full border-[1.5px] border-sand-dark p-1">
-          <button
-            type="button"
-            onClick={() => changeServiceType("individual")}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              serviceType === "individual"
-                ? "bg-sage text-white"
-                : "text-ink hover:text-sage"
-            }`}
-          >
-            Особиста терапія
-          </button>
-          <button
-            type="button"
-            onClick={() => changeServiceType("couple")}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              serviceType === "couple"
-                ? "bg-sage text-white"
-                : "text-ink hover:text-sage"
-            }`}
-          >
-            Парна терапія
-          </button>
-        </div>
-      )}
+        {hasCoupleTherapy && (
+          <div className="w-64 shrink-0">
+            <ServiceTypeDropdown serviceType={serviceType} onServiceTypeChange={changeServiceType} />
+          </div>
+        )}
+      </div>
 
       <div className="flex items-center justify-between gap-3">
         <button
