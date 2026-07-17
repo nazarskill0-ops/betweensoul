@@ -19,10 +19,10 @@ export function NearestTimeWidget({
 
   return (
     <div className="rounded-card bg-sage-light p-4">
-      <span className="mb-3 block text-xs font-medium uppercase tracking-wide text-ink-muted">
+      <span className="mb-3 block text-center text-xs font-medium uppercase tracking-wide text-ink-muted">
         Найближчий час
       </span>
-      <span className="mb-4 block font-display text-lg font-bold text-ink">
+      <span className="mb-4 block text-center font-display text-2xl font-bold text-ink">
         {nearestDay.date.toLocaleDateString("uk-UA", {
           day: "numeric",
           month: "long",
