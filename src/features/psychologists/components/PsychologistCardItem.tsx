@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { QUALIFICATIONS, type PsychologistCard } from "../schema";
 
-const MAX_BADGES = 4;
+const MAX_TOPIC_BADGES = 4;
 
 function formatExperienceYears(years: number): string {
   const mod100 = years % 100;
@@ -27,22 +27,28 @@ function BadgeGroup({
   items,
   className,
   gapClassName = "gap-3",
+  maxVisible,
 }: {
   items: string[];
   className: string;
   gapClassName?: string;
+  maxVisible: number;
 }) {
-  const visible = items.slice(0, MAX_BADGES);
-  const hiddenCount = items.length - MAX_BADGES;
+  const visible = items.slice(0, maxVisible);
+  const hiddenCount = items.length - maxVisible;
 
   return (
-    <div className={`flex flex-wrap ${gapClassName}`}>
+    <div className={`flex flex-wrap items-center ${gapClassName}`}>
       {visible.map((item) => (
         <span key={item} className={className}>
           {item}
         </span>
       ))}
-      {hiddenCount > 0 && <span className={className}>+{hiddenCount}</span>}
+      {hiddenCount > 0 && (
+        <span className="rounded-full border border-sand-dark px-2.5 py-1 text-[13px] text-ink-muted">
+          +{hiddenCount}
+        </span>
+      )}
     </div>
   );
 }
@@ -196,25 +202,26 @@ export function PsychologistCardItem({
           )}
         </div>
 
-        <div className="flex flex-col gap-2">
-          {psychologist.specializations.length > 0 && (
-            <BadgeGroup
-              items={psychologist.specializations}
-              className="rounded-full border-[1.5px] border-transparent bg-sage-light px-3 py-1.5 text-sm text-ink"
-            />
-          )}
-
+        <div className="flex flex-col gap-3">
           {psychologist.topics.length > 0 && (
             <BadgeGroup
               items={psychologist.topics}
-              className="rounded-full border-[1.5px] border-sand-dark bg-white px-3 py-1.5 text-sm text-ink-muted"
+              className="rounded-full border border-sand-dark bg-white px-3 py-1.5 text-sm text-ink-muted"
               gapClassName="gap-2"
+              maxVisible={MAX_TOPIC_BADGES}
             />
+          )}
+
+          {psychologist.specializations.length > 0 && (
+            <p className="truncate text-base text-ink-muted">
+              <span className="font-medium">Методи:</span>{" "}
+              {psychologist.specializations.join(", ")}
+            </p>
           )}
         </div>
 
         {psychologist.bio && (
-          <div className="rounded-card bg-sage-light p-4">
+          <div className="border-l-2 border-sage py-1 pl-4">
             <p className="text-sm text-ink-muted italic">
               "{getBioExcerpt(psychologist.bio)}"
             </p>
@@ -222,11 +229,11 @@ export function PsychologistCardItem({
         )}
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-1">
-          <span className="flex items-center gap-1.5 text-base">
+          <span className="flex items-center gap-1.5 text-base font-semibold">
             <ClockIcon className="h-4 w-4 shrink-0 text-ink-muted" />
             <span className="text-ink-muted">50 хв</span>
             <span className="text-ink-muted"> · </span>
-            <span className="font-normal text-ink-muted">{priceUah} ₴</span>
+            <span className="text-ink-muted">{priceUah} ₴</span>
           </span>
           <Link
             href={`/psychologist/${psychologist.profileId}`}
