@@ -160,6 +160,9 @@ export const psychologistCardSchema = z.object({
   bio: z.string().optional(),
   clientCategories: z.array(z.string()).default([]),
   videoUrl: z.string().nullable().default(null),
+  age: z.number().int().positive(),
+  couplePriceMinor: z.number().int().nonnegative().nullable().default(null), // ціна за парну сесію
+  coupleSessionDurationMinutes: z.number().int().positive().nullable().default(null),
 });
 export type PsychologistCard = z.infer<typeof psychologistCardSchema>;
 
@@ -186,7 +189,9 @@ export type Review = z.infer<typeof reviewSchema>;
 
 /** Полный профиль психолога (страница /psychologist/[id]). */
 export const psychologistProfileSchema = psychologistCardSchema.extend({
-  bio: z.string(),
+  aboutMe: z.string(), // «Про мене»
+  experienceText: z.string(), // «Досвід і компетенції»
+  therapyStyle: z.string(), // «Особливості терапії»
   topicsSecondary: z.array(z.string()), // «Я також працюю з»
   topicsExcluded: z.array(z.string()), // «З чим я не працюю»
   education: z.object({

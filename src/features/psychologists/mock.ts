@@ -21,7 +21,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "female",
     qualification: "psychologist",
     experienceYears: 8,
+    age: 34,
     priceMinor: 90000,
+    couplePriceMinor: null,
+    coupleSessionDurationMinutes: null,
     sessionsCount: 640,
     formats: ["online"],
     services: ["Особиста терапія"],
@@ -32,6 +35,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk", "en"],
     bio: "Працюю в когнітивно-поведінковому підході з тривожними та депресивними станами. Вірю, що терапія — це навички, які залишаються з вами назавжди.",
     clientCategories: ["general"],
+    aboutMe:
+      "Я психологиня з 8-річним досвідом приватної практики. Працюю з дорослими, які відчувають тривогу, апатію чи вигорання і хочуть повернути собі відчуття опори.",
+    experienceText:
+      "За вісім років роботи провела понад 640 сесій у когнітивно-поведінковому підході. Спеціалізуюсь на схема-терапії для тих, чиї труднощі мають глибше коріння, ніж здається на перший погляд.",
+    therapyStyle:
+      "Працюю структуровано: даю конкретні техніки та домашні завдання між сесіями. Вважаю, що терапія — це навички, а не одноразове полегшення.",
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
@@ -85,7 +94,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "male",
     qualification: "psychotherapist",
     experienceYears: 12,
+    age: 45,
     priceMinor: 120000,
+    couplePriceMinor: 160000,
+    coupleSessionDurationMinutes: 90,
     sessionsCount: 1180,
     formats: ["online"],
     services: ["Особиста терапія", "Парна терапія"],
@@ -96,6 +108,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk", "ru"],
     bio: "Допомагаю парам і окремим людям розібратись у стосунках — з іншими та з собою. Працюю чесно, без загальних порад.",
     clientCategories: ["general"],
+    aboutMe:
+      "Психотерапевт із дванадцятирічним стажем, працюю як з парами, так і з окремими клієнтами над стосунками — з іншими людьми та із собою.",
+    experienceText:
+      "Понад 1180 проведених сесій у гештальт-підході, повний курс Київського гештальт університету. Окремо волонтерю, підтримуючи родини військових.",
+    therapyStyle:
+      "Не займаю нічию сторону в парній роботі — допомагаю обом партнерам почути одне одного. Говорю прямо, без загальних порад.",
     videoUrl: null,
     education: {
       higher: [
@@ -141,7 +159,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "female",
     qualification: "psychologist",
     experienceYears: 6,
+    age: 29,
     priceMinor: 70000,
+    couplePriceMinor: null,
+    coupleSessionDurationMinutes: null,
     sessionsCount: 320,
     formats: ["online"],
     services: ["Дитяча терапія"],
@@ -152,6 +173,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk"],
     bio: "Працюю з дітьми від 6 років та підлітками. Через гру та творчість допомагаю дитині впоратись з тим, що словами поки не виходить.",
     clientCategories: ["teens"],
+    aboutMe:
+      "Дитяча та підліткова психологиня, працюю з дітьми від 6 років. Через гру та творчість допомагаю дитині впоратись з тим, що поки не виходить сказати словами.",
+    experienceText:
+      "Шість років практики, понад 320 сесій. Пройшла окремий курс з розладів харчової поведінки та практичні інтенсиви з арт-терапії.",
+    therapyStyle:
+      "Використовую ігрові та арт-техніки замість прямих розмов «по-дорослому» — дітям і підліткам так простіше розкритись. Батьків завжди тримаю в курсі прогресу.",
     videoUrl: null,
     education: {
       higher: [
@@ -211,7 +238,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "female",
     qualification: "psychotherapist",
     experienceYears: 10,
+    age: 38,
     priceMinor: 110000,
+    couplePriceMinor: null,
+    coupleSessionDurationMinutes: null,
     sessionsCount: 870,
     formats: ["online"],
     services: ["Особиста терапія"],
@@ -222,6 +252,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk", "en"],
     bio: "Спеціалізуюсь на роботі з травмою — бойовою, втратою, насиллям. EMDR-терапевтка, сертифікована Europe EMDR Association.",
     clientCategories: ["veterans", "abuse_survivors", "grief"],
+    aboutMe:
+      "Травматерапевтка, спеціалізуюсь на роботі з бойовою травмою, втратою та насиллям. Маю сертифікацію Europe EMDR Association.",
+    experienceText:
+      "Десять років практики, понад 870 сесій. Окремо веду кризову підтримку ЗСУ та родин військових у межах волонтерської ініціативи.",
+    therapyStyle:
+      "Основний метод — EMDR, який дозволяє переробити травматичний досвід без багаторазового детального переживання подій. Темп сесії завжди задає клієнт.",
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
@@ -267,7 +303,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "male",
     qualification: "psychotherapist",
     experienceYears: 15,
+    age: 52,
     priceMinor: 150000,
+    couplePriceMinor: null,
+    coupleSessionDurationMinutes: null,
     sessionsCount: 2100,
     formats: ["online"],
     services: ["Особиста терапія"],
@@ -278,6 +317,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk", "ru", "en"],
     bio: "П'ятнадцять років приватної практики. Працюю з глибинними запитами: сенс, самотність, повторювані життєві сценарії.",
     clientCategories: ["general"],
+    aboutMe:
+      "Психолог із психоаналітичним підходом, п'ятнадцять років приватної практики. Працюю з глибинними запитами: сенс, самотність, повторювані життєві сценарії.",
+    experienceText:
+      "Понад 2100 проведених сесій, навчався в Українській асоціації психоаналізу протягом п'яти років. Фокусуюсь на довготривалій роботі, а не швидких рішеннях.",
+    therapyStyle:
+      "Не даю готових відповідей — допомагаю клієнту самому дійти до розуміння власних мотивів. Сесії проходять у вільному форматі розмови.",
     videoUrl: null,
     education: {
       higher: [
@@ -317,7 +362,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "female",
     qualification: "psychotherapist",
     experienceYears: 9,
+    age: 40,
     priceMinor: 100000,
+    couplePriceMinor: 140000,
+    coupleSessionDurationMinutes: 90,
     sessionsCount: 760,
     formats: ["online"],
     services: ["Парна терапія", "Особиста терапія"],
@@ -328,6 +376,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk"],
     bio: "Системна сімейна терапевтка. Працюю з парами на всіх етапах — від кризи перших років до синдрому порожнього гнізда.",
     clientCategories: ["abuse_survivors"],
+    aboutMe:
+      "Сімейна психотерапевтка, працюю з парами на всіх етапах стосунків — від кризи перших років спільного життя до синдрому порожнього гнізда.",
+    experienceText:
+      "Дев'ять років практики, понад 760 сесій. Закінчила секцію сімейної терапії УСП зі спеціалізацією в системному підході.",
+    therapyStyle:
+      "Розглядаю пару як систему, де зміна одного впливає на обох. Багато уваги приділяю темі емоційного насилля та відновленню довіри.",
     videoUrl: null,
     education: {
       higher: [
@@ -358,7 +412,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "female",
     qualification: "psychologist",
     experienceYears: 5,
+    age: 31,
     priceMinor: 65000,
+    couplePriceMinor: null,
+    coupleSessionDurationMinutes: null,
     sessionsCount: 280,
     formats: ["online"],
     services: ["Особиста терапія"],
@@ -369,6 +426,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk", "ru"],
     bio: "Допомагаю відновити нормальні стосунки з їжею та власним тілом. Без дієт, без сорому, без «просто візьми себе в руки».",
     clientCategories: ["eating_disorders"],
+    aboutMe:
+      "Психологиня, працюю з розладами харчової поведінки та відновленням стосунків із власним тілом. Без дієт, без сорому, без «просто візьми себе в руки».",
+    experienceText:
+      "П'ять років практики, 280 сесій. Проходила спеціалізований курс з діагностики та терапії РХП.",
+    therapyStyle:
+      "Поєдную тілесно-орієнтовану терапію з КПТ — працюю і з думками про їжу, і з тілесними відчуттями одночасно.",
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
@@ -408,7 +471,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "male",
     qualification: "psychologist",
     experienceYears: 7,
+    age: 36,
     priceMinor: 130000,
+    couplePriceMinor: null,
+    coupleSessionDurationMinutes: null,
     sessionsCount: 540,
     formats: ["online"],
     services: ["Особиста терапія"],
@@ -419,6 +485,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk", "en"],
     bio: "Десять років у бізнесі до психології — знаю вигорання зсередини. Працюю з фаундерами, керівниками та тими, хто тягне забагато.",
     clientCategories: ["business"],
+    aboutMe:
+      "Психолог для підприємців і керівників. До психології десять років працював у бізнесі — знаю вигорання зсередини, а не з підручника.",
+    experienceText:
+      "Сім років практики, 540 сесій. Сертифікований у терапії прийняття та відповідальності (ACT).",
+    therapyStyle:
+      "Працюю структурно і прямо, без зайвої води — після кожної сесії клієнт іде з конкретним планом дій.",
     videoUrl: null,
     education: {
       higher: [
@@ -458,7 +530,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "female",
     qualification: "psychologist",
     experienceYears: 11,
+    age: 43,
     priceMinor: 85000,
+    couplePriceMinor: 120000,
+    coupleSessionDurationMinutes: 60,
     sessionsCount: 930,
     formats: ["online"],
     services: ["Особиста терапія", "Парна терапія"],
@@ -469,6 +544,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk"],
     bio: "Супроводжую жінок та пари на шляху до батьківства: вагітність, пологи, втрати, репродуктивні складнощі, післяпологовий період.",
     clientCategories: ["grief", "general"],
+    aboutMe:
+      "Психологиня перинатального напряму, супроводжую жінок та пари на шляху до батьківства: вагітність, пологи, втрати, післяпологовий період.",
+    experienceText:
+      "Одинадцять років практики, понад 930 сесій. Проходила навчання в Інституті перинатальної психології та базовий курс доула-супроводу.",
+    therapyStyle:
+      "Працюю дбайливо з темами, де багато сорому й тиші — втратами вагітності, складними пологами. Клієнт сам визначає темп розмови.",
     videoUrl: null,
     education: {
       higher: [
@@ -514,7 +595,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "male",
     qualification: "psychotherapist",
     experienceYears: 14,
+    age: 47,
     priceMinor: 95000,
+    couplePriceMinor: null,
+    coupleSessionDurationMinutes: null,
     sessionsCount: 1450,
     formats: ["online"],
     services: ["Особиста терапія"],
@@ -525,6 +609,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk", "ru"],
     bio: "Чотирнадцять років працюю із залежностями та людьми поруч із залежними. Без моралізаторства — тільки робота.",
     clientCategories: ["general"],
+    aboutMe:
+      "Психотерапевт, чотирнадцять років працюю із залежностями та людьми поруч із залежними — партнерами, батьками, дітьми.",
+    experienceText:
+      "Понад 1450 сесій, навчався транзактному аналізу в УАТА. Дев'ять років вів групову терапію в реабілітаційному центрі «Крок».",
+    therapyStyle:
+      "Працюю без моралізаторства — тільки конкретна робота з патернами поведінки. Однаково уважний і до залежної людини, і до її оточення.",
     videoUrl: null,
     education: {
       higher: [
@@ -570,7 +660,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "female",
     qualification: "psychologist",
     experienceYears: 4,
+    age: 33,
     priceMinor: 55000,
+    couplePriceMinor: null,
+    coupleSessionDurationMinutes: null,
     sessionsCount: 190,
     formats: ["online"],
     services: ["Особиста терапія"],
@@ -581,6 +674,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk", "en"],
     bio: "Сама пройшла еміграцію 2022 року — знаю, як воно. Працюю з українцями за кордоном: адаптація, провина вцілілого, туга за домом.",
     clientCategories: ["adaptation"],
+    aboutMe:
+      "Психологиня, сама пройшла еміграцію 2022 року — знаю це не з теорії. Працюю з українцями за кордоном.",
+    experienceText:
+      "Чотири роки практики, 190 сесій. Пройшла базовий курс позитивної психотерапії в Wiesbaden Academy.",
+    therapyStyle:
+      "Багато уваги приділяю темам провини вцілілого, туги за домом і адаптації в новій країні — з власним досвідом усередині.",
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // TODO: replace with real video
     education: {
       higher: [
@@ -620,7 +719,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "female",
     qualification: "psychologist",
     experienceYears: 3,
+    age: 28,
     priceMinor: 40000,
+    couplePriceMinor: null,
+    coupleSessionDurationMinutes: null,
     sessionsCount: 85,
     formats: ["online"],
     services: ["Дитяча терапія", "Особиста терапія"],
@@ -631,6 +733,12 @@ export const mockPsychologists: PsychologistProfile[] = [
     languages: ["uk"],
     bio: "Працюю з підлітками 12+ та молодими дорослими. Тривога, сором'язливість, конфлікти з батьками — приходьте, розберемось.",
     clientCategories: ["teens", "separation"],
+    aboutMe:
+      "Психологиня, працюю з підлітками 12+ та молодими дорослими. Тривога, сором'язливість, конфлікти з батьками — приходьте, розберемось.",
+    experienceText:
+      "Три роки практики, 85 сесій, паралельно працюю шкільною психологинею в ліцеї — щодня бачу підлітків у реальному контексті.",
+    therapyStyle:
+      "Говорю з підлітками як з рівними, без повчань. Використовую наративні техніки, щоб клієнт сам переосмислив свою історію.",
     videoUrl: null,
     education: {
       higher: [
@@ -660,7 +768,10 @@ export const mockPsychologists: PsychologistProfile[] = [
     gender: "female",
     qualification: "psychologist",
     experienceYears: 13,
+    age: 41,
     priceMinor: 95000,
+    couplePriceMinor: 130000,
+    coupleSessionDurationMinutes: 90,
     sessionsCount: 1500,
     formats: ["online"],
     services: ["Особиста терапія", "Парна терапія"],
@@ -701,6 +812,12 @@ export const mockPsychologists: PsychologistProfile[] = [
       "separation",
       "general",
     ],
+    aboutMe:
+      "Тринадцять років працюю з людьми, які пройшли через кризу — війну, втрату, дискримінацію, залежність. Створюю простір без осуду для будь-якого досвіду.",
+    experienceText:
+      "Понад 1500 сесій за тринадцять років практики. Працюю з ветеранами, ЛГБТК+ спільнотою, ВПО та людьми з РХП — з кожною групою окремо проходила профільні курси.",
+    therapyStyle:
+      "Гнучко поєдную методи залежно від запиту: КПТ і EMDR для травми, гештальт і системну сімейну терапію для стосунків. Головне — темп визначає клієнт, не я.",
     videoUrl: null,
     education: {
       higher: [
