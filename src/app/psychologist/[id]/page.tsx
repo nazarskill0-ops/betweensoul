@@ -1,4 +1,3 @@
-import { AppHeader } from "@/components/layout/AppHeader";
 import { PsychologistProfileView } from "@/features/psychologists/components/PsychologistProfileView";
 
 export default async function PsychologistProfilePage({
@@ -10,7 +9,6 @@ export default async function PsychologistProfilePage({
 
   return (
     <div className="min-h-dvh bg-white">
-      <AppHeader />
       <main className="mx-auto max-w-6xl px-5 py-8">
         <PsychologistProfileView id={id} />
       </main>
