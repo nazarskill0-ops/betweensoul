@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope, Syne } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AppHeader } from "@/components/layout/app-header";
@@ -36,6 +37,7 @@ export default function RootLayout({
           <AppFooter />
           </Providers>
       </body>
+      <GoogleAnalytics gaId="G-Q4JQ7H4RGH" />
     </html>
   );
 }
