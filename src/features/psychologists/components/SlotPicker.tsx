@@ -2,11 +2,8 @@
 
 import { useMemo, useState } from "react";
 import {
-  WEEKDAY_LABELS,
   combineDateAndTime,
-  formatWeekRange,
-  generateWeekSlots,
-  getWeekStart,
+  generateUpcomingSlots,
   toLocalDateIso,
   type SelectedSlot,
   type SlotServiceType,
@@ -15,6 +12,40 @@ import { formatSlotRange } from "../utils/formatSlotRange";
 import { ServiceTypeDropdown } from "./ServiceTypeDropdown";
 
 const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
+const INITIAL_VISIBLE_DAYS = 3;
+const LOAD_MORE_DAYS_STEP = 3;
+
+type DayGroup = { dateIso: string; date: Date; times: string[] };
+
+/** Заголовок групи-дня у списку слотів: "20 липня, понеділок". */
+function formatDayGroupHeading(date: Date): string {
+  const dayMonth = date.toLocaleDateString("uk-UA", { day: "numeric", month: "long" });
+  const weekday = date.toLocaleDateString("uk-UA", { weekday: "long" });
+  return `${dayMonth}, ${weekday}`;
+}
+
+/** Дата в підтвердженні обраного слоту: "20 липня" (без дня тижня). */
+function formatSelectedDateLabel(date: Date): string {
+  return date.toLocaleDateString("uk-UA", { day: "numeric", month: "long" });
+}
+
+function groupSlotsByDay(slots: { date: Date; time: string }[]): DayGroup[] {
+  const groups: DayGroup[] = [];
+  const indexByDateIso = new Map<string, number>();
+
+  for (const slot of slots) {
+    const dateIso = toLocalDateIso(slot.date);
+    const existingIndex = indexByDateIso.get(dateIso);
+    if (existingIndex === undefined) {
+      indexByDateIso.set(dateIso, groups.length);
+      groups.push({ dateIso, date: slot.date, times: [slot.time] });
+    } else {
+      groups[existingIndex].times.push(slot.time);
+    }
+  }
+
+  return groups;
+}
 
 export function SlotPicker({
   psychologistId,
@@ -32,37 +63,21 @@ export function SlotPicker({
   onServiceTypeChange: (type: SlotServiceType) => void;
 }) {
   const hasCoupleTherapy = couplePriceMinor !== null;
-  const [weekOffset, setWeekOffset] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot>(null);
-  const [selectedDayIso, setSelectedDayIso] = useState<string | null>(null);
+  const [visibleDayCount, setVisibleDayCount] = useState(INITIAL_VISIBLE_DAYS);
 
-  const weekStart = useMemo(() => getWeekStart(weekOffset), [weekOffset]);
-  const days = useMemo(
-    () => generateWeekSlots(weekStart, serviceType),
-    [weekStart, serviceType]
+  const upcomingSlots = useMemo(
+    () => generateUpcomingSlots(serviceType),
+    [serviceType]
   );
-
-  const selectedDayIndex = useMemo(() => {
-    if (selectedDayIso) {
-      const idx = days.findIndex((d) => toLocalDateIso(d.date) === selectedDayIso);
-      if (idx !== -1) return idx;
-    }
-    const firstFreeIdx = days.findIndex((d) => d.slots.some((s) => !s.isBooked));
-    return firstFreeIdx !== -1 ? firstFreeIdx : 0;
-  }, [days, selectedDayIso]);
-
-  const selectedDay = days[selectedDayIndex];
-
-  const changeWeek = (delta: number) => {
-    setWeekOffset((o) => o + delta);
-    setSelectedSlot(null);
-    setSelectedDayIso(null);
-  };
+  const dayGroups = useMemo(() => groupSlotsByDay(upcomingSlots), [upcomingSlots]);
+  const visibleDayGroups = dayGroups.slice(0, visibleDayCount);
+  const hasMoreDays = dayGroups.length > visibleDayCount;
 
   const changeServiceType = (type: SlotServiceType) => {
     onServiceTypeChange(type);
     setSelectedSlot(null);
-    setSelectedDayIso(null);
+    setVisibleDayCount(INITIAL_VISIBLE_DAYS);
   };
 
   const toggleSlot = (dateIso: string, time: string) => {
@@ -93,9 +108,9 @@ export function SlotPicker({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
+    <div className="flex flex-col gap-4 rounded-card bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-2xl text-ink">Оберіть зручний час</h2>
+        <h2 className="font-display text-xl font-bold text-ink">Оберіть зручний час</h2>
 
         {hasCoupleTherapy && (
           <div className="w-64 shrink-0">
@@ -104,104 +119,86 @@ export function SlotPicker({
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={() => changeWeek(-1)}
-          className="rounded-full border-[1.5px] border-sand-dark px-3 py-1.5 text-sm text-ink transition-colors hover:border-sage"
-        >
-          ← Попередній тиждень
-        </button>
-        <span className="text-sm font-medium text-ink-muted">
-          {formatWeekRange(weekStart)}
-        </span>
-        <button
-          type="button"
-          onClick={() => changeWeek(1)}
-          className="rounded-full border-[1.5px] border-sand-dark px-3 py-1.5 text-sm text-ink transition-colors hover:border-sage"
-        >
-          Наступний тиждень →
-        </button>
-      </div>
+      {dayGroups.length === 0 ? (
+        <p className="text-sm text-ink-muted">Немає доступних слотів найближчим часом.</p>
+      ) : (
+        <>
+          <div className="flex flex-col gap-5">
+            {visibleDayGroups.map((group) => (
+              <div key={group.dateIso} className="flex flex-col gap-2">
+                <h3 className="font-display text-base font-semibold text-ink">
+                  {formatDayGroupHeading(group.date)}
+                </h3>
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {days.map((day, i) => {
-          const dateIso = toLocalDateIso(day.date);
-          const isActive = i === selectedDayIndex;
-          return (
-            <button
-              key={dateIso}
-              type="button"
-              onClick={() => setSelectedDayIso(dateIso)}
-              className={`flex shrink-0 flex-col items-center gap-0.5 rounded-card border-[1.5px] px-4 py-2.5 transition-colors ${
-                isActive
-                  ? "border-sage bg-sage text-white"
-                  : "border-sand-dark text-ink hover:border-sage"
-              }`}
-            >
-              <span className="text-xs font-medium uppercase tracking-wide">
-                {WEEKDAY_LABELS[i]}
-              </span>
-              <span className="text-sm font-semibold">
-                {day.date.toLocaleDateString("uk-UA", {
-                  day: "numeric",
-                  month: "short",
-                })}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {group.times.map((time) => {
+                    const isSelected =
+                      selectedSlot?.dateIso === group.dateIso && selectedSlot.time === time;
+                    return (
+                      <button
+                        key={time}
+                        type="button"
+                        onClick={() => toggleSlot(group.dateIso, time)}
+                        className={`cursor-pointer rounded-lg border-[1.5px] px-3 py-2.5 text-center text-sm font-normal transition-all duration-200 hover:scale-[1.04] ${
+                          isSelected
+                            ? "border-sage bg-sage text-white"
+                            : "border-sand-dark text-ink hover:border-sage"
+                        }`}
+                      >
+                        {formatSlotRange(combineDateAndTime(group.date, time), activeDurationMinutes)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
 
-      <div className="flex flex-col gap-2">
-        {selectedDay.slots.length === 0 && (
-          <p className="text-sm text-ink-muted">Немає вільних слотів цього дня.</p>
-        )}
-        {selectedDay.slots.map((slot) => {
-          const dateIso = toLocalDateIso(selectedDay.date);
-          const isSelected =
-            selectedSlot?.dateIso === dateIso && selectedSlot.time === slot.time;
-          return (
-            <button
-              key={slot.time}
-              type="button"
-              disabled={slot.isBooked}
-              onClick={() => toggleSlot(dateIso, slot.time)}
-              className={`w-full rounded-full border-[1.5px] px-6 py-4 text-base font-medium transition-colors ${
-                slot.isBooked
-                  ? "cursor-not-allowed border-sand-dark text-ink-muted/50 line-through"
-                  : isSelected
-                    ? "border-sage bg-sage text-white"
-                    : "border-sand-dark text-ink hover:border-sage"
-              }`}
-            >
-              {formatSlotRange(
-                combineDateAndTime(selectedDay.date, slot.time),
-                activeDurationMinutes
+          {(hasMoreDays || visibleDayCount > INITIAL_VISIBLE_DAYS) && (
+            <div className="flex items-center gap-4">
+              {hasMoreDays && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleDayCount((c) => c + LOAD_MORE_DAYS_STEP)}
+                  className="w-fit text-sm font-medium text-sage transition-colors hover:text-sage/80"
+                >
+                  Показати більше дат
+                </button>
               )}
-            </button>
-          );
-        })}
-      </div>
-
-      {selectedSlot && (
-        <p className="text-sm font-medium text-ink">
-          Ви обрали:{" "}
-          {(() => {
-            const [year, month, day] = selectedSlot.dateIso.split("-").map(Number);
-            return new Date(year, month - 1, day).toLocaleDateString("uk-UA", {
-              day: "numeric",
-              month: "long",
-            });
-          })()}
-          , {selectedSlot.time}
-        </p>
+              {visibleDayCount > INITIAL_VISIBLE_DAYS && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleDayCount(INITIAL_VISIBLE_DAYS)}
+                  className="w-fit text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+                >
+                  Показати менше
+                </button>
+              )}
+            </div>
+          )}
+        </>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="text-sm text-ink-muted">
-          {activeDurationMinutes} хв · {activePriceUah} ₴
-        </span>
+      {selectedSlot && (
+        <div className="flex flex-col gap-0.5 text-sm font-medium text-ink">
+          <p>
+            Ви обрали: {serviceType === "couple" ? "Парна сесія" : "Індивідуальна сесія"} ·{" "}
+            {activePriceUah} ₴
+          </p>
+          <p className="text-ink-muted">
+            {(() => {
+              const [year, month, day] = selectedSlot.dateIso.split("-").map(Number);
+              const date = new Date(year, month - 1, day);
+              return `${formatSelectedDateLabel(date)} ${formatSlotRange(
+                combineDateAndTime(date, selectedSlot.time),
+                activeDurationMinutes
+              )}`;
+            })()}
+          </p>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <button
           type="button"
           disabled={!selectedSlot}

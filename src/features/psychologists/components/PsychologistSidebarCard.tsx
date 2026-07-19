@@ -127,8 +127,8 @@ export function PsychologistSidebarCard({
   };
 
   return (
-    <div className="flex max-h-[calc(100vh-7.5rem)] flex-col gap-3 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
-      <div className="-mx-5 -mt-5 h-[300px] shrink-0 overflow-hidden rounded-t-[16px]">
+    <div className="flex max-h-[calc(100vh-7.5rem)] flex-col gap-3 rounded-card bg-white p-5">
+      <div className="h-[300px] shrink-0 overflow-hidden rounded-xl">
         {psychologist.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -141,7 +141,7 @@ export function PsychologistSidebarCard({
         )}
       </div>
 
-      <div className="-mt-1.5 flex shrink-0 items-start justify-between gap-4">
+      <div className="mt-3 flex shrink-0 items-start justify-between gap-4">
         <div className="flex-1">
           <h1 className="font-display text-xl font-bold leading-tight text-ink">
             {psychologist.fullName}
@@ -238,7 +238,7 @@ export function PsychologistSidebarCard({
                 <div className="flex justify-between gap-3">
                   <span className="text-ink-muted">Тип сесії</span>
                   <span className="font-medium text-ink">
-                    {serviceType === "couple" ? "Парна терапія" : "Особиста терапія"}
+                    {serviceType === "couple" ? "Парна терапія" : "Індивідуальна терапія"}
                   </span>
                 </div>
               )}

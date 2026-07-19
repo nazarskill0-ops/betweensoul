@@ -27,7 +27,7 @@ export function GeneralInfoBlock({
     .filter((label): label is NonNullable<typeof label> => label !== undefined);
 
   const therapyTypesLabel =
-    psychologist.couplePriceMinor !== null ? "Особиста, Парна" : "Особиста";
+    psychologist.couplePriceMinor !== null ? "Індивідуальна, Парна" : "Індивідуальна";
 
   const stats: Stat[] = [
     ...(languageLabels.length > 0
@@ -63,7 +63,7 @@ export function GeneralInfoBlock({
   return (
     <div
       id="general-info"
-      className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5"
+      className="flex flex-col gap-4 rounded-card bg-white p-5"
     >
       <h2 className="font-display text-xl font-bold text-ink">Загальна інформація</h2>
 

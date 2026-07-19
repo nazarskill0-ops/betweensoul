@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef } from "react";
 import type { Review } from "../schema";
-
-const VISIBLE_COUNT = 2;
 
 function formatReviewDate(iso: string): string {
   return new Intl.DateTimeFormat("uk-UA", {
@@ -36,14 +34,15 @@ function StarRating({ rating }: { rating: number }) {
 function ReviewCard({ review }: { review: Review }) {
   return (
     <div className="flex flex-col gap-2 rounded-card border-[1.5px] border-sand-dark bg-white p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-semibold text-ink">{review.author}</span>
-        <span className="text-sm text-ink-muted">
-          {formatReviewDate(review.createdAt)}
-        </span>
+      <div className="flex flex-col gap-1">
+        <StarRating rating={review.rating} />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="font-semibold text-ink">{review.author}</span>
+          <span className="text-sm text-ink-muted">
+            {formatReviewDate(review.createdAt)}
+          </span>
+        </div>
       </div>
-
-      <StarRating rating={review.rating} />
 
       {review.topics.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -63,33 +62,69 @@ function ReviewCard({ review }: { review: Review }) {
   );
 }
 
+/*
+  Без нової залежності (embla-carousel і т.п. не можна — AI_PROMPT.md,
+  правило 13: нові пакети в package.json не ставимо). Тому drag-to-scroll
+  реалізовано вручну: тягнемо mousedown/mousemove, рахуємо зсув курсора
+  й підставляємо його як scrollLeft контейнера.
+*/
+function useDragScroll<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const drag = useRef({ isDown: false, startX: 0, scrollLeft: 0 });
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    drag.current = { isDown: true, startX: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft };
+  };
+
+  const stopDrag = () => {
+    drag.current.isDown = false;
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el || !drag.current.isDown) return;
+    e.preventDefault();
+    const x = e.pageX - el.offsetLeft;
+    const walk = x - drag.current.startX;
+    el.scrollLeft = drag.current.scrollLeft - walk;
+  };
+
+  return { ref, onMouseDown, onMouseMove, onMouseUp: stopDrag, onMouseLeave: stopDrag };
+}
+
 export function ReviewsList({ reviews }: { reviews: Review[] }) {
-  const [showAll, setShowAll] = useState(false);
+  const drag = useDragScroll<HTMLDivElement>();
 
   if (reviews.length === 0) return null;
 
-  const visibleReviews = showAll ? reviews : reviews.slice(0, VISIBLE_COUNT);
-  const hasMore = reviews.length > VISIBLE_COUNT;
+  if (reviews.length === 1) {
+    return (
+      <div className="flex flex-col gap-3 rounded-card bg-white p-5">
+        <h2 className="font-display text-xl font-bold text-ink">Відгуки</h2>
+        <ReviewCard review={reviews[0]} />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-3 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
-      <h2 className="font-display text-2xl text-ink">Відгуки</h2>
-
-      <div className="flex flex-col gap-3">
-        {visibleReviews.map((review) => (
-          <ReviewCard key={review.id} review={review} />
+    <div className="flex flex-col gap-3 rounded-card bg-white p-5">
+      <h2 className="font-display text-xl font-bold text-ink">Відгуки</h2>
+      <div
+        ref={drag.ref}
+        onMouseDown={drag.onMouseDown}
+        onMouseMove={drag.onMouseMove}
+        onMouseUp={drag.onMouseUp}
+        onMouseLeave={drag.onMouseLeave}
+        className="flex cursor-grab select-none gap-3 overflow-x-auto pb-1 active:cursor-grabbing"
+      >
+        {reviews.map((review) => (
+          <div key={review.id} className="w-80 shrink-0">
+            <ReviewCard review={review} />
+          </div>
         ))}
       </div>
-
-      {hasMore && (
-        <button
-          type="button"
-          onClick={() => setShowAll((v) => !v)}
-          className="w-fit rounded-full border-[1.5px] border-sand-dark px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-sage"
-        >
-          {showAll ? "Згорнути" : `Всі відгуки (${reviews.length})`}
-        </button>
-      )}
     </div>
   );
 }

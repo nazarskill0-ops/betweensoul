@@ -50,8 +50,8 @@ export function FAQAccordion() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <div className="flex flex-col gap-3 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
-      <h2 className="font-display text-2xl text-ink">Часті питання</h2>
+    <div className="flex flex-col gap-3 rounded-card bg-white p-5">
+      <h2 className="font-display text-xl font-bold text-ink">Часті питання</h2>
 
       <div className="flex flex-col divide-y divide-sand-dark">
         {FAQ_ITEMS.map((item, i) => {

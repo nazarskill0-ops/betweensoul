@@ -8,7 +8,7 @@ export function TopicsBlock({
   if (psychologist.topics.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-5">
+    <div className="flex flex-col gap-4 rounded-card bg-white p-5">
       <h2 className="font-display text-xl font-bold text-ink">З чим я працюю</h2>
 
       <div className="flex flex-wrap gap-2">

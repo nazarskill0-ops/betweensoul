@@ -97,18 +97,55 @@ export function formatWeekRange(weekStart: Date): string {
   return `${startStr} – ${endStr}`;
 }
 
-/** Перший день з вільними слотами, починаючи з поточного тижня — для "найближчий час". */
-export function findNearestFreeDay(
+export type UpcomingSlot = { date: Date; time: string };
+
+/**
+ * Плаский хронологічний список ще не заброньованих слотів на кілька тижнів
+ * вперед — для простого списку "найближчі доступні сесії" (без week-view).
+ */
+export function generateUpcomingSlots(
   serviceType: SlotServiceType = "individual",
-  weeksToSearch = 4
-): DayColumn | null {
+  weeksToSearch = 8
+): UpcomingSlot[] {
+  const now = Date.now();
+  const result: UpcomingSlot[] = [];
+
   for (let w = 0; w < weeksToSearch; w++) {
     const days = generateWeekSlots(getWeekStart(w), serviceType);
     for (const day of days) {
-      if (day.slots.some((s) => !s.isBooked)) return day;
+      for (const slot of day.slots) {
+        if (slot.isBooked) continue;
+        if (combineDateAndTime(day.date, slot.time).getTime() < now) continue;
+        result.push({ date: day.date, time: slot.time });
+      }
     }
   }
-  return null;
+
+  return result.sort(
+    (a, b) =>
+      combineDateAndTime(a.date, a.time).getTime() -
+      combineDateAndTime(b.date, b.time).getTime()
+  );
+}
+
+/**
+ * Найближчий день з вільними слотами — для "найближчий час" у сайдбарі.
+ * Побудований на тому самому `generateUpcomingSlots`, що й SlotPicker, тож
+ * дата тут завжди збігається з першим слотом у списку бронювання (раніше
+ * ця функція сканувала тижні окремо й не відкидала слоти, що вже минули).
+ */
+export function findNearestFreeDay(
+  serviceType: SlotServiceType = "individual"
+): DayColumn | null {
+  const upcoming = generateUpcomingSlots(serviceType);
+  if (upcoming.length === 0) return null;
+
+  const nearestDateIso = toLocalDateIso(upcoming[0].date);
+  const slots: DaySlot[] = upcoming
+    .filter((slot) => toLocalDateIso(slot.date) === nearestDateIso)
+    .map((slot) => ({ time: slot.time, isBooked: false }));
+
+  return { date: upcoming[0].date, slots };
 }
 
 /** День (з generateWeekSlots) + "14:00" → Date на 14:00 того дня — для formatSlotRange. */

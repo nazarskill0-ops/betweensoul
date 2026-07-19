@@ -20,7 +20,7 @@ function ChevronDownIcon({ className }: { className?: string }) {
 }
 
 const SERVICE_TYPE_OPTIONS: { value: SlotServiceType; label: string }[] = [
-  { value: "individual", label: "Персональна терапія" },
+  { value: "individual", label: "Індивідуальна терапія" },
   { value: "couple", label: "Парна терапія" },
 ];
 

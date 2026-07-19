@@ -17,6 +17,15 @@ export const SERVICES = [
 /** Три базовые услуги для стартового выбора в каталоге. */
 export const CORE_SERVICES = SERVICES.slice(0, 3);
 
+/**
+ * Значення SERVICES — це те саме, що зберігається в URL/фільтрах/моках
+ * (`?service=Особиста терапія`, `p.services.includes(...)`), тож саме
+ * значення не перейменовуємо без міграції. Тут лише те, що бачить клієнт.
+ */
+export function formatServiceLabel(service: string): string {
+  return service === "Особиста терапія" ? "Індивідуальна терапія" : service;
+}
+
 /** Теми запитів, сгруппированы как в мега-меню Rozmova. */
 export const TOPIC_GROUPS = [
   {
@@ -158,6 +167,7 @@ export const psychologistCardSchema = z.object({
   specializations: z.array(z.string()),
   languages: z.array(z.string()),
   bio: z.string().optional(),
+  aboutMe: z.string(), // «Про мене» — власні слова психотерапевта
   clientCategories: z.array(z.string()).default([]),
   videoUrl: z.string().nullable().default(null),
   age: z.number().int().positive(),
@@ -189,7 +199,6 @@ export type Review = z.infer<typeof reviewSchema>;
 
 /** Полный профиль психолога (страница /psychologist/[id]). */
 export const psychologistProfileSchema = psychologistCardSchema.extend({
-  aboutMe: z.string(), // «Про мене»
   experienceText: z.string(), // «Досвід і компетенції»
   therapyStyle: z.string(), // «Особливості терапії»
   topicsSecondary: z.array(z.string()), // «Я також працюю з»

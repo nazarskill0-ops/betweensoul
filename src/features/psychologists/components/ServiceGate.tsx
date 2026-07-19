@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatServiceLabel } from "../schema";
 
 /*
   Экран без выбранной услуги: просим клиента сначала определиться с форматом.
@@ -28,7 +29,7 @@ export function ServiceGate() {
             href={`/catalog?service=${encodeURIComponent(service)}`}
             className="rounded-card border-[1.5px] border-sand-dark bg-white px-6 py-8 font-semibold text-ink transition-colors hover:border-sage hover:text-sage"
           >
-            {service}
+            {formatServiceLabel(service)}
           </Link>
         ))}
       </div>

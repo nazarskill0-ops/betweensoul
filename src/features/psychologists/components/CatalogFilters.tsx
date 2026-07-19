@@ -85,7 +85,7 @@ export function CatalogFilters() {
         : "";
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-card border-[1.5px] border-sand-dark bg-white p-4">
+    <div className="flex flex-wrap items-center gap-3 rounded-card bg-white p-4">
       <FilterDropdown
         label="Тема"
         mode="multi"

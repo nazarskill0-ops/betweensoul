@@ -98,7 +98,7 @@ const FAQ = [
 
 function Logo({ className = "" }: { className?: string }) {
   return (
-    <span className={`font-display ${className}`}>
+    <span className={`font-logo ${className}`}>
       calm<span className="text-sage">i</span>
     </span>
   );

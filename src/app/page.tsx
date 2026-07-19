@@ -7,7 +7,7 @@ export default function HomePage() {
     <>
       <AppHeader />
       <main className="flex min-h-[calc(100dvh-4rem)] flex-col items-center justify-center gap-6 px-5 text-center">
-        <span className="font-display text-4xl tracking-tight">
+        <span className="font-logo text-4xl tracking-tight">
           calm<span className="text-sage">i</span>
         </span>
         <p className="max-w-md text-ink-muted">

@@ -57,8 +57,10 @@ Query + Zustand + Zod + react-hook-form. Архитектура уже выбр�
 9. Стили — только Tailwind с токенами проекта: `bg-sage`, `bg-sand`,
    `bg-sage-light`, `text-ink`, `text-ink-muted`, `text-rose`,
    `border-sand-dark`, `rounded-card`, `font-display` (заголовки). Никаких
-   своих hex-цветов, css-файлов, styled-components. Референс внешнего вида —
-   `src/app/page.tsx` и `_design_ref/index.html`.
+   своих hex-цветов, css-файлов, styled-components. Актуальные значения и
+   назначение токенов — в `docs/DESIGN_SYSTEM.md`. `_design_ref/index.html`
+   — исходный бежевый макет, палитру больше не отражает (сайт перешёл на
+   серо-белую); ориентируйся на `src/app/page.tsx` и `DESIGN_SYSTEM.md`.
 10. Все тексты интерфейса — на украинском.
 11. Мобильная версия обязательна (проверяй на 375px).
 

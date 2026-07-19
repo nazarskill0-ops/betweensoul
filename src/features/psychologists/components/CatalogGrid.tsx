@@ -10,6 +10,7 @@ export function CatalogGrid({ filters }: { filters: PsychologistFilters }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { data, isLoading } = usePsychologists(filters);
+  const isCoupleService = filters.service === "Парна терапія";
 
   const resetFilters = () => {
     const service = searchParams.get("service");
@@ -49,7 +50,11 @@ export function CatalogGrid({ filters }: { filters: PsychologistFilters }) {
   return (
     <div className="grid grid-cols-1 gap-4">
       {data.map((psychologist) => (
-        <PsychologistCardItem key={psychologist.profileId} psychologist={psychologist} />
+        <PsychologistCardItem
+          key={psychologist.profileId}
+          psychologist={psychologist}
+          isCoupleService={isCoupleService}
+        />
       ))}
     </div>
   );

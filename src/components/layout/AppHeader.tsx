@@ -10,8 +10,8 @@ const navLinks = [
 
 export function AppHeader() {
   return (
-    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-sand-dark bg-sand/90 px-5 backdrop-blur-md md:px-12">
-      <Link href="/" className="font-display text-2xl tracking-tight">
+    <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-sand-dark bg-white/90 px-5 backdrop-blur-md md:px-12">
+      <Link href="/" className="font-logo text-2xl tracking-tight">
         calm<span className="text-sage">i</span>
       </Link>
 

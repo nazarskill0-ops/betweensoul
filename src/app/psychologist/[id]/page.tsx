@@ -9,11 +9,11 @@ export default async function PsychologistProfilePage({
   const { id } = await params;
 
   return (
-    <>
+    <div className="min-h-dvh bg-white">
       <AppHeader />
       <main className="mx-auto max-w-6xl px-5 py-8">
         <PsychologistProfileView id={id} />
       </main>
-    </>
+    </div>
   );
 }

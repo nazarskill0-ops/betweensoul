@@ -8,7 +8,6 @@ import { VideoIntroBlock } from "./VideoIntroBlock";
 import { GeneralInfoBlock } from "./GeneralInfoBlock";
 import { TopicsBlock } from "./TopicsBlock";
 import { ProfileInfoSections } from "./ProfileInfoSections";
-import { EducationTimeline } from "./EducationTimeline";
 import { ReviewsList } from "./ReviewsList";
 import { SlotPicker } from "./SlotPicker";
 import { FAQAccordion } from "./FAQAccordion";
@@ -43,7 +42,6 @@ export function PsychologistProfileView({ id }: { id: string }) {
           <TopicsBlock psychologist={data} />
 
           <ProfileInfoSections psychologist={data} />
-          <EducationTimeline education={data.education} />
           <ReviewsList reviews={data.reviews} />
 
           <div id="booking">

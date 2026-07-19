@@ -1,17 +1,21 @@
 import type { PsychologistProfile } from "../schema";
 import { CollapsibleSection } from "./CollapsibleSection";
-import { HeartIcon, ListIcon, MedalIcon, PersonIcon } from "./icons";
+import { EducationTimeline } from "./EducationTimeline";
+import { GraduationCapIcon, HeartIcon, ListIcon, MedalIcon, PersonIcon } from "./icons";
 
 export function ProfileInfoSections({
   psychologist,
 }: {
   psychologist: PsychologistProfile;
 }) {
+  const hasEducation =
+    psychologist.education.higher.length > 0 ||
+    psychologist.education.courses.length > 0 ||
+    psychologist.education.other.length > 0;
+
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="font-display text-2xl text-ink">Про терапевта</h2>
-
-      <div className="divide-y divide-sand-dark overflow-hidden rounded-card bg-white shadow-sm">
+      <div className="divide-y divide-[#f2f2f2] overflow-hidden rounded-card bg-white">
         <CollapsibleSection
           bare
           defaultOpen
@@ -53,6 +57,16 @@ export function ProfileInfoSections({
                 </span>
               ))}
             </div>
+          </CollapsibleSection>
+        )}
+
+        {hasEducation && (
+          <CollapsibleSection
+            bare
+            title="Моя освіта"
+            icon={<GraduationCapIcon className="h-4 w-4 text-sage" />}
+          >
+            <EducationTimeline education={psychologist.education} />
           </CollapsibleSection>
         )}
       </div>

@@ -3,8 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import { QUALIFICATIONS, type PsychologistCard } from "../schema";
+import { formatSessionsCountBadge } from "../utils/formatters";
+import { CheckIcon } from "./icons";
 
 const MAX_TOPIC_BADGES = 4;
+const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
+const ABOUT_ME_EXCERPT_LENGTH = 380;
 
 function formatExperienceYears(years: number): string {
   const mod100 = years % 100;
@@ -23,42 +27,55 @@ function getYoutubeVideoId(url: string): string | null {
   return match ? match[1] : null;
 }
 
-function BadgeGroup({
-  items,
-  className,
-  gapClassName = "gap-3",
-  maxVisible,
+function LabeledText({
+  label,
+  className = "",
+  children,
 }: {
-  items: string[];
-  className: string;
-  gapClassName?: string;
-  maxVisible: number;
+  label: string;
+  className?: string;
+  children: React.ReactNode;
 }) {
-  const visible = items.slice(0, maxVisible);
-  const hiddenCount = items.length - maxVisible;
-
   return (
-    <div className={`flex flex-wrap items-center ${gapClassName}`}>
-      {visible.map((item) => (
-        <span key={item} className={className}>
-          {item}
-        </span>
-      ))}
-      {hiddenCount > 0 && (
-        <span className="rounded-full border border-sand-dark px-2.5 py-1 text-[13px] text-ink-muted">
-          +{hiddenCount}
-        </span>
-      )}
+    <div className="flex flex-col gap-0.5">
+      <span className="text-xs text-ink-muted">{label}</span>
+      <p className={`text-base text-ink ${className}`}>{children}</p>
     </div>
   );
 }
 
-function getBioExcerpt(bio: string): string {
-  const firstSentenceEnd = bio.indexOf(".");
-  const firstSentence =
-    firstSentenceEnd !== -1 ? bio.slice(0, firstSentenceEnd + 1) : bio;
-  if (firstSentence.length <= 100) return firstSentence;
-  return `${bio.slice(0, 97).trimEnd()}…`;
+function getAboutMeExcerpt(aboutMe: string): { text: string; isTruncated: boolean } {
+  if (aboutMe.length <= ABOUT_ME_EXCERPT_LENGTH) {
+    return { text: aboutMe, isTruncated: false };
+  }
+  return {
+    text: `${aboutMe.slice(0, ABOUT_ME_EXCERPT_LENGTH).trimEnd()}…`,
+    isTruncated: true,
+  };
+}
+
+function TabButton({
+  label,
+  isActive,
+  onClick,
+}: {
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`border-b-2 pb-1.5 text-sm text-sage transition-colors ${
+        isActive
+          ? "border-sage font-semibold"
+          : "border-transparent font-medium hover:text-sage/80"
+      }`}
+    >
+      {label}
+    </button>
+  );
 }
 
 function ShieldIcon({ className }: { className?: string }) {
@@ -139,21 +156,34 @@ function CloseIcon({ className }: { className?: string }) {
 
 export function PsychologistCardItem({
   psychologist,
+  isCoupleService = false,
 }: {
   psychologist: PsychologistCard;
+  isCoupleService?: boolean;
 }) {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
-  const priceUah = psychologist.priceMinor / 100;
+  const [activeTab, setActiveTab] = useState<"main" | "about">("main");
+  const activeDurationMinutes = isCoupleService
+    ? (psychologist.coupleSessionDurationMinutes ?? INDIVIDUAL_SESSION_DURATION_MINUTES)
+    : INDIVIDUAL_SESSION_DURATION_MINUTES;
+  const activePriceMinor = isCoupleService
+    ? (psychologist.couplePriceMinor ?? psychologist.priceMinor)
+    : psychologist.priceMinor;
+  const activePriceUah = activePriceMinor / 100;
   const qualificationLabel = QUALIFICATIONS.find(
     (q) => q.value === psychologist.qualification
   )?.label;
+  const sessionsBadge = formatSessionsCountBadge(psychologist.sessionsCount);
+  const aboutMeExcerpt = getAboutMeExcerpt(psychologist.aboutMe);
+  const visibleTopics = psychologist.topics.slice(0, MAX_TOPIC_BADGES);
+  const hiddenTopicsCount = psychologist.topics.length - MAX_TOPIC_BADGES;
   const videoId = psychologist.videoUrl
     ? getYoutubeVideoId(psychologist.videoUrl)
     : null;
 
   return (
-    <div className="flex flex-col gap-5 rounded-card border-[1.5px] border-sand-dark bg-white p-5 sm:flex-row sm:gap-6">
-      <div className="relative h-56 w-full shrink-0 sm:h-auto sm:w-56">
+    <div className="flex flex-col gap-5 rounded-card bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:flex-row sm:gap-6">
+      <div className="relative h-56 w-full shrink-0 self-start sm:aspect-[4/5] sm:h-auto sm:w-56">
         {psychologist.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -179,65 +209,106 @@ export function PsychologistCardItem({
 
       <div className="flex flex-1 flex-col gap-5">
         <div className="flex flex-col gap-1.5">
-          <h3 className="font-display text-2xl leading-tight text-ink">
+          <h3 className="font-display text-2xl font-bold leading-tight text-ink">
             {psychologist.fullName}
           </h3>
           {(qualificationLabel || psychologist.experienceYears !== null) && (
-            <div className="flex items-center gap-1.5 text-sm">
+            <div className="flex items-center gap-1.5 text-sm font-semibold text-ink-muted">
               {qualificationLabel && (
                 <>
                   <ShieldIcon className="h-4 w-4 shrink-0 text-sage" />
-                  <span className="font-normal text-ink">{qualificationLabel}</span>
+                  <span>{qualificationLabel}</span>
                 </>
               )}
               {qualificationLabel && psychologist.experienceYears !== null && (
-                <span className="text-ink-muted"> · </span>
+                <span className="font-normal text-ink-muted"> · </span>
               )}
               {psychologist.experienceYears !== null && (
-                <span className="text-ink-muted">
-                  {formatExperienceYears(psychologist.experienceYears)}
-                </span>
+                <span>{formatExperienceYears(psychologist.experienceYears)}</span>
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-semibold text-ink-muted">
+            <span className="flex items-center gap-1">
+              <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
+              Підтверджений диплом
+            </span>
+            {sessionsBadge && (
+              <span className="flex items-center gap-1">
+                <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
+                {sessionsBadge} проведених сесій
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-5">
+            <TabButton
+              label="Основне"
+              isActive={activeTab === "main"}
+              onClick={() => setActiveTab("main")}
+            />
+            <TabButton
+              label="Про мене"
+              isActive={activeTab === "about"}
+              onClick={() => setActiveTab("about")}
+            />
+          </div>
+
+          {activeTab === "main" ? (
+            <div className="flex flex-col gap-3">
+              {psychologist.specializations.length > 0 && (
+                <LabeledText label="Методи роботи">
+                  {psychologist.specializations.join(", ")}
+                </LabeledText>
+              )}
+
+              {psychologist.topics.length > 0 && (
+                <LabeledText label="Працює з темами">
+                  {visibleTopics.join(", ")}
+                  {hiddenTopicsCount > 0 && (
+                    <>
+                      {" "}
+                      <Link
+                        href={`/psychologist/${psychologist.profileId}`}
+                        className="font-medium text-sage transition-colors hover:text-sage/80"
+                      >
+                        і ще {hiddenTopicsCount}
+                      </Link>
+                    </>
+                  )}
+                </LabeledText>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-start gap-1">
+              <LabeledText label="Про терапевта" className="line-clamp-5">
+                {aboutMeExcerpt.text}
+              </LabeledText>
+              {aboutMeExcerpt.isTruncated && (
+                <Link
+                  href={`/psychologist/${psychologist.profileId}`}
+                  className="text-sm font-medium text-sage transition-colors hover:text-sage/80"
+                >
+                  Читати далі
+                </Link>
               )}
             </div>
           )}
         </div>
 
-        <div className="flex flex-col gap-3">
-          {psychologist.topics.length > 0 && (
-            <BadgeGroup
-              items={psychologist.topics}
-              className="rounded-full border border-sand-dark bg-white px-3 py-1.5 text-sm text-ink-muted"
-              gapClassName="gap-2"
-              maxVisible={MAX_TOPIC_BADGES}
-            />
-          )}
-
-          {psychologist.specializations.length > 0 && (
-            <p className="truncate text-base text-ink-muted">
-              <span className="font-medium">Методи:</span>{" "}
-              {psychologist.specializations.join(", ")}
-            </p>
-          )}
-        </div>
-
-        {psychologist.bio && (
-          <div className="border-l-2 border-sage py-1 pl-4">
-            <p className="text-sm text-ink-muted italic">
-              "{getBioExcerpt(psychologist.bio)}"
-            </p>
-          </div>
-        )}
-
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-1">
-          <span className="flex items-center gap-1.5 text-base font-semibold">
+          <span className="flex items-center gap-1.5 text-base font-bold">
             <ClockIcon className="h-4 w-4 shrink-0 text-ink-muted" />
-            <span className="text-ink-muted">50 хв</span>
+            <span className="text-ink-muted">{activeDurationMinutes} хв</span>
             <span className="text-ink-muted"> · </span>
-            <span className="text-ink-muted">{priceUah} ₴</span>
+            <span className="text-ink-muted">{activePriceUah} ₴</span>
           </span>
           <Link
             href={`/psychologist/${psychologist.profileId}`}
-            className="flex items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sage"
+            className="flex items-center gap-1.5 rounded-full bg-ink-muted px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sage"
           >
             Переглянути профіль
             <ArrowRightIcon className="h-4 w-4 shrink-0" />

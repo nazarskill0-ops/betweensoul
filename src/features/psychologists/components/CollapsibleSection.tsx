@@ -51,7 +51,7 @@ export function CollapsibleSection({
               {icon}
             </span>
           )}
-          <h2 className="font-display text-xl text-ink">{title}</h2>
+          <h2 className={`font-display text-xl text-ink ${bare ? "font-bold" : ""}`}>{title}</h2>
         </div>
         <ChevronDownIcon
           className={`h-5 w-5 shrink-0 text-ink-muted transition-transform ${
