@@ -17,6 +17,15 @@ export const SERVICES = [
 /** Три базовые услуги для стартового выбора в каталоге. */
 export const CORE_SERVICES = SERVICES.slice(0, 3);
 
+/**
+ * Значення SERVICES — це те саме, що зберігається в URL/фільтрах/моках
+ * (`?service=Особиста терапія`, `p.services.includes(...)`), тож саме
+ * значення не перейменовуємо без міграції. Тут лише те, що бачить клієнт.
+ */
+export function formatServiceLabel(service: string): string {
+  return service === "Особиста терапія" ? "Індивідуальна терапія" : service;
+}
+
 /** Теми запитів, сгруппированы как в мега-меню Rozmova. */
 export const TOPIC_GROUPS = [
   {
@@ -31,23 +40,19 @@ export const TOPIC_GROUPS = [
       "Самооцінка та самоцінність",
       "Нав'язливі думки та ритуали",
       "Хімічні залежності",
-      "Психосоматика",
       "Ставлення до їжі",
-      "Психолог ЛГБТ-френдлі",
     ],
   },
   {
     group: "Нові умови життя",
     topics: [
       "Втрата та горе",
-      "Адаптація, еміграція",
       "Народження дитини",
       "ПТСР",
       "Кризи і травми",
-      "Репродуктивний психолог",
-      "Психолог для вагітних",
-      "Психолог для літніх людей",
-      "Психолог для військових та їхніх близьких",
+      "Репродуктивне здоров'я",
+      "Вагітність",
+      "Літній вік",
     ],
   },
   {
@@ -56,8 +61,7 @@ export const TOPIC_GROUPS = [
       "Сімейні стосунки",
       "Співзалежність",
       "Аб'юз, емоційне насилля",
-      "Психолог при розлученні",
-      "Психотерапевт з соціофобії",
+      "Соціофобія",
     ],
   },
   {
@@ -66,9 +70,9 @@ export const TOPIC_GROUPS = [
       "Емоційне вигорання",
       "Ставлення до грошей",
       "Прокрастинація",
-      "Мотиваційний психолог",
-      "Психолог з РДУГ",
-      "Психолог з профорієнтації",
+      "Мотивація",
+      "РДУГ",
+      "Профорієнтація",
     ],
   },
 ] as const;
@@ -103,14 +107,24 @@ export const SPECIALIZATIONS = [
 ] as const;
 
 export const CLIENT_CATEGORIES = [
-  { value: "veterans", label: "Учасники бойових дій та ветерани" },
-  { value: "couples", label: "Парна терапія" },
-  { value: "disabilities", label: "Люди з інвалідністю" },
-  { value: "chronic", label: "Тяжкі та хронічні захворювання" },
-  { value: "business", label: "Бізнес та керівники" },
-  { value: "children", label: "Діти та підлітки" },
-  { value: "grief", label: "Втрата та горювання" },
   { value: "general", label: "Загальна аудиторія" },
+  { value: "veterans", label: "Учасники бойових дій та ветерани" },
+  { value: "lgbtq", label: "ЛГБТК+ спільнота" },
+  { value: "military_families", label: "Родини військових" },
+  { value: "disabilities", label: "Люди з інвалідністю" },
+  { value: "business", label: "Бізнес та керівники" },
+  { value: "grief", label: "Втрата та горювання" },
+  { value: "eating_disorders", label: "Розлади харчової поведінки (РХП)" },
+  {
+    value: "chronic_illness",
+    label: "Тяжкі та хронічні захворювання (включно з психосоматикою)",
+  },
+  { value: "idp", label: "ВПО (внутрішньо переміщені особи)" },
+  { value: "abuse_survivors", label: "Пережили домашнє/сексуальне насильство" },
+  { value: "divorce", label: "Розлучення та вихід зі стосунків" },
+  { value: "separation", label: "Сепарація від батьків" },
+  { value: "adaptation", label: "Адаптація та еміграція" },
+  { value: "addiction", label: "Залежність (алкогольна, наркотична, ігрова)" },
 ] as const;
 
 export const LANGUAGES = [
@@ -152,6 +166,13 @@ export const psychologistCardSchema = z.object({
   topics: z.array(z.string()),
   specializations: z.array(z.string()),
   languages: z.array(z.string()),
+  bio: z.string().optional(),
+  aboutMe: z.string(), // «Про мене» — власні слова психотерапевта
+  clientCategories: z.array(z.string()).default([]),
+  videoUrl: z.string().nullable().default(null),
+  age: z.number().int().positive(),
+  couplePriceMinor: z.number().int().nonnegative().nullable().default(null), // ціна за парну сесію
+  coupleSessionDurationMinutes: z.number().int().positive().nullable().default(null),
 });
 export type PsychologistCard = z.infer<typeof psychologistCardSchema>;
 
@@ -178,7 +199,8 @@ export type Review = z.infer<typeof reviewSchema>;
 
 /** Полный профиль психолога (страница /psychologist/[id]). */
 export const psychologistProfileSchema = psychologistCardSchema.extend({
-  bio: z.string(),
+  experienceText: z.string(), // «Досвід і компетенції»
+  therapyStyle: z.string(), // «Особливості терапії»
   topicsSecondary: z.array(z.string()), // «Я також працюю з»
   topicsExcluded: z.array(z.string()), // «З чим я не працюю»
   education: z.object({
@@ -194,11 +216,13 @@ export type PsychologistProfile = z.infer<typeof psychologistProfileSchema>;
 export const psychologistFiltersSchema = z.object({
   q: z.string().optional(), // поиск по имени
   service: z.string().optional(),
-  topic: z.string().optional(), // ищет и в основной, и во вторичной экспертизе
-  specialization: z.string().optional(),
-  language: z.string().optional(),
+  topics: z.array(z.string()).optional(), // ищет и в основной, и во вторичной экспертизе
+  specializations: z.array(z.string()).optional(),
+  languages: z.array(z.string()).optional(),
+  clientCategories: z.array(z.string()).optional(),
   gender: z.string().optional(),
   qualification: z.string().optional(),
+  priceMin: z.coerce.number().int().nonnegative().optional(),
   priceMax: z.coerce.number().int().positive().optional(),
 });
 export type PsychologistFilters = z.infer<typeof psychologistFiltersSchema>;

@@ -28,24 +28,40 @@ export async function fetchPsychologists(
     }
     if (filters.service && !p.services.includes(filters.service)) return false;
     if (
-      filters.topic &&
-      !p.topics.includes(filters.topic) &&
-      !p.topicsSecondary.includes(filters.topic)
+      filters.topics &&
+      filters.topics.length > 0 &&
+      !filters.topics.some(
+        (t) => p.topics.includes(t) || p.topicsSecondary.includes(t)
+      )
     ) {
       return false;
     }
     if (
-      filters.specialization &&
-      !p.specializations.includes(filters.specialization)
+      filters.specializations &&
+      filters.specializations.length > 0 &&
+      !filters.specializations.some((s) => p.specializations.includes(s))
     ) {
       return false;
     }
-    if (filters.language && !p.languages.includes(filters.language))
+    if (
+      filters.languages &&
+      filters.languages.length > 0 &&
+      !filters.languages.some((l) => p.languages.includes(l))
+    ) {
       return false;
+    }
+    if (
+      filters.clientCategories &&
+      filters.clientCategories.length > 0 &&
+      !filters.clientCategories.some((c) => p.clientCategories.includes(c))
+    ) {
+      return false;
+    }
     if (filters.gender && p.gender !== filters.gender) return false;
     if (filters.qualification && p.qualification !== filters.qualification)
       return false;
     if (filters.priceMax && p.priceMinor > filters.priceMax) return false;
+    if (filters.priceMin && p.priceMinor < filters.priceMin) return false;
     return true;
   });
 }
