@@ -86,11 +86,7 @@ const SECTIONS = [
 export default function PrivacyPage() {
   return (
     <main className="mx-auto max-w-2xl px-5 py-20 md:px-12">
-      <a href="/" className="text-sm text-sage hover:underline">
-        ← На головну
-      </a>
-
-      <div className="mt-4 text-xs font-semibold uppercase tracking-wide text-sage">
+      <div className="text-xs font-semibold uppercase tracking-wide text-sage">
         Юридична інформація
       </div>
       <h1 className="font-display text-3xl md:text-4xl">

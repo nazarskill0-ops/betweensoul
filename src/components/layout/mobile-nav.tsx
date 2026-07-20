@@ -74,7 +74,7 @@ export function MobileNav() {
                 {group.topics.map((topic) => (
                   <Link
                     key={topic}
-                    href={`/catalog?topic=${encodeURIComponent(topic)}`}
+                    href={`/catalog?topics=${encodeURIComponent(topic)}`}
                     onClick={closeAll}
                     className="block py-2 text-sm text-white/90 transition-colors hover:text-white"
                   >
@@ -93,7 +93,7 @@ export function MobileNav() {
             {SPECIALIZATIONS.map((item) => (
               <Link
                 key={item}
-                href={`/catalog?specialization=${encodeURIComponent(item)}`}
+                href={`/catalog?specializations=${encodeURIComponent(item)}`}
                 onClick={closeAll}
                 className="block py-2.5 text-sm text-white/90 transition-colors hover:text-white"
               >

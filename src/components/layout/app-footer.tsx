@@ -1,20 +1,31 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
-import { SERVICES, SPECIALIZATIONS, TOPIC_GROUPS } from "@/features/psychologists/schema";
+import { SERVICES, TOPIC_GROUPS } from "@/features/psychologists/schema";
+import { slugifyMethod } from "@/features/psychologists/utils/methodSlug";
 
 const POPULAR_TOPICS = TOPIC_GROUPS.flatMap((g) => g.topics).slice(0, 6);
+// Fixed curated list (not the full SPECIALIZATIONS taxonomy) — each links to
+// its informational /methods/[slug] page rather than a catalog filter.
+const FOOTER_METHODS = [
+  "КПТ",
+  "Гештальт",
+  "Психоаналіз",
+  "Арт-терапія",
+  "EMDR",
+  "Екзистенційний аналіз",
+] as const;
 
 export function AppFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#151a18] px-5 py-14 md:px-12">
+    <footer className="bg-sand-dark px-5 py-14 md:px-12">
       <div className="mx-auto flex max-w-7xl flex-col gap-12">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between">
           <div className="max-w-xs">
-            <Logo variant="light" />
-            <p className="mt-3 text-sm text-white/60">
-              Платформа для пошуку психологів та психотерапевтів в Україні
+            <Logo />
+            <p className="mt-3 text-sm text-ink-muted">
+              Онлайн платформа для пошуку психологів та психотерапевтів в Україні. Ви знайдете спеціаліста, якому будете довіряти.
             </p>
           </div>
 
@@ -33,17 +44,17 @@ export function AppFooter() {
               {POPULAR_TOPICS.map((topic) => (
                 <FooterLink
                   key={topic}
-                  href={`/catalog?topic=${encodeURIComponent(topic)}`}
+                  href={`/catalog?topics=${encodeURIComponent(topic)}`}
                   label={topic}
                 />
               ))}
             </FooterColumn>
 
             <FooterColumn title="Методи">
-              {SPECIALIZATIONS.slice(0, 6).map((item) => (
+              {FOOTER_METHODS.map((item) => (
                 <FooterLink
                   key={item}
-                  href={`/catalog?specialization=${encodeURIComponent(item)}`}
+                  href={`/methods/${slugifyMethod(item)}`}
                   label={item}
                 />
               ))}
@@ -51,36 +62,30 @@ export function AppFooter() {
           </div>
 
           <div className="max-w-xs">
-            <div className="mb-3 text-xs font-medium uppercase tracking-wide text-white/40">
+            <div className="mb-3 text-xs font-medium uppercase tracking-wide text-ink-muted">
               Юридична інформація
             </div>
-            <FooterLink href="/terms" label="Умови користування" />
-            <FooterLink href="/privacy" label="Політика конфіденційності" />
+            <div className="flex flex-col gap-2.5">
+              <FooterLink href="/terms" label="Умови користування" />
+              <FooterLink href="/privacy" label="Політика конфіденційності" />
+            </div>
 
-            <div className="mt-6 text-xs font-medium uppercase tracking-wide text-white/40">
+            <div className="mt-6 mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
               Зв'язатися з нами
             </div>
             <a
-              href="mailto:hello@calmi.me"
-              className="mt-2 block text-sm text-white/90 hover:text-white"
+              href="mailto:support@calmi.in.ua"
+              className="block text-sm text-ink transition-colors hover:text-sage"
             >
-              hello@calmi.me
+              support@calmi.in.ua
             </a>
           </div>
         </div>
 
-        <div className="flex flex-col-reverse items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
-          <span className="text-xs text-white/40">
+        <div className="flex flex-col-reverse items-center justify-between gap-4 border-t border-sand-dark pt-6 sm:flex-row">
+          <span className="text-xs text-ink-muted">
             © {year} Calmi. Усі права захищені.
           </span>
-          <div className="flex items-center gap-5">
-            <Link href="/terms" className="text-xs text-white/40 hover:text-white/70">
-              Умови користування
-            </Link>
-            <Link href="/privacy" className="text-xs text-white/40 hover:text-white/70">
-              Політика конфіденційності
-            </Link>
-          </div>
         </div>
       </div>
     </footer>
@@ -90,7 +95,7 @@ export function AppFooter() {
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-3 text-xs font-medium uppercase tracking-wide text-white/40">
+      <div className="mb-3 text-xs font-medium uppercase tracking-wide text-ink-muted">
         {title}
       </div>
       <div className="flex flex-col gap-2.5">{children}</div>
@@ -100,7 +105,7 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
 
 function FooterLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} className="text-sm text-white/90 transition-colors hover:text-white">
+    <Link href={href} className="text-sm text-ink transition-colors hover:text-sage">
       {label}
     </Link>
   );

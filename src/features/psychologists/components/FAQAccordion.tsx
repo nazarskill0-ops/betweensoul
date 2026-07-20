@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 
-const FAQ_ITEMS = [
+export type FAQItem = { question: string; answer: string };
+
+const DEFAULT_FAQ_ITEMS: FAQItem[] = [
   {
     question: "Як проходить сесія?",
     answer:
@@ -46,15 +48,25 @@ function ChevronDownIcon({ className }: { className?: string }) {
   );
 }
 
-export function FAQAccordion() {
+export function FAQAccordion({
+  items = DEFAULT_FAQ_ITEMS,
+  title = "Часті питання",
+  className = "rounded-card bg-white p-5",
+  titleClassName = "font-display text-xl font-bold text-ink",
+}: {
+  items?: FAQItem[];
+  title?: string;
+  className?: string;
+  titleClassName?: string;
+}) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <div className="flex flex-col gap-3 rounded-card bg-white p-5">
-      <h2 className="font-display text-xl font-bold text-ink">Часті питання</h2>
+    <div className={`flex flex-col gap-3 ${className}`}>
+      <h2 className={titleClassName}>{title}</h2>
 
       <div className="flex flex-col divide-y divide-sand-dark">
-        {FAQ_ITEMS.map((item, i) => {
+        {items.map((item, i) => {
           const isOpen = openIndex === i;
           return (
             <div key={item.question} className="py-3 first:pt-0 last:pb-0">

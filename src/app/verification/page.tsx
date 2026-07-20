@@ -24,11 +24,7 @@ const STEPS = [
 export default function VerificationPage() {
   return (
     <main className="mx-auto max-w-2xl px-5 py-16 md:px-8">
-      <Link href="/" className="text-sm text-sage hover:underline">
-        ← На головну
-      </Link>
-
-      <h1 className="mt-6 font-display text-3xl md:text-4xl">
+      <h1 className="font-display text-3xl md:text-4xl">
         Як ми перевіряємо фахівців
       </h1>
       <p className="mt-4 text-ink-muted">

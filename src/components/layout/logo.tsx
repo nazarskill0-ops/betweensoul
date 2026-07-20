@@ -10,7 +10,7 @@ export function Logo({ variant = "dark" }: LogoProps) {
   return (
     <Link
       href="/"
-      className={`font-display text-2xl tracking-tight ${
+      className={`font-logo text-2xl tracking-tight ${
         variant === "light" ? "text-white" : "text-ink"
       }`}
     >

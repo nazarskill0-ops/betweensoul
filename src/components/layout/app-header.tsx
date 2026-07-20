@@ -6,6 +6,7 @@ import { NavDropdown } from "@/components/layout/nav-dropdown";
 import { TopicsMegaMenu } from "@/components/layout/topics-mega-menu";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Logo } from "@/components/layout/logo";
+import { AuthMenu } from "@/components/layout/auth-menu";
 
 export function AppHeader() {
   return (
@@ -18,30 +19,19 @@ export function AppHeader() {
         <NavDropdown
           label="Методи"
           items={SPECIALIZATIONS}
-          paramName="specialization"
+          paramName="specializations"
           columns={2}
         />
         <Link
           href="/partners"
           className="text-sm text-ink transition-colors hover:text-sage"
         >
-          Терапевтам
+          Для психологів
         </Link>
       </nav>
 
-      <div className="hidden items-center gap-3 md:flex">
-        <Link
-          href="/login"
-          className="text-sm font-medium text-ink transition-colors hover:text-sage"
-        >
-          Вхід
-        </Link>
-        <Link
-          href="/register"
-          className="rounded-full bg-ink px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sage"
-        >
-          Реєстрація
-        </Link>
+      <div className="hidden md:flex">
+        <AuthMenu />
       </div>
 
       <MobileNav />

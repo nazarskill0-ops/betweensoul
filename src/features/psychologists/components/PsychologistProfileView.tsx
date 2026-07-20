@@ -12,6 +12,7 @@ import { ReviewsList } from "./ReviewsList";
 import { SlotPicker } from "./SlotPicker";
 import { FAQAccordion } from "./FAQAccordion";
 import type { SlotServiceType } from "../utils/generateFakeSlots";
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 
 export function PsychologistProfileView({ id }: { id: string }) {
   const { data, isLoading } = usePsychologist(id);
@@ -29,6 +30,14 @@ export function PsychologistProfileView({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col gap-8">
+      <Breadcrumbs
+        items={[
+          { label: "Calmi", href: "/" },
+          { label: "Каталог", href: "/catalog" },
+          { label: data.fullName },
+        ]}
+      />
+
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="order-2 flex flex-col gap-8 lg:order-1">
           <VideoIntroBlock

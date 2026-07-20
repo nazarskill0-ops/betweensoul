@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "../api";
 import { loginSchema, type LoginValues } from "../schema";
@@ -14,6 +14,9 @@ const errorClass = "mt-1.5 block text-xs font-medium text-rose";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const registerHref =
+    searchParams.get("role") === "therapist" ? "/therapist-register" : "/register";
   const {
     register,
     handleSubmit,
@@ -68,7 +71,7 @@ export function LoginForm() {
 
       <p className="mt-5 text-center text-sm text-ink-muted">
         Немає акаунта?{" "}
-        <Link href="/register" className="font-medium text-sage">
+        <Link href={registerHref} className="font-medium text-sage">
           Зареєструватись
         </Link>
       </p>

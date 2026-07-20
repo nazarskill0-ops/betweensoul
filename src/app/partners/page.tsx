@@ -96,28 +96,9 @@ const FAQ = [
   },
 ];
 
-function Logo({ className = "" }: { className?: string }) {
-  return (
-    <span className={`font-logo ${className}`}>
-      calm<span className="text-sage">i</span>
-    </span>
-  );
-}
-
 export default function LandingPage() {
   return (
     <>
-      {/* NAV */}
-      <nav className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-sand-dark bg-sand/90 px-5 backdrop-blur-md md:px-12">
-        <Logo className="text-2xl tracking-tight" />
-        <a
-          href="#form"
-          className="rounded-full bg-ink px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sage"
-        >
-          Стати партнером
-        </a>
-      </nav>
-
       {/* HERO */}
       <section className="mx-auto max-w-5xl px-5 pt-16 pb-20 md:px-12 md:pt-24">
         <div className="max-w-2xl">
@@ -247,19 +228,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="flex flex-col items-center gap-3 border-t border-sand-dark px-5 py-8 text-center text-sm text-ink-muted md:flex-row md:justify-between md:px-12 md:text-left">
-        <Logo className="text-lg text-ink" />
-        <div>© 2026 Calmi. Всі права захищені.</div>
-        <div className="flex gap-5">
-          <a href="/privacy" className="transition-colors hover:text-sage">
-            Політика конфіденційності
-          </a>
-          <a href="/terms" className="transition-colors hover:text-sage">
-            Умови використання
-          </a>
-        </div>
-      </footer>
     </>
   );
 }
