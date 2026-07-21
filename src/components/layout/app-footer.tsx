@@ -20,8 +20,8 @@ export function AppFooter() {
 
   return (
     <footer className="bg-sand-dark px-5 py-14 md:px-12">
-      <div className="mx-auto flex max-w-7xl flex-col gap-12">
-        <div className="flex flex-col gap-10 md:flex-row md:justify-between">
+      <div className="mx-auto flex max-w-7xl flex-col gap-16">
+        <div className="flex flex-col gap-12 md:flex-row md:justify-between">
           <div className="max-w-xs">
             <Logo />
             <p className="mt-3 text-sm text-ink-muted">
@@ -62,15 +62,15 @@ export function AppFooter() {
           </div>
 
           <div className="max-w-xs">
-            <div className="mb-3 text-xs font-medium uppercase tracking-wide text-ink-muted">
+            <div className="mb-4 text-xs font-medium uppercase tracking-wide text-ink-muted">
               Юридична інформація
             </div>
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-3">
               <FooterLink href="/terms" label="Умови користування" />
               <FooterLink href="/privacy" label="Політика конфіденційності" />
             </div>
 
-            <div className="mt-6 mb-2 text-xs font-medium uppercase tracking-wide text-ink-muted">
+            <div className="mt-8 mb-3 text-xs font-medium uppercase tracking-wide text-ink-muted">
               Зв'язатися з нами
             </div>
             <a
@@ -95,10 +95,10 @@ export function AppFooter() {
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="mb-3 text-xs font-medium uppercase tracking-wide text-ink-muted">
+      <div className="mb-4 text-xs font-medium uppercase tracking-wide text-ink-muted">
         {title}
       </div>
-      <div className="flex flex-col gap-2.5">{children}</div>
+      <div className="flex flex-col gap-3">{children}</div>
     </div>
   );
 }
