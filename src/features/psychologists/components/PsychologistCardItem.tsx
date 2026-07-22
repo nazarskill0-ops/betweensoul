@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { QUALIFICATIONS, type PsychologistCard } from "../schema";
+import { INDIVIDUAL_SESSION_DURATION_MINUTES } from "../utils/availabilityStore";
 import { formatSessionsCountBadge } from "../utils/formatters";
 import { CheckIcon } from "./icons";
 
 const MAX_TOPIC_BADGES = 4;
-const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 const ABOUT_ME_EXCERPT_LENGTH = 380;
 
 function formatExperienceYears(years: number): string {

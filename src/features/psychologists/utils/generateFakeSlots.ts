@@ -3,10 +3,26 @@
   SlotPicker (сітка на тиждень), і в PsychologistSidebarCard ("найближчий
   вільний час"), щоб дані не розходились між компонентами.
 
+  Якщо переданий psychologistId має реальний шаблон доступності в
+  availabilityStore (зараз лише кабінет психолога для TEMPLATED_PSYCHOLOGIST_ID),
+  слоти будуються з нього (з урахуванням винятків і заблокованих слотів), а не
+  з випадкового генератора нижче.
+
   // TODO(backend): реальні слоти для різних типів послуг матимуть окремі
   // записи в availability_slots з полем service_type — обговорити структуру
   // з бекенд-розробником, зараз лише UI-демонстрація на фейкових даних.
 */
+
+import {
+  enumerateCycleTimes,
+  getCoupleSettings,
+  getTemplate,
+  isDateExcepted,
+  isSlotOverlapping,
+  weekdayOfDate,
+  INDIVIDUAL_SESSION_DURATION_MINUTES,
+  SESSION_BREAK_MINUTES,
+} from "./availabilityStore";
 
 export const TIME_SLOTS_POOL = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -63,13 +79,59 @@ export function getWeekStart(offset: number): Date {
   return monday;
 }
 
+/**
+ * Слоти на день з реального шаблону доступності — null, якщо в психолога
+ * його немає (тоді generateWeekSlots падає назад на випадковий генератор).
+ *
+ * Індивідуальні й парні слоти рахуються окремими циклами (сесія + перерва),
+ * а фінальний список виключає слоти, що перетинаються в часі з уже існуючим
+ * бронюванням будь-якого типу — психолог не може вести дві сесії одночасно.
+ */
+function generateTemplatedDaySlots(
+  date: Date,
+  psychologistId: string,
+  serviceType: SlotServiceType
+): DaySlot[] | null {
+  const template = getTemplate(psychologistId);
+  if (!template) return null;
+
+  const dateIso = toLocalDateIso(date);
+  if (isDateExcepted(psychologistId, dateIso)) return [];
+
+  const weekday = weekdayOfDate(date);
+  if (!template.workingDays.includes(weekday)) return [];
+
+  let sessionDurationMinutes: number;
+  if (serviceType === "couple") {
+    const coupleSettings = getCoupleSettings(psychologistId);
+    if (!coupleSettings?.offersCoupleTherapy) return [];
+    sessionDurationMinutes = coupleSettings.coupleSessionDurationMinutes;
+  } else {
+    sessionDurationMinutes = INDIVIDUAL_SESSION_DURATION_MINUTES;
+  }
+  const cycleMinutes = sessionDurationMinutes + SESSION_BREAK_MINUTES;
+
+  return enumerateCycleTimes(template, cycleMinutes)
+    .filter(
+      (time) => !isSlotOverlapping(psychologistId, dateIso, weekday, time, sessionDurationMinutes)
+    )
+    .map((time) => ({ time, isBooked: false }));
+}
+
 export function generateWeekSlots(
   weekStart: Date,
-  serviceType: SlotServiceType = "individual"
+  serviceType: SlotServiceType = "individual",
+  psychologistId?: string
 ): DayColumn[] {
   return Array.from({ length: 7 }).map((_, i) => {
     const date = new Date(weekStart);
     date.setDate(date.getDate() + i);
+
+    if (psychologistId) {
+      const templated = generateTemplatedDaySlots(date, psychologistId, serviceType);
+      if (templated !== null) return { date, slots: templated };
+    }
+
     const seed = `${toLocalDateIso(date)}-${serviceType}`;
     const rand = seededRandom(seed);
     const count = 3 + Math.floor(rand() * 3); // 3-5
@@ -105,13 +167,14 @@ export type UpcomingSlot = { date: Date; time: string };
  */
 export function generateUpcomingSlots(
   serviceType: SlotServiceType = "individual",
+  psychologistId?: string,
   weeksToSearch = 8
 ): UpcomingSlot[] {
   const now = Date.now();
   const result: UpcomingSlot[] = [];
 
   for (let w = 0; w < weeksToSearch; w++) {
-    const days = generateWeekSlots(getWeekStart(w), serviceType);
+    const days = generateWeekSlots(getWeekStart(w), serviceType, psychologistId);
     for (const day of days) {
       for (const slot of day.slots) {
         if (slot.isBooked) continue;
@@ -135,9 +198,10 @@ export function generateUpcomingSlots(
  * ця функція сканувала тижні окремо й не відкидала слоти, що вже минули).
  */
 export function findNearestFreeDay(
-  serviceType: SlotServiceType = "individual"
+  serviceType: SlotServiceType = "individual",
+  psychologistId?: string
 ): DayColumn | null {
-  const upcoming = generateUpcomingSlots(serviceType);
+  const upcoming = generateUpcomingSlots(serviceType, psychologistId);
   if (upcoming.length === 0) return null;
 
   const nearestDateIso = toLocalDateIso(upcoming[0].date);

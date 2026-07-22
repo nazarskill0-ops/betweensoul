@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { LANGUAGES, QUALIFICATIONS, type PsychologistProfile } from "../schema";
+import { INDIVIDUAL_SESSION_DURATION_MINUTES } from "../utils/availabilityStore";
 import {
   combineDateAndTime,
   findNearestFreeDay,
@@ -14,8 +15,6 @@ import { BriefcaseIcon, CheckIcon, ClockIcon, CloseIcon, GlobeIcon, PersonIcon }
 import { InfoRow } from "./InfoRow";
 import { NearestTimeWidget } from "./NearestTimeWidget";
 import { ServiceTypeDropdown } from "./ServiceTypeDropdown";
-
-const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 
 function CompactInfoSummary({
   psychologist,
@@ -82,7 +81,10 @@ export function PsychologistSidebarCard({
     .map((code) => LANGUAGES.find((l) => l.value === code)?.label)
     .filter((label): label is NonNullable<typeof label> => label !== undefined);
 
-  const nearestDay = useMemo(() => findNearestFreeDay(serviceType), [serviceType]);
+  const nearestDay = useMemo(
+    () => findNearestFreeDay(serviceType, psychologist.profileId),
+    [serviceType, psychologist.profileId]
+  );
 
   useEffect(() => {
     const target = document.getElementById("general-info");

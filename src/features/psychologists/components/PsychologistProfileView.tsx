@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { notFound } from "next/navigation";
 import { usePsychologist } from "../hooks/usePsychologist";
+import type { PsychologistProfile } from "../schema";
 import { PsychologistSidebarCard } from "./PsychologistSidebarCard";
 import { VideoIntroBlock } from "./VideoIntroBlock";
 import { GeneralInfoBlock } from "./GeneralInfoBlock";
@@ -14,11 +15,26 @@ import { FAQAccordion } from "./FAQAccordion";
 import type { SlotServiceType } from "../utils/generateFakeSlots";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 
-export function PsychologistProfileView({ id }: { id: string }) {
-  const { data, isLoading } = usePsychologist(id);
+/**
+ * `previewData` дозволяє відрендерити цю саму публічну верстку з "чернетковими"
+ * (ще не збереженими) даними — використовується кабінетом психолога для
+ * прев'ю "як побачать клієнти". Коли передано previewData, id не потрібен і
+ * реальний фетч не відбувається.
+ */
+export function PsychologistProfileView({
+  id,
+  previewData,
+}: {
+  id?: string;
+  previewData?: PsychologistProfile;
+}) {
+  const { data: fetchedData, isLoading } = usePsychologist(id ?? "", {
+    enabled: !previewData && !!id,
+  });
+  const data = previewData ?? fetchedData;
   const [serviceType, setServiceType] = useState<SlotServiceType>("individual");
 
-  if (isLoading) {
+  if (!previewData && isLoading) {
     return (
       <div className="h-96 animate-pulse rounded-card border-[1.5px] border-sand-dark bg-sand" />
     );

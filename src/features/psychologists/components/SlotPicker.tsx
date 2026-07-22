@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { INDIVIDUAL_SESSION_DURATION_MINUTES } from "../utils/availabilityStore";
 import {
   combineDateAndTime,
   generateUpcomingSlots,
@@ -11,7 +12,6 @@ import {
 import { formatSlotRange } from "../utils/formatSlotRange";
 import { ServiceTypeDropdown } from "./ServiceTypeDropdown";
 
-const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 const INITIAL_VISIBLE_DAYS = 3;
 const LOAD_MORE_DAYS_STEP = 3;
 
@@ -67,8 +67,8 @@ export function SlotPicker({
   const [visibleDayCount, setVisibleDayCount] = useState(INITIAL_VISIBLE_DAYS);
 
   const upcomingSlots = useMemo(
-    () => generateUpcomingSlots(serviceType),
-    [serviceType]
+    () => generateUpcomingSlots(serviceType, psychologistId),
+    [serviceType, psychologistId]
   );
   const dayGroups = useMemo(() => groupSlotsByDay(upcomingSlots), [upcomingSlots]);
   const visibleDayGroups = dayGroups.slice(0, visibleDayCount);
