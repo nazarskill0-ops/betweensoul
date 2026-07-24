@@ -204,48 +204,27 @@ export function PsychologistCardItem({
 
   return (
     <div className="flex flex-col gap-5 rounded-card border-[1.5px] border-sand-dark bg-white p-5 sm:flex-row sm:gap-6">
-      <div className="flex w-full shrink-0 flex-col gap-3 self-start sm:w-56">
-        <div className="relative h-56 w-full sm:aspect-[4/5] sm:h-auto">
-          {psychologist.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={psychologist.avatarUrl}
-              alt={psychologist.fullName}
-              className="h-full w-full rounded-card object-cover"
-            />
-          ) : (
-            <div className="h-full w-full rounded-card bg-sage-light" />
-          )}
-
-          {psychologist.videoUrl && (
-            <button
-              type="button"
-              onClick={() => setIsVideoOpen(true)}
-              aria-label="Переглянути відео психолога"
-              className="absolute bottom-2 right-2 text-sage transition-transform hover:scale-105"
-            >
-              <PlayIcon className="h-10 w-10 drop-shadow" />
-            </button>
-          )}
-        </div>
-
-        {showBothPricing &&
-        psychologist.couplePriceMinor !== null &&
-        psychologist.coupleSessionDurationMinutes !== null ? (
-          <div className="flex flex-col gap-1">
-            <PriceRow
-              durationMinutes={INDIVIDUAL_SESSION_DURATION_MINUTES}
-              priceMinor={psychologist.priceMinor}
-              label="індивідуальна"
-            />
-            <PriceRow
-              durationMinutes={psychologist.coupleSessionDurationMinutes}
-              priceMinor={psychologist.couplePriceMinor}
-              label="парна"
-            />
-          </div>
+      <div className="relative h-56 w-full shrink-0 self-start sm:aspect-[4/5] sm:h-auto sm:w-56">
+        {psychologist.avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={psychologist.avatarUrl}
+            alt={psychologist.fullName}
+            className="h-full w-full rounded-card object-cover"
+          />
         ) : (
-          <PriceRow durationMinutes={activeDurationMinutes} priceMinor={activePriceMinor} />
+          <div className="h-full w-full rounded-card bg-sage-light" />
+        )}
+
+        {psychologist.videoUrl && (
+          <button
+            type="button"
+            onClick={() => setIsVideoOpen(true)}
+            aria-label="Переглянути відео психолога"
+            className="absolute bottom-2 right-2 text-sage transition-transform hover:scale-105"
+          >
+            <PlayIcon className="h-10 w-10 drop-shadow" />
+          </button>
         )}
       </div>
 
@@ -341,7 +320,25 @@ export function PsychologistCardItem({
           )}
         </div>
 
-        <div className="mt-auto flex items-center justify-end gap-3 pt-1">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-1">
+          {showBothPricing &&
+          psychologist.couplePriceMinor !== null &&
+          psychologist.coupleSessionDurationMinutes !== null ? (
+            <div className="flex flex-col gap-1">
+              <PriceRow
+                durationMinutes={INDIVIDUAL_SESSION_DURATION_MINUTES}
+                priceMinor={psychologist.priceMinor}
+                label="індивідуальна"
+              />
+              <PriceRow
+                durationMinutes={psychologist.coupleSessionDurationMinutes}
+                priceMinor={psychologist.couplePriceMinor}
+                label="парна"
+              />
+            </div>
+          ) : (
+            <PriceRow durationMinutes={activeDurationMinutes} priceMinor={activePriceMinor} />
+          )}
           <Link
             href={`/psychologist/${psychologist.profileId}`}
             className="flex items-center gap-1.5 rounded-full bg-ink-muted px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sage"
