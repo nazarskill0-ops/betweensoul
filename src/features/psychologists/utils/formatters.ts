@@ -1,11 +1,3 @@
-import { LANGUAGES } from "../schema";
-
-export function formatLanguages(languages: string[]): string {
-  return languages
-    .map((code) => LANGUAGES.find((lang) => lang.value === code)?.label ?? code)
-    .join(", ");
-}
-
 export function formatAge(age: number): string {
   const mod100 = age % 100;
   const mod10 = age % 10;
