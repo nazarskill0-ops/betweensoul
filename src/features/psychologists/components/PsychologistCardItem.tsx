@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { QUALIFICATIONS, type PsychologistCard } from "../schema";
 import { INDIVIDUAL_SESSION_DURATION_MINUTES } from "../utils/availabilityStore";
-import { formatSessionsCountBadge } from "../utils/formatters";
+import { formatLanguages, formatSessionsCountBadge } from "../utils/formatters";
 import { CheckIcon } from "./icons";
 
 const MAX_TOPIC_BADGES = 4;
@@ -262,6 +262,12 @@ export function PsychologistCardItem({
               {psychologist.specializations.length > 0 && (
                 <LabeledText label="Методи роботи">
                   {psychologist.specializations.join(", ")}
+                </LabeledText>
+              )}
+
+              {psychologist.languages.length > 0 && (
+                <LabeledText label="Мова сесій">
+                  {formatLanguages(psychologist.languages)}
                 </LabeledText>
               )}
 
