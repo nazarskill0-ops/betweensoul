@@ -69,7 +69,7 @@ function HeroIllustration() {
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden px-5 pt-16 pb-8 md:px-12 md:pt-24 md:pb-12">
+    <section className="relative overflow-hidden px-5 pt-[88px] pb-[44px] md:px-12 md:pt-[132px] md:pb-[66px]">
       <HeroIllustration />
       <div className="relative mx-auto max-w-5xl">
         <div className="max-w-2xl">
@@ -80,11 +80,8 @@ export function HeroSection() {
             Для психологів →
           </Link>
 
-          <p className="mt-6 text-sm font-medium tracking-wide text-sage">
-            Психотерапія онлайн
-          </p>
-          <h1 className="mt-2 text-5xl leading-[1.05] font-bold tracking-tight md:text-6xl">
-            без довгих пошуків.
+          <h1 className="mt-4 text-5xl leading-[1.05] font-bold tracking-tight md:text-6xl">
+            Психотерапія онлайн — без довгих пошуків.
           </h1>
           <p className="mt-5 max-w-md text-lg text-ink-muted">
             Пошук психолога став простішим.

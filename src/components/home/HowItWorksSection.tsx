@@ -23,7 +23,7 @@ export function HowItWorksSection() {
         <h2 className="mb-12 font-display text-2xl leading-snug md:text-3xl">
           Як це працює
         </h2>
-        <div className="grid divide-y divide-sand-dark border-t border-sand-dark md:grid-cols-3 md:divide-x md:divide-y-0">
+        <div className="grid gap-8 border-t border-sand-dark md:grid-cols-3 md:gap-6">
           {STEPS.map((step) => (
             <div key={step.title} className="flex flex-col gap-2 px-5 py-8 md:px-6">
               <span className="text-5xl leading-none font-bold text-ink-muted/25 md:text-6xl">
