@@ -15,24 +15,26 @@ const HOTLINES = [
 
 export function CrisisSupportSection() {
   return (
-    <section className="mx-auto max-w-5xl px-5 py-20 md:px-12">
-      <h2 className="font-display text-2xl leading-snug md:text-3xl">
-        Потрібна термінова допомога?
-      </h2>
-      <p className="mt-3 max-w-2xl text-ink-muted">
-        Calmi — платформа для запису на консультацію, а не служба екстреної
-        допомоги. Якщо зараз важко або небезпечно — зверніться на безкоштовну
-        гарячу лінію.
-      </p>
+    <section className="border-t border-sand-dark">
+      <div className="mx-auto max-w-5xl px-5 py-20 md:px-12">
+        <h2 className="font-display text-2xl leading-snug md:text-3xl">
+          Потрібна термінова допомога?
+        </h2>
+        <p className="mt-3 max-w-2xl text-ink-muted">
+          Calmi — платформа для запису на консультацію, а не служба екстреної
+          допомоги. Якщо зараз важко або небезпечно — зверніться на безкоштовну
+          гарячу лінію.
+        </p>
 
-      <ul className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-10 sm:gap-y-3">
-        {HOTLINES.map((line) => (
-          <li key={line.number} className="text-sm">
-            <span className="font-semibold text-ink">{line.number}</span>
-            <span className="text-ink-muted"> — {line.label}</span>
-          </li>
-        ))}
-      </ul>
+        <ul className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-10 sm:gap-y-3">
+          {HOTLINES.map((line) => (
+            <li key={line.number} className="text-sm">
+              <span className="font-semibold text-ink">{line.number}</span>
+              <span className="text-ink-muted"> — {line.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }

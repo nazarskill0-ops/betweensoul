@@ -35,20 +35,22 @@ const REASONS = [
 
 export function WhyCalmiSection() {
   return (
-    <section className="mx-auto max-w-5xl px-5 py-20 md:px-12">
-      <h2 className="mb-12 font-display text-2xl leading-snug md:text-3xl">
-        Чому обирають Calmi
-      </h2>
-      <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
-        {REASONS.map((reason) => (
-          <div key={reason.title}>
-            <h3 className="flex items-center gap-2 font-semibold text-ink">
-              <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
-              {reason.title}
-            </h3>
-            <p className="mt-1.5 text-sm text-ink-muted">{reason.text}</p>
-          </div>
-        ))}
+    <section className="border-t border-sand-dark">
+      <div className="mx-auto max-w-5xl px-5 py-20 md:px-12">
+        <h2 className="mb-12 font-display text-2xl leading-snug md:text-3xl">
+          Чому обирають Calmi
+        </h2>
+        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+          {REASONS.map((reason) => (
+            <div key={reason.title}>
+              <h3 className="flex items-center gap-2 font-semibold text-ink">
+                <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
+                {reason.title}
+              </h3>
+              <p className="mt-1.5 text-sm text-ink-muted">{reason.text}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

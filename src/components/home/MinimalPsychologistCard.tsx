@@ -42,14 +42,18 @@ export function MinimalPsychologistCard({
   return (
     <Link
       href={`/psychologist/${psychologist.profileId}`}
-      className="group relative block aspect-[3/4] w-full shrink-0 overflow-hidden rounded-card"
+      className="group relative block aspect-[3/4] w-full shrink-0 overflow-hidden rounded-card border-[1.5px] border-sand-dark"
     >
       {psychologist.avatarUrl ? (
+        // TODO(backend): mock photos come from a stock-avatar API (varied
+        // color/b&w styles). Production photos should go through a single
+        // consistent color-grading step before upload so the grid reads as
+        // one system. The filter below is a stopgap visual normalizer.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={psychologist.avatarUrl}
           alt={psychologist.fullName}
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover [filter:grayscale(0.15)_contrast(1.05)_saturate(0.85)]"
         />
       ) : (
         <div className="h-full w-full bg-sage-light" />

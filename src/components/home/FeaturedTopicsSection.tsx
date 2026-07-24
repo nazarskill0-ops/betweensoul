@@ -65,7 +65,7 @@ export function FeaturedTopicsSection() {
     .slice(0, FEATURED_COUNT);
 
   return (
-    <section className="bg-white">
+    <section className="border-t border-sand-dark">
       <div className="mx-auto max-w-5xl px-5 py-20 md:px-12">
         <h2 className="mb-8 font-medium text-2xl leading-snug md:text-3xl">
           Фахівці за популярними темами

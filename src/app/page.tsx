@@ -8,7 +8,7 @@ import { PartnersCTASection } from "@/components/home/PartnersCTASection";
 
 export default function HomePage() {
   return (
-    <main>
+    <main className="bg-white">
       <HeroSection />
       <HowItWorksSection />
       <FeaturedTopicsSection />

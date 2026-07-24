@@ -80,11 +80,13 @@ export function HeroSection() {
             Для психологів →
           </Link>
 
-          <h1 className="mt-4 font-semibold text-4xl leading-tight tracking-tight md:text-5xl">
-            Психотерапія онлайн —
-без довгих пошуків.
+          <p className="mt-6 text-sm font-medium tracking-wide text-sage">
+            Психотерапія онлайн
+          </p>
+          <h1 className="mt-2 text-5xl leading-[1.05] font-bold tracking-tight md:text-6xl">
+            без довгих пошуків.
           </h1>
-          <p className="mt-5 max-w-md text-lg text-ink-muted font-medium">
+          <p className="mt-5 max-w-md text-lg text-ink-muted">
             Пошук психолога став простішим.
 Знайдіть спеціаліста, якому довірятимете.
           </p>

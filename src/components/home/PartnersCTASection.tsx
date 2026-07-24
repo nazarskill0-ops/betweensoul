@@ -2,18 +2,18 @@ import Link from "next/link";
 
 export function PartnersCTASection() {
   return (
-    <section className="px-5 py-20 md:px-12">
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 rounded-card border-[1.5px] border-sand-dark bg-white px-8 py-12 text-center">
-        <h2 className="font-display text-2xl md:text-3xl">
+    <section className="bg-sage">
+      <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-5 py-20 text-center text-white md:px-12">
+        <h2 className="text-2xl font-semibold md:text-3xl">
           Ви психолог? Приєднуйтесь безкоштовно
         </h2>
-        <p className="max-w-md text-ink-muted">
+        <p className="max-w-md text-white/85">
           Calmi шукає клієнтів за вас — реєстрація для фахівців безкоштовна
           назавжди.
         </p>
         <Link
           href="/partners"
-          className="mt-2 rounded-full border-[1.5px] border-sand-dark px-7 py-3 font-medium text-ink transition-colors hover:border-sage hover:text-sage"
+          className="mt-2 rounded-full bg-white px-7 py-3 font-medium text-sage transition-colors hover:bg-white/90"
         >
           Стати партнером
         </Link>
