@@ -35,8 +35,8 @@ const REASONS = [
 
 export function WhyCalmiSection() {
   return (
-    <section className="border-t border-sand-dark">
-      <div className="mx-auto max-w-5xl px-5 py-20 md:px-12">
+    <section className="border-t border-sand-dark px-5 md:px-12">
+      <div className="mx-auto max-w-5xl py-20">
         <h2 className="mb-12 font-display text-2xl leading-snug md:text-3xl">
           Чому обирають Calmi
         </h2>

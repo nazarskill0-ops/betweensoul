@@ -15,8 +15,8 @@ const HOTLINES = [
 
 export function CrisisSupportSection() {
   return (
-    <section>
-      <div className="mx-auto max-w-5xl px-5 py-20 md:px-12">
+    <section className="px-5 md:px-12">
+      <div className="mx-auto max-w-5xl py-20">
         <h2 className="font-display text-2xl leading-snug md:text-3xl">
           Потрібна термінова допомога?
         </h2>

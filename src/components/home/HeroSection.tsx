@@ -90,7 +90,7 @@ export function HeroSection() {
           <div className="mt-9 flex flex-wrap gap-3">
             <Link
               href="/catalog"
-              className="rounded-full bg-sage px-8 py-3.5 font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-sage/90"
+              className="rounded-full border-[1.5px] border-sage bg-sage px-8 py-3.5 font-semibold text-white transition-colors hover:bg-transparent hover:text-sage"
             >
               Знайти психолога
             </Link>

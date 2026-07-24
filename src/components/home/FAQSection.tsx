@@ -87,8 +87,8 @@ const HOME_FAQ_ITEMS: FAQItem[] = [
 
 export function FAQSection() {
   return (
-    <section className="border-t border-sand-dark">
-      <div className="mx-auto max-w-5xl px-5 py-20 md:px-12">
+    <section className="border-t border-sand-dark px-5 md:px-12">
+      <div className="mx-auto max-w-5xl py-20">
         <FAQAccordion
           items={HOME_FAQ_ITEMS}
           title="Часті запитання"

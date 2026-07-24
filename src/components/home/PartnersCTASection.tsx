@@ -2,8 +2,8 @@ import Link from "next/link";
 
 export function PartnersCTASection() {
   return (
-    <section className="bg-sage">
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 px-5 py-20 text-center text-white md:px-12">
+    <section className="bg-sage px-5 md:px-12">
+      <div className="mx-auto flex max-w-5xl flex-col items-center gap-4 py-20 text-center text-white">
         <h2 className="text-2xl font-semibold md:text-3xl">
           Ви психолог? Приєднуйтесь безкоштовно
         </h2>
