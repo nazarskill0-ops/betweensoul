@@ -182,7 +182,7 @@ export function PsychologistCardItem({
     : null;
 
   return (
-    <div className="flex flex-col gap-5 rounded-card bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:flex-row sm:gap-6">
+    <div className="flex flex-col gap-5 rounded-card border-[1.5px] border-sand-dark bg-white p-5 sm:flex-row sm:gap-6">
       <div className="relative h-56 w-full shrink-0 self-start sm:aspect-[4/5] sm:h-auto sm:w-56">
         {psychologist.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
