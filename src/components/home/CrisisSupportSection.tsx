@@ -15,7 +15,7 @@ const HOTLINES = [
 
 export function CrisisSupportSection() {
   return (
-    <section className="border-t border-sand-dark">
+    <section>
       <div className="mx-auto max-w-5xl px-5 py-20 md:px-12">
         <h2 className="font-display text-2xl leading-snug md:text-3xl">
           Потрібна термінова допомога?
