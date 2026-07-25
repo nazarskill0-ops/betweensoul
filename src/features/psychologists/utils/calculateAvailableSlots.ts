@@ -1,21 +1,34 @@
 /*
-  Чиста функція розрахунку вільних слотів на день.
+  Чиста функція розрахунку вільних слотів на день — варіант "контрольні
+  точки", а не послідовні незалежні цикли.
 
-  вільні_інтервали = робоче_вікно − усі_зайняті_інтервали (підтверджені
-  бронювання будь-якого типу + ручні блокування — для цієї функції вони
-  нерозрізнимі, обидва просто "зайнятий час").
+  Замість того, щоб генерувати слоти циклом (тривалість+перерва) від початку
+  кожного вільного шматка часу (де одне бронювання посеред дня непередбачувано
+  зсуває час усіх наступних слотів), кандидати перевіряються на ФІКСОВАНИХ
+  контрольних точках через рівний крок (CONTROL_POINT_STEP_MINUTES, за
+  замовчуванням 30 хв) у межах робочого вікна — 9:00, 9:30, 10:00, 10:30...
+  незалежно від того, що вже заброньовано.
 
-  У кожному вільному інтервалі індивідуальні й парні слоти генеруються
-  окремими циклами (тривалість сесії + перерва), завжди від початку саме
-  цього інтервалу — а не від початку робочого дня. Тому підтверджена парна
-  сесія на початку дня, наприклад, зсуває весь наступний індивідуальний
-  цикл, а не просто "виколює" один слот із вирівняної по дню сітки.
+  Контрольна точка валідна для типу сесії, якщо [точка, точка + тривалість +
+  перерва) не перетинається з жодним зайнятим інтервалом (бронювання чи ручне
+  блокування) — сама сесія при цьому мусить вміститись у робоче вікно, а
+  "хвіст" перерви за межі робочого дня виходити може (там нема наступної
+  сесії, яку потрібно берегти).
+
+  Наслідок: індивідуальні й парні слоти завжди пропонуються на тих самих
+  "гарних" позначках, незалежно одне від одного і незалежно від того, що вже
+  заброньовано — жодного ефекту "все зсунулось на 10 хвилин" після одного
+  бронювання. Частина часу між контрольними точками при цьому може лишитись
+  невикористаною (фрагментація) — свідомо прийнятий компроміс.
 
   Без стану й побічних ефектів — викликати щоразу, коли потрібен актуальний
   розклад, кешувати результат нема потреби.
 */
 
 export type TimeInterval = { start: string; end: string }; // "HH:MM", 24-годинний формат
+
+/** Крок контрольних точок — 9:00, 9:30, 10:00... */
+export const CONTROL_POINT_STEP_MINUTES = 30;
 
 export function toMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
@@ -28,96 +41,37 @@ export function toTime(minutes: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/**
- * Робоче вікно мінус усі зайняті інтервали (з мерджем перекриттів) →
- * відсортовані вільні шматки, кожен уже "обрізаний" під перерву з обох
- * боків, де вона потрібна:
- *
- * - Після КОЖНОГО зайнятого інтервалу вільний час починається не одразу з
- *   моменту його закінчення, а через `breakMinutes`.
- * - Якщо вільний шматок упирається в наступний зайнятий інтервал (а не в
- *   кінець робочого дня), його usable-кінець теж зменшується на
- *   `breakMinutes` — інакше останній слот у шматку міг би згенеруватись
- *   впритул до наступного бронювання, лишивши собі нуль перерви ПЕРЕД ним.
- *   Кінець робочого дня перервою не обрізається — там нема наступної сесії,
- *   з якою треба берегти дистанцію (див. generateSlotsInFreeInterval).
- *
- * Тобто контрольна точка (можливий початок слота) валідна, лише якщо
- * [точка, точка + тривалість + breakMinutes) не перетинається з жодним
- * зайнятим інтервалом — за винятком випадку, коли ця перерва просто виходить
- * за межі робочого дня, а не в реальне бронювання.
- */
-export function subtractBusyIntervals(
-  workingWindow: TimeInterval,
-  busyIntervals: TimeInterval[],
-  breakMinutes: number
-): TimeInterval[] {
-  const windowStart = toMinutes(workingWindow.start);
-  const windowEnd = toMinutes(workingWindow.end);
-  if (windowEnd <= windowStart) return [];
+type MinuteInterval = { start: number; end: number };
 
-  const clipped = busyIntervals
-    .map((b) => ({
-      start: Math.max(toMinutes(b.start), windowStart),
-      end: Math.min(toMinutes(b.end), windowEnd),
-    }))
-    .filter((b) => b.end > b.start)
-    .sort((a, b) => a.start - b.start);
-
-  const merged: { start: number; end: number }[] = [];
-  for (const b of clipped) {
-    const last = merged[merged.length - 1];
-    if (last && b.start <= last.end) {
-      last.end = Math.max(last.end, b.end);
-    } else {
-      merged.push({ ...b });
-    }
-  }
-
-  const free: TimeInterval[] = [];
-  let cursor = windowStart;
-  for (const b of merged) {
-    // usable-кінець цього вільного шматка — на breakMinutes раніше за старт
-    // наступного бронювання, щоб слот, згенерований аж до цієї межі, лишав
-    // собі повну перерву перед ним.
-    const usableEnd = b.start - breakMinutes;
-    if (usableEnd > cursor) free.push({ start: toTime(cursor), end: toTime(usableEnd) });
-    // +breakMinutes після зайнятого інтервалу, не просто b.end. Якщо наступний
-    // зайнятий інтервал починається раніше, ніж закінчується ця перерва, він
-    // просто поглинається без окремого (закоротко) вільного шматка між ними.
-    cursor = Math.max(cursor, b.end + breakMinutes);
-  }
-  // Останній шматок упирається в кінець робочого дня, не в бронювання —
-  // перерва тут не потрібна, беремо windowEnd як є.
-  if (cursor < windowEnd) free.push({ start: toTime(cursor), end: toTime(windowEnd) });
-
-  return free;
+/** Контрольні точки в межах робочого вікна — windowStart, +step, +step, ... поки < windowEnd. */
+function generateControlPoints(
+  windowStart: number,
+  windowEnd: number,
+  stepMinutes: number
+): number[] {
+  const points: number[] = [];
+  for (let m = windowStart; m < windowEnd; m += stepMinutes) points.push(m);
+  return points;
 }
 
 /**
- * Слоти фіксованої тривалості всередині ОДНОГО вільного інтервалу — цикл
- * durationMinutes+breakMinutes, завжди від початку цього інтервалу. Слот, що
- * не вміщується цілком (лишається менше за durationMinutes до кінця
- * інтервалу), не генерується — навіть якщо для "хвоста" перерви теж не
- * вистачає, це не заважає останньому повному слоту сесії.
+ * Контрольна точка валідна для сесії заданої тривалості, якщо:
+ * 1) сама сесія (без перерви) вміщується в робоче вікно;
+ * 2) [точка, точка + тривалість + перерва) не перетинається з жодним
+ *    зайнятим інтервалом — перетин з межею робочого дня тут не рахується,
+ *    бо це не "зайнятий інтервал".
  */
-export function generateSlotsInFreeInterval(
-  interval: TimeInterval,
+function isValidControlPoint(
+  point: number,
   durationMinutes: number,
-  breakMinutes: number
-): TimeInterval[] {
-  if (durationMinutes <= 0) return [];
+  breakMinutes: number,
+  windowEnd: number,
+  busyIntervals: MinuteInterval[]
+): boolean {
+  if (point + durationMinutes > windowEnd) return false;
 
-  const slots: TimeInterval[] = [];
-  const end = toMinutes(interval.end);
-  let cursor = toMinutes(interval.start);
-
-  while (cursor + durationMinutes <= end) {
-    slots.push({ start: toTime(cursor), end: toTime(cursor + durationMinutes) });
-    cursor += durationMinutes + breakMinutes;
-  }
-
-  return slots;
+  const slotEndWithBreak = point + durationMinutes + breakMinutes;
+  return !busyIntervals.some((b) => point < b.end && b.start < slotEndWithBreak);
 }
 
 export type AvailableSlots = {
@@ -127,8 +81,9 @@ export type AvailableSlots = {
 
 /**
  * Робоче вікно дня + всі зайняті інтервали → вільні слоти окремо для
- * індивідуальних і парних сесій. `coupleDurationMinutes: null`, якщо
- * психолог не проводить парні сесії — тоді `couple` завжди порожній.
+ * індивідуальних і парних сесій, на спільних контрольних точках.
+ * `coupleDurationMinutes: null`, якщо психолог не проводить парні сесії —
+ * тоді `couple` завжди порожній.
  */
 export function calculateAvailableSlots(params: {
   workingWindow: TimeInterval | null;
@@ -136,6 +91,7 @@ export function calculateAvailableSlots(params: {
   individualDurationMinutes: number;
   coupleDurationMinutes: number | null;
   breakMinutes: number;
+  controlPointStepMinutes?: number;
 }): AvailableSlots {
   const {
     workingWindow,
@@ -143,21 +99,31 @@ export function calculateAvailableSlots(params: {
     individualDurationMinutes,
     coupleDurationMinutes,
     breakMinutes,
+    controlPointStepMinutes = CONTROL_POINT_STEP_MINUTES,
   } = params;
 
   if (!workingWindow) return { individual: [], couple: [] };
 
-  const freeIntervals = subtractBusyIntervals(workingWindow, busyIntervals, breakMinutes);
+  const windowStart = toMinutes(workingWindow.start);
+  const windowEnd = toMinutes(workingWindow.end);
+  if (windowEnd <= windowStart) return { individual: [], couple: [] };
+
+  const busy: MinuteInterval[] = busyIntervals.map((b) => ({
+    start: toMinutes(b.start),
+    end: toMinutes(b.end),
+  }));
+
+  const controlPoints = generateControlPoints(windowStart, windowEnd, controlPointStepMinutes);
+
+  function slotsFor(durationMinutes: number | null): TimeInterval[] {
+    if (durationMinutes == null || durationMinutes <= 0) return [];
+    return controlPoints
+      .filter((p) => isValidControlPoint(p, durationMinutes, breakMinutes, windowEnd, busy))
+      .map((p) => ({ start: toTime(p), end: toTime(p + durationMinutes) }));
+  }
 
   return {
-    individual: freeIntervals.flatMap((f) =>
-      generateSlotsInFreeInterval(f, individualDurationMinutes, breakMinutes)
-    ),
-    couple:
-      coupleDurationMinutes == null
-        ? []
-        : freeIntervals.flatMap((f) =>
-            generateSlotsInFreeInterval(f, coupleDurationMinutes, breakMinutes)
-          ),
+    individual: slotsFor(individualDurationMinutes),
+    couple: slotsFor(coupleDurationMinutes),
   };
 }
