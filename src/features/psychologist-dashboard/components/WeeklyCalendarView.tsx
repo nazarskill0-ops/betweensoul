@@ -16,6 +16,7 @@ import {
   calculateAvailableSlots,
   toMinutes,
   toTime,
+  CONTROL_POINT_STEP_MINUTES,
   type TimeInterval,
 } from "@/features/psychologists/utils/calculateAvailableSlots";
 import { toggleBlockedSlot } from "../api";
@@ -34,6 +35,15 @@ const DEFAULT_TIMELINE_START_MINUTES = 9 * 60;
 const DEFAULT_TIMELINE_END_MINUTES = 18 * 60;
 const DAY_COLUMN_WIDTH = 140;
 const HEADER_HEIGHT = 40;
+/* Вільні слоти тепер — незалежні контрольні точки з кроком
+   CONTROL_POINT_STEP_MINUTES (варіант Б), а не послідовний нецикл: сусідні
+   кандидати того самого типу можуть перекриватись у часі (напр. 09:00-09:50
+   і 09:30-10:20 для 50-хв сесії з кроком 30 хв) — це свідомо прийнятий
+   компроміс алгоритму, не помилка. Малювати їх блоками на всю реальну
+   тривалість (як бронювання й блокування) означало б, що вони візуально
+   накладаються одне на одного. Тому кожен вільний слот займає лише свій
+   власний крок сітки — позиція (top) все одно за реальним часом початку. */
+const FREE_SLOT_MARKER_HEIGHT = CONTROL_POINT_STEP_MINUTES * PX_PER_MINUTE;
 
 function ChevronIcon({ direction, className }: { direction: "left" | "right"; className?: string }) {
   return (
@@ -295,7 +305,7 @@ export function WeeklyCalendarView() {
                         onClick={() => requestBlock(dateIso, slot)}
                         style={{
                           top: topFor(slot.start),
-                          height: heightFor(slot.start, slot.end),
+                          height: FREE_SLOT_MARKER_HEIGHT,
                           left: 2,
                           right: hasCoupleLane ? "51%" : 2,
                         }}
@@ -315,7 +325,7 @@ export function WeeklyCalendarView() {
                           onClick={() => requestBlock(dateIso, slot)}
                           style={{
                             top: topFor(slot.start),
-                            height: heightFor(slot.start, slot.end),
+                            height: FREE_SLOT_MARKER_HEIGHT,
                             left: "51%",
                             right: 2,
                           }}
