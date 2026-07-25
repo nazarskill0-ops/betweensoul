@@ -1,5 +1,10 @@
 import { INDIVIDUAL_SESSION_DURATION_MINUTES } from "@/features/psychologists/utils/availabilityStore";
-import type { PayoutSession, ProfileFormValues, UpcomingSession } from "./schema";
+import type {
+  ClientSessionHistoryEntry,
+  PayoutSession,
+  ProfileFormValues,
+  UpcomingSession,
+} from "./schema";
 
 export const MOCK_PSYCHOLOGIST_NAME = "Олена Коваленко";
 
@@ -46,10 +51,9 @@ export const mockUpcomingSessions: UpcomingSession[] = [
   },
 ];
 
-// Минулі сесії — та сама структура, що й mockUpcomingSessions (UpcomingSession),
-// лише з датами в минулому. Разом вони дають повну історію по клієнту, з якої
-// вкладка "Мої сеанси" рахує, котра це за рахунком сесія з конкретним клієнтом.
-const mockPastClientSessions: UpcomingSession[] = [
+// Минулі сесії з клієнтами — для розгорнутого списку "Історія з клієнтом" у
+// вкладці "Мої сеанси" (дата, час, статус відвідування).
+export const mockClientSessionHistory: ClientSessionHistoryEntry[] = [
   {
     id: "hist-1",
     startsAt: "2026-06-10T09:00:00.000Z",
@@ -57,6 +61,7 @@ const mockPastClientSessions: UpcomingSession[] = [
     clientName: "Оксана Петренко",
     clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
     type: "individual",
+    status: "completed",
   },
   {
     id: "hist-2",
@@ -65,45 +70,53 @@ const mockPastClientSessions: UpcomingSession[] = [
     clientName: "Оксана Петренко",
     clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
     type: "individual",
+    status: "completed",
   },
   {
     id: "hist-3",
+    startsAt: "2026-07-01T09:00:00.000Z",
+    durationMinutes: 50,
+    clientName: "Оксана Петренко",
+    clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
+    type: "individual",
+    status: "cancelled",
+  },
+  {
+    id: "hist-4",
     startsAt: "2026-07-08T09:00:00.000Z",
     durationMinutes: 50,
     clientName: "Оксана Петренко",
     clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
     type: "individual",
+    status: "completed",
   },
   {
-    id: "hist-4",
+    id: "hist-5",
     startsAt: "2026-06-17T13:00:00.000Z",
     durationMinutes: 50,
     clientName: "Максим Ткаченко",
     clientAvatarUrl: null,
     type: "individual",
+    status: "completed",
   },
   {
-    id: "hist-5",
+    id: "hist-6",
     startsAt: "2026-07-01T13:00:00.000Z",
     durationMinutes: 50,
     clientName: "Максим Ткаченко",
     clientAvatarUrl: null,
     type: "individual",
+    status: "no_show",
   },
   {
-    id: "hist-6",
+    id: "hist-7",
     startsAt: "2026-06-20T17:00:00.000Z",
     durationMinutes: 80,
     clientName: "Дарʼя і Богдан",
     clientAvatarUrl: "https://i.pravatar.cc/150?img=25",
     type: "couple",
+    status: "completed",
   },
-];
-
-/** Уся історія сесій (минулі + майбутні) для підрахунку "котра це сесія з клієнтом". */
-export const mockClientSessionHistory: UpcomingSession[] = [
-  ...mockPastClientSessions,
-  ...mockUpcomingSessions,
 ];
 
 // Шаблон доступності, винятки, заблоковані слоти, налаштування парної

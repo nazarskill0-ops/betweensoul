@@ -25,6 +25,7 @@ import type {
   AvailabilityException,
   AvailabilityValues,
   CalendarBooking,
+  ClientSessionHistoryEntry,
   DashboardStats,
   PayoutSession,
   ProfileFormValues,
@@ -50,7 +51,7 @@ export async function fetchUpcomingSessions(): Promise<UpcomingSession[]> {
   return mockUpcomingSessions;
 }
 
-export async function fetchClientSessionHistory(): Promise<UpcomingSession[]> {
+export async function fetchClientSessionHistory(): Promise<ClientSessionHistoryEntry[]> {
   await delay(300);
   return mockClientSessionHistory;
 }

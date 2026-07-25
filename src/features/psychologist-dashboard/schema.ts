@@ -43,6 +43,28 @@ export const upcomingSessionSchema = z.object({
 });
 export type UpcomingSession = z.infer<typeof upcomingSessionSchema>;
 
+export const SESSION_HISTORY_STATUSES = ["completed", "cancelled", "no_show"] as const;
+export const SESSION_HISTORY_STATUS_LABELS: Record<
+  (typeof SESSION_HISTORY_STATUSES)[number],
+  string
+> = {
+  completed: "Успішно",
+  cancelled: "Скасовано",
+  no_show: "Неявка",
+};
+
+/** Минула сесія з клієнтом — для розгорнутого списку "Історія з клієнтом". */
+export const clientSessionHistoryEntrySchema = z.object({
+  id: z.string(),
+  clientName: z.string(),
+  clientAvatarUrl: z.string().nullable(),
+  startsAt: z.string(), // ISO, UTC
+  durationMinutes: z.number().int().positive(),
+  type: z.enum(SESSION_TYPES),
+  status: z.enum(SESSION_HISTORY_STATUSES),
+});
+export type ClientSessionHistoryEntry = z.infer<typeof clientSessionHistoryEntrySchema>;
+
 /** Робоче вікно одного дня — `null` означає вихідний. */
 export const dayWindowSchema = z
   .object({
