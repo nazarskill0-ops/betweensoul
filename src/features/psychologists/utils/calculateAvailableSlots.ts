@@ -28,10 +28,18 @@ export function toTime(minutes: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/** Робоче вікно мінус усі зайняті інтервали (з мерджем перекриттів) → відсортовані вільні шматки. */
+/**
+ * Робоче вікно мінус усі зайняті інтервали (з мерджем перекриттів) →
+ * відсортовані вільні шматки. Після КОЖНОГО зайнятого інтервалу (бронювання
+ * чи ручного блокування) вільний час починається не одразу з моменту його
+ * закінчення, а через `breakMinutes` — психологу потрібна перерва після
+ * будь-якої зайнятої ділянки, а не лише між двома згенерованими слотами
+ * одного типу всередині вільного інтервалу.
+ */
 export function subtractBusyIntervals(
   workingWindow: TimeInterval,
-  busyIntervals: TimeInterval[]
+  busyIntervals: TimeInterval[],
+  breakMinutes: number
 ): TimeInterval[] {
   const windowStart = toMinutes(workingWindow.start);
   const windowEnd = toMinutes(workingWindow.end);
@@ -59,7 +67,10 @@ export function subtractBusyIntervals(
   let cursor = windowStart;
   for (const b of merged) {
     if (b.start > cursor) free.push({ start: toTime(cursor), end: toTime(b.start) });
-    cursor = Math.max(cursor, b.end);
+    // +breakMinutes після зайнятого інтервалу, не просто b.end. Якщо наступний
+    // зайнятий інтервал починається раніше, ніж закінчується ця перерва, він
+    // просто поглинається без окремого (закоротко) вільного шматка між ними.
+    cursor = Math.max(cursor, b.end + breakMinutes);
   }
   if (cursor < windowEnd) free.push({ start: toTime(cursor), end: toTime(windowEnd) });
 
@@ -119,7 +130,7 @@ export function calculateAvailableSlots(params: {
 
   if (!workingWindow) return { individual: [], couple: [] };
 
-  const freeIntervals = subtractBusyIntervals(workingWindow, busyIntervals);
+  const freeIntervals = subtractBusyIntervals(workingWindow, busyIntervals, breakMinutes);
 
   return {
     individual: freeIntervals.flatMap((f) =>
