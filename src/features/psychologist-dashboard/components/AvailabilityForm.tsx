@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TimePicker } from "@/components/ui/TimePicker";
+import { useClickOutside } from "@/lib/hooks/use-click-outside";
 import { updateAvailability } from "../api";
 import { useAvailability } from "../hooks/useAvailability";
 import {
@@ -16,6 +17,56 @@ import {
 
 const errorClass = "mt-1.5 block text-xs font-medium text-rose";
 const DEFAULT_DAY_WINDOW = { start: "09:00", end: "18:00" };
+
+function ApplyToAllPopover({
+  workingDays,
+  onApply,
+}: {
+  workingDays: Weekday[];
+  onApply: (window: { start: string; end: string }) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [start, setStart] = useState(DEFAULT_DAY_WINDOW.start);
+  const [end, setEnd] = useState(DEFAULT_DAY_WINDOW.end);
+  const ref = useRef<HTMLDivElement>(null);
+  useClickOutside(ref, () => setIsOpen(false));
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((o) => !o)}
+        disabled={workingDays.length === 0}
+        className="rounded-full border-[1.5px] border-sand-dark px-4 py-2 text-xs font-medium text-ink-muted transition-colors hover:border-sage hover:text-sage disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        Застосувати для всіх
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 top-full z-10 mt-2 w-72 rounded-card border-[1.5px] border-sand-dark bg-white p-4 shadow-lg">
+          <p className="mb-3 text-xs text-ink-muted">
+            Скопіювати ці години в усі позначені робочі дні — інші дні не зміняться.
+          </p>
+          <div className="flex items-center gap-2">
+            <TimePicker label="Початок для всіх" value={start} onChange={setStart} className="flex-1" />
+            <span className="text-ink-muted">—</span>
+            <TimePicker label="Кінець для всіх" value={end} onChange={setEnd} className="flex-1" />
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              onApply({ start, end });
+              setIsOpen(false);
+            }}
+            className="mt-3 w-full rounded-full bg-sage px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-sage/90"
+          >
+            Застосувати
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function AvailabilityForm() {
   const { data } = useAvailability();
@@ -50,13 +101,22 @@ export function AvailabilityForm() {
     setValue(day, { ...current, [field]: value }, { shouldValidate: true });
   }
 
+  const workingDays = WEEKDAYS.map((d) => d.value).filter((day) => days?.[day]);
+
+  function applyToAllWorkingDays(window: { start: string; end: string }) {
+    workingDays.forEach((day) => setValue(day, window, { shouldValidate: true }));
+  }
+
   return (
     <form
       onSubmit={handleSubmit((v) => mutation.mutate(v))}
       className="flex flex-col gap-5 rounded-card border-[1.5px] border-sand-dark bg-white p-6"
     >
       <div>
-        <label className="mb-2 block text-sm font-medium">Робочі дні й години</label>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <label className="text-sm font-medium">Робочі дні й години</label>
+          <ApplyToAllPopover workingDays={workingDays} onApply={applyToAllWorkingDays} />
+        </div>
         <div className="flex flex-col divide-y divide-sand-dark">
           {WEEKDAYS.map((day) => {
             const window = days?.[day.value];
