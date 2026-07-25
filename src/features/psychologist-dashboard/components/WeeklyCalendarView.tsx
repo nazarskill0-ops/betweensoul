@@ -306,7 +306,7 @@ export function WeeklyCalendarView() {
                       </button>
                     ))}
 
-                    {/* Вільні парні — sage-обводка + легка sage-заливка, друга смуга поруч з індивідуальними */}
+                    {/* Вільні парні — білий фон (без заливки), лише sage-обводка відрізняє від індивідуальних */}
                     {hasCoupleLane &&
                       freeSlots.couple.map((slot) => (
                         <button
@@ -319,7 +319,7 @@ export function WeeklyCalendarView() {
                             left: "51%",
                             right: 2,
                           }}
-                          className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sage bg-sage-light/60 px-0.5 text-center text-sage transition-colors hover:bg-sage-light"
+                          className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sage bg-white px-0.5 text-center text-sage transition-colors hover:bg-sage-light/40"
                         >
                           <span className="text-[9px] leading-none font-medium">{slot.start}</span>
                           <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
