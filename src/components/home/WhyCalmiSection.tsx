@@ -37,7 +37,7 @@ export function WhyCalmiSection() {
   return (
     <section className="border-t border-sand-dark px-5 md:px-12">
       <div className="mx-auto max-w-5xl py-20">
-        <h2 className="mb-12 text-center font-display text-2xl leading-snug md:text-3xl">
+        <h2 className="mb-12 text-center font-bold text-2xl leading-snug md:text-3xl">
           Чому обирають Calmi
         </h2>
         <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">

@@ -81,11 +81,10 @@ export function HeroSection() {
           </Link>
 
           <h1 className="mt-4 text-5xl leading-[1.05] font-bold tracking-tight md:text-6xl">
-            Психотерапія онлайн — без довгих пошуків.
+            Онлайн-консультації психолога без довгих пошуків
           </h1>
           <p className="mt-5 max-w-md text-lg text-ink-muted">
-            Пошук психолога став простішим.
-Знайдіть спеціаліста, якому довірятимете.
+            Перевірені психологи, зручний запис, оплата прямо на платформі
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Link
