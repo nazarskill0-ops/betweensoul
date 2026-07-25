@@ -3,9 +3,10 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AvailabilityExceptions } from "./AvailabilityExceptions";
 import { AvailabilityForm } from "./AvailabilityForm";
+import { MySessionsView } from "./MySessionsView";
 import { WeeklyCalendarView } from "./WeeklyCalendarView";
 
-type View = "availability" | "calendar";
+type View = "availability" | "calendar" | "sessions";
 
 function TabButton({
   label,
@@ -35,7 +36,9 @@ export function ScheduleView() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const view: View = searchParams.get("view") === "calendar" ? "calendar" : "availability";
+  const viewParam = searchParams.get("view");
+  const view: View =
+    viewParam === "calendar" ? "calendar" : viewParam === "sessions" ? "sessions" : "availability";
 
   function setView(next: View) {
     const params = new URLSearchParams(searchParams);
@@ -58,6 +61,11 @@ export function ScheduleView() {
           isActive={view === "calendar"}
           onClick={() => setView("calendar")}
         />
+        <TabButton
+          label="Мої сеанси"
+          isActive={view === "sessions"}
+          onClick={() => setView("sessions")}
+        />
       </div>
 
       {view === "availability" ? (
@@ -65,8 +73,10 @@ export function ScheduleView() {
           <AvailabilityForm />
           <AvailabilityExceptions />
         </div>
-      ) : (
+      ) : view === "calendar" ? (
         <WeeklyCalendarView />
+      ) : (
+        <MySessionsView />
       )}
     </div>
   );

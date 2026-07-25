@@ -14,7 +14,12 @@ import {
   toggleBlockedSlot as toggleBlockedSlotInStore,
   type BlockedSlot,
 } from "@/features/psychologists/utils/availabilityStore";
-import { mockPayoutSessions, mockProfile, mockUpcomingSessions } from "./mock";
+import {
+  mockClientSessionHistory,
+  mockPayoutSessions,
+  mockProfile,
+  mockUpcomingSessions,
+} from "./mock";
 import type {
   AddExceptionValues,
   AvailabilityException,
@@ -43,6 +48,11 @@ let profileState: ProfileFormValues = { ...mockProfile };
 export async function fetchUpcomingSessions(): Promise<UpcomingSession[]> {
   await delay(300);
   return mockUpcomingSessions;
+}
+
+export async function fetchClientSessionHistory(): Promise<UpcomingSession[]> {
+  await delay(300);
+  return mockClientSessionHistory;
 }
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {

@@ -46,6 +46,66 @@ export const mockUpcomingSessions: UpcomingSession[] = [
   },
 ];
 
+// Минулі сесії — та сама структура, що й mockUpcomingSessions (UpcomingSession),
+// лише з датами в минулому. Разом вони дають повну історію по клієнту, з якої
+// вкладка "Мої сеанси" рахує, котра це за рахунком сесія з конкретним клієнтом.
+const mockPastClientSessions: UpcomingSession[] = [
+  {
+    id: "hist-1",
+    startsAt: "2026-06-10T09:00:00.000Z",
+    durationMinutes: 50,
+    clientName: "Оксана Петренко",
+    clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
+    type: "individual",
+  },
+  {
+    id: "hist-2",
+    startsAt: "2026-06-24T09:00:00.000Z",
+    durationMinutes: 50,
+    clientName: "Оксана Петренко",
+    clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
+    type: "individual",
+  },
+  {
+    id: "hist-3",
+    startsAt: "2026-07-08T09:00:00.000Z",
+    durationMinutes: 50,
+    clientName: "Оксана Петренко",
+    clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
+    type: "individual",
+  },
+  {
+    id: "hist-4",
+    startsAt: "2026-06-17T13:00:00.000Z",
+    durationMinutes: 50,
+    clientName: "Максим Ткаченко",
+    clientAvatarUrl: null,
+    type: "individual",
+  },
+  {
+    id: "hist-5",
+    startsAt: "2026-07-01T13:00:00.000Z",
+    durationMinutes: 50,
+    clientName: "Максим Ткаченко",
+    clientAvatarUrl: null,
+    type: "individual",
+  },
+  {
+    id: "hist-6",
+    startsAt: "2026-06-20T17:00:00.000Z",
+    durationMinutes: 80,
+    clientName: "Дарʼя і Богдан",
+    clientAvatarUrl: "https://i.pravatar.cc/150?img=25",
+    type: "couple",
+  },
+];
+
+/** Уся історія сесій (минулі + майбутні) для підрахунку "котра це сесія з клієнтом". */
+export const mockClientSessionHistory: UpcomingSession[] = [
+  ...mockPastClientSessions,
+  ...mockUpcomingSessions,
+];
+
 // Шаблон доступності, винятки, заблоковані слоти, налаштування парної
 // терапії та повторювані бронювання живуть у спільному availabilityStore
 // (features/psychologists/utils) — єдине джерело правди, яким користується і
