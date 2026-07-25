@@ -43,19 +43,33 @@ export const upcomingSessionSchema = z.object({
 });
 export type UpcomingSession = z.infer<typeof upcomingSessionSchema>;
 
-export const availabilitySchema = z
+/** Робоче вікно одного дня — `null` означає вихідний. */
+export const dayWindowSchema = z
   .object({
-    workingDays: z
-      .array(z.enum(WEEKDAY_VALUES))
-      .min(1, "Оберіть хоча б один робочий день"),
-    startTime: z.string().min(1, "Вкажіть початок"),
-    endTime: z.string().min(1, "Вкажіть кінець"),
+    start: z.string().min(1, "Вкажіть початок"),
+    end: z.string().min(1, "Вкажіть кінець"),
   })
-  .refine((v) => v.startTime < v.endTime, {
-    message: "Кінець робочого дня має бути пізніше початку",
-    path: ["endTime"],
+  .refine((v) => v.start < v.end, {
+    message: "Кінець має бути пізніше початку",
+    path: ["end"],
+  })
+  .nullable();
+
+/** Розклад по днях — кожен робочий день має власне вікно {start, end}, не спільне на всіх. */
+export const weeklyAvailabilitySchema = z
+  .object({
+    mon: dayWindowSchema,
+    tue: dayWindowSchema,
+    wed: dayWindowSchema,
+    thu: dayWindowSchema,
+    fri: dayWindowSchema,
+    sat: dayWindowSchema,
+    sun: dayWindowSchema,
+  })
+  .refine((v) => WEEKDAY_VALUES.some((day) => v[day] !== null), {
+    message: "Оберіть хоча б один робочий день",
   });
-export type AvailabilityValues = z.infer<typeof availabilitySchema>;
+export type AvailabilityValues = z.infer<typeof weeklyAvailabilitySchema>;
 
 export const availabilityExceptionSchema = z.object({
   id: z.string(),

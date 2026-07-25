@@ -7,10 +7,10 @@ import {
   getCoupleSettings,
   getExceptions,
   getRecurringBookings,
-  getTemplate,
+  getWeeklyAvailability,
   removeExceptionRange,
   setCoupleSettings,
-  setTemplate,
+  setWeeklyAvailability,
   toggleBlockedSlot as toggleBlockedSlotInStore,
   type BlockedSlot,
 } from "@/features/psychologists/utils/availabilityStore";
@@ -64,13 +64,13 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
 
 export async function fetchAvailability(): Promise<AvailabilityValues> {
   await delay(300);
-  // TEMPLATED_PSYCHOLOGIST_ID завжди має шаблон (засіяний в availabilityStore).
-  return getTemplate(TEMPLATED_PSYCHOLOGIST_ID) as AvailabilityValues;
+  // TEMPLATED_PSYCHOLOGIST_ID завжди має розклад (засіяний в availabilityStore).
+  return getWeeklyAvailability(TEMPLATED_PSYCHOLOGIST_ID) as AvailabilityValues;
 }
 
 export async function updateAvailability(values: AvailabilityValues): Promise<void> {
   await delay(300);
-  setTemplate(TEMPLATED_PSYCHOLOGIST_ID, values);
+  setWeeklyAvailability(TEMPLATED_PSYCHOLOGIST_ID, values);
 }
 
 export async function fetchAvailabilityExceptions(): Promise<AvailabilityException[]> {

@@ -14,15 +14,15 @@
 */
 
 import {
-  enumerateCycleTimes,
+  getBusyIntervals,
   getCoupleSettings,
-  getTemplate,
+  getWeeklyAvailability,
   isDateExcepted,
-  isSlotOverlapping,
   weekdayOfDate,
   INDIVIDUAL_SESSION_DURATION_MINUTES,
   SESSION_BREAK_MINUTES,
 } from "./availabilityStore";
+import { calculateAvailableSlots } from "./calculateAvailableSlots";
 
 export const TIME_SLOTS_POOL = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -92,30 +92,35 @@ function generateTemplatedDaySlots(
   psychologistId: string,
   serviceType: SlotServiceType
 ): DaySlot[] | null {
-  const template = getTemplate(psychologistId);
-  if (!template) return null;
+  const weeklyAvailability = getWeeklyAvailability(psychologistId);
+  if (!weeklyAvailability) return null;
 
   const dateIso = toLocalDateIso(date);
   if (isDateExcepted(psychologistId, dateIso)) return [];
 
   const weekday = weekdayOfDate(date);
-  if (!template.workingDays.includes(weekday)) return [];
+  const workingWindow = weeklyAvailability[weekday];
+  if (!workingWindow) return [];
 
-  let sessionDurationMinutes: number;
+  let coupleDurationMinutes: number | null = null;
   if (serviceType === "couple") {
     const coupleSettings = getCoupleSettings(psychologistId);
     if (!coupleSettings?.offersCoupleTherapy) return [];
-    sessionDurationMinutes = coupleSettings.coupleSessionDurationMinutes;
-  } else {
-    sessionDurationMinutes = INDIVIDUAL_SESSION_DURATION_MINUTES;
+    coupleDurationMinutes = coupleSettings.coupleSessionDurationMinutes;
   }
-  const cycleMinutes = sessionDurationMinutes + SESSION_BREAK_MINUTES;
 
-  return enumerateCycleTimes(template, cycleMinutes)
-    .filter(
-      (time) => !isSlotOverlapping(psychologistId, dateIso, weekday, time, sessionDurationMinutes)
-    )
-    .map((time) => ({ time, isBooked: false }));
+  const { individual, couple } = calculateAvailableSlots({
+    workingWindow,
+    busyIntervals: getBusyIntervals(psychologistId, dateIso, weekday),
+    individualDurationMinutes: INDIVIDUAL_SESSION_DURATION_MINUTES,
+    coupleDurationMinutes,
+    breakMinutes: SESSION_BREAK_MINUTES,
+  });
+
+  return (serviceType === "couple" ? couple : individual).map((slot) => ({
+    time: slot.start,
+    isBooked: false,
+  }));
 }
 
 export function generateWeekSlots(

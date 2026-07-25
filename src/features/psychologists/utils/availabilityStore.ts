@@ -7,6 +7,8 @@
   TODO(backend): замінити на реальні запити до availability_slots.
 */
 
+import type { TimeInterval } from "./calculateAvailableSlots";
+
 export const WEEKDAY_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 export type Weekday = (typeof WEEKDAY_ORDER)[number];
 
@@ -23,11 +25,8 @@ export const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 /** Перерва між сесіями — фіксовано 10 хв для всіх, для обох типів сесій. */
 export const SESSION_BREAK_MINUTES = 10;
 
-export type AvailabilityTemplate = {
-  workingDays: Weekday[];
-  startTime: string; // "HH:MM"
-  endTime: string; // "HH:MM"
-};
+/** Робоче вікно свого власного дня — `null` означає вихідний. */
+export type WeeklyAvailability = Record<Weekday, TimeInterval | null>;
 
 export type AvailabilityExceptionRange = {
   id: string;
@@ -63,10 +62,14 @@ export type RecurringBooking = {
 /** Психолог, для якого кабінет психолога керує реальним шаблоном доступності. */
 export const TEMPLATED_PSYCHOLOGIST_ID = "p-01";
 
-let template: AvailabilityTemplate = {
-  workingDays: ["mon", "tue", "wed", "thu", "fri"],
-  startTime: "09:00",
-  endTime: "18:00",
+let weeklyAvailability: WeeklyAvailability = {
+  mon: { start: "09:00", end: "18:00" },
+  tue: { start: "09:00", end: "18:00" },
+  wed: { start: "09:00", end: "18:00" },
+  thu: { start: "09:00", end: "18:00" },
+  fri: { start: "09:00", end: "18:00" },
+  sat: null,
+  sun: null,
 };
 
 let exceptions: AvailabilityExceptionRange[] = [
@@ -85,7 +88,7 @@ let coupleSettings: CoupleSettings = {
   coupleSessionDurationMinutes: 80,
 };
 
-let recurringBookings: RecurringBooking[] = [
+const recurringBookings: RecurringBooking[] = [
   {
     id: "cb-1",
     dayOfWeek: "mon",
@@ -128,13 +131,13 @@ let recurringBookings: RecurringBooking[] = [
   },
 ];
 
-export function getTemplate(psychologistId: string): AvailabilityTemplate | null {
-  return psychologistId === TEMPLATED_PSYCHOLOGIST_ID ? template : null;
+export function getWeeklyAvailability(psychologistId: string): WeeklyAvailability | null {
+  return psychologistId === TEMPLATED_PSYCHOLOGIST_ID ? weeklyAvailability : null;
 }
 
-export function setTemplate(psychologistId: string, next: AvailabilityTemplate) {
+export function setWeeklyAvailability(psychologistId: string, next: WeeklyAvailability) {
   if (psychologistId !== TEMPLATED_PSYCHOLOGIST_ID) return;
-  template = next;
+  weeklyAvailability = next;
 }
 
 export function getExceptions(psychologistId: string): AvailabilityExceptionRange[] {
@@ -196,26 +199,6 @@ export function getRecurringBookings(psychologistId: string): RecurringBooking[]
   return psychologistId === TEMPLATED_PSYCHOLOGIST_ID ? recurringBookings : [];
 }
 
-/** "09:00".."18:00" крок cycleMinutes → ["09:00","10:00",...] поки вкладається до кінця. */
-export function enumerateCycleTimes(
-  availabilityTemplate: AvailabilityTemplate,
-  cycleMinutes: number
-): string[] {
-  const [startH, startM] = availabilityTemplate.startTime.split(":").map(Number);
-  const [endH, endM] = availabilityTemplate.endTime.split(":").map(Number);
-  const startMinutes = startH * 60 + startM;
-  const endMinutes = endH * 60 + endM;
-  const times: string[] = [];
-
-  for (let m = startMinutes; m + cycleMinutes <= endMinutes; m += cycleMinutes) {
-    const h = Math.floor(m / 60);
-    const min = m % 60;
-    times.push(`${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`);
-  }
-
-  return times;
-}
-
 export function addMinutesToTime(time: string, minutes: number): string {
   const [h, m] = time.split(":").map(Number);
   const total = h * 60 + m + minutes;
@@ -224,38 +207,23 @@ export function addMinutesToTime(time: string, minutes: number): string {
   return `${String(nextH).padStart(2, "0")}:${String(nextM).padStart(2, "0")}`;
 }
 
-function toMinutes(time: string): number {
-  const [h, m] = time.split(":").map(Number);
-  return h * 60 + m;
-}
-
-function rangesOverlap(
-  aStart: string,
-  aDurationMinutes: number,
-  bStart: string,
-  bDurationMinutes: number
-): boolean {
-  const aStartMin = toMinutes(aStart);
-  const bStartMin = toMinutes(bStart);
-  return aStartMin < bStartMin + bDurationMinutes && bStartMin < aStartMin + aDurationMinutes;
-}
-
-// TODO: verify overlap-blocking logic with Illia when real booking data available —
-// мок-реалізація зараз: перекриття рахується проти заблокованих слотів і
-// повторюваних (щотижневих) мок-бронювань, а не проти реальної таблиці bookings.
-export function isSlotOverlapping(
+/**
+ * Усі зайняті інтервали дня (підтверджені бронювання будь-якого типу + ручні
+ * блокування) — вхід для `calculateAvailableSlots`. Бронювання незмінні,
+ * тут лише конвертуються в `{start, end}`; блокування вже зберігаються так.
+ */
+export function getBusyIntervals(
   psychologistId: string,
   dateIso: string,
-  weekday: Weekday,
-  startTime: string,
-  durationMinutes: number
-): boolean {
-  const overlapsBlocked = getBlockedSlots(psychologistId)
-    .filter((b) => b.date === dateIso)
-    .some((b) => rangesOverlap(startTime, durationMinutes, b.startTime, toMinutes(b.endTime) - toMinutes(b.startTime)));
-  if (overlapsBlocked) return true;
-
-  return getRecurringBookings(psychologistId)
+  weekday: Weekday
+): TimeInterval[] {
+  const busyFromBookings = getRecurringBookings(psychologistId)
     .filter((b) => b.dayOfWeek === weekday)
-    .some((b) => rangesOverlap(startTime, durationMinutes, b.startTime, b.durationMinutes));
+    .map((b) => ({ start: b.startTime, end: addMinutesToTime(b.startTime, b.durationMinutes) }));
+
+  const busyFromBlocks = getBlockedSlots(psychologistId)
+    .filter((b) => b.date === dateIso)
+    .map((b) => ({ start: b.startTime, end: b.endTime }));
+
+  return [...busyFromBookings, ...busyFromBlocks];
 }

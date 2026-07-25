@@ -7,9 +7,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { updateAvailability } from "../api";
 import { useAvailability } from "../hooks/useAvailability";
-import { availabilitySchema, WEEKDAYS, type AvailabilityValues, type Weekday } from "../schema";
+import {
+  weeklyAvailabilitySchema,
+  WEEKDAYS,
+  type AvailabilityValues,
+  type Weekday,
+} from "../schema";
 
 const errorClass = "mt-1.5 block text-xs font-medium text-rose";
+const DEFAULT_DAY_WINDOW = { start: "09:00", end: "18:00" };
 
 export function AvailabilityForm() {
   const { data } = useAvailability();
@@ -20,15 +26,14 @@ export function AvailabilityForm() {
     watch,
     setValue,
     formState: { errors },
-  } = useForm<AvailabilityValues>({ resolver: zodResolver(availabilitySchema) });
+  } = useForm<AvailabilityValues>({ resolver: zodResolver(weeklyAvailabilitySchema) });
 
   useEffect(() => {
     if (data) reset(data);
   }, [data, reset]);
 
-  const workingDays = watch("workingDays") ?? [];
-  const startTime = watch("startTime");
-  const endTime = watch("endTime");
+  const days = watch();
+  const hasWorkingDay = WEEKDAYS.some((day) => days?.[day.value]);
 
   const mutation = useMutation({
     mutationFn: updateAvailability,
@@ -37,10 +42,12 @@ export function AvailabilityForm() {
   });
 
   function toggleDay(day: Weekday) {
-    const next = workingDays.includes(day)
-      ? workingDays.filter((d) => d !== day)
-      : [...workingDays, day];
-    setValue("workingDays", next, { shouldValidate: true });
+    setValue(day, days?.[day] ? null : DEFAULT_DAY_WINDOW, { shouldValidate: true });
+  }
+
+  function setDayTime(day: Weekday, field: "start" | "end", value: string) {
+    const current = days?.[day] ?? DEFAULT_DAY_WINDOW;
+    setValue(day, { ...current, [field]: value }, { shouldValidate: true });
   }
 
   return (
@@ -49,48 +56,56 @@ export function AvailabilityForm() {
       className="flex flex-col gap-5 rounded-card border-[1.5px] border-sand-dark bg-white p-6"
     >
       <div>
-        <label className="mb-2 block text-sm font-medium">Робочі дні</label>
-        <div className="flex flex-wrap gap-2">
+        <label className="mb-2 block text-sm font-medium">Робочі дні й години</label>
+        <div className="flex flex-col divide-y divide-sand-dark">
           {WEEKDAYS.map((day) => {
-            const isActive = workingDays.includes(day.value);
+            const window = days?.[day.value];
+            const isActive = !!window;
+            const dayError = errors[day.value];
+
             return (
-              <button
-                key={day.value}
-                type="button"
-                onClick={() => toggleDay(day.value)}
-                className={`h-10 w-14 rounded-full border-[1.5px] text-sm font-medium transition-colors ${
-                  isActive
-                    ? "border-sage bg-sage-light text-sage"
-                    : "border-sand-dark text-ink-muted hover:border-sage"
-                }`}
-              >
-                {day.label}
-              </button>
+              <div key={day.value} className="flex flex-wrap items-center gap-4 py-3 first:pt-0">
+                <button
+                  type="button"
+                  onClick={() => toggleDay(day.value)}
+                  className={`h-10 w-14 shrink-0 rounded-full border-[1.5px] text-sm font-medium transition-colors ${
+                    isActive
+                      ? "border-sage bg-sage-light text-sage"
+                      : "border-sand-dark text-ink-muted hover:border-sage"
+                  }`}
+                >
+                  {day.label}
+                </button>
+
+                {isActive ? (
+                  <div className="flex flex-1 flex-wrap items-center gap-2">
+                    <TimePicker
+                      label={`Початок — ${day.label}`}
+                      value={window.start}
+                      onChange={(v) => setDayTime(day.value, "start", v)}
+                      className="w-32"
+                    />
+                    <span className="text-ink-muted">—</span>
+                    <TimePicker
+                      label={`Кінець — ${day.label}`}
+                      value={window.end}
+                      onChange={(v) => setDayTime(day.value, "end", v)}
+                      className="w-32"
+                    />
+                    {dayError && (
+                      <span className={errorClass}>
+                        {(dayError as { end?: { message?: string } }).end?.message}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="flex-1 text-sm text-ink-muted">Вихідний</span>
+                )}
+              </div>
             );
           })}
         </div>
-        {errors.workingDays && <span className={errorClass}>{errors.workingDays.message}</span>}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Початок</label>
-          <TimePicker
-            label="Початок робочого дня"
-            value={startTime ?? ""}
-            onChange={(v) => setValue("startTime", v, { shouldValidate: true })}
-          />
-          {errors.startTime && <span className={errorClass}>{errors.startTime.message}</span>}
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Кінець</label>
-          <TimePicker
-            label="Кінець робочого дня"
-            value={endTime ?? ""}
-            onChange={(v) => setValue("endTime", v, { shouldValidate: true })}
-          />
-          {errors.endTime && <span className={errorClass}>{errors.endTime.message}</span>}
-        </div>
+        {!hasWorkingDay && <span className={errorClass}>Оберіть хоча б один робочий день</span>}
       </div>
 
       {mutation.isSuccess && (
