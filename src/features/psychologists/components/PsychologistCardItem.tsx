@@ -128,6 +128,26 @@ function ArrowRightIcon({ className }: { className?: string }) {
   );
 }
 
+function PriceRow({
+  durationMinutes,
+  priceMinor,
+  label,
+}: {
+  durationMinutes: number;
+  priceMinor: number;
+  label?: string;
+}) {
+  return (
+    <span className="flex items-center gap-1.5 text-base font-bold">
+      <ClockIcon className="h-4 w-4 shrink-0 text-ink-muted" />
+      <span className="text-ink-muted">{durationMinutes} хв</span>
+      <span className="text-ink-muted"> · </span>
+      <span className="text-ink-muted">{priceMinor / 100} ₴</span>
+      {label && <span className="text-sm font-medium text-ink-muted"> — {label}</span>}
+    </span>
+  );
+}
+
 function PlayIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -157,9 +177,11 @@ function CloseIcon({ className }: { className?: string }) {
 export function PsychologistCardItem({
   psychologist,
   isCoupleService = false,
+  showBothPricing = false,
 }: {
   psychologist: PsychologistCard;
   isCoupleService?: boolean;
+  showBothPricing?: boolean;
 }) {
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"main" | "about">("main");
@@ -169,7 +191,6 @@ export function PsychologistCardItem({
   const activePriceMinor = isCoupleService
     ? (psychologist.couplePriceMinor ?? psychologist.priceMinor)
     : psychologist.priceMinor;
-  const activePriceUah = activePriceMinor / 100;
   const qualificationLabel = QUALIFICATIONS.find(
     (q) => q.value === psychologist.qualification
   )?.label;
@@ -182,7 +203,7 @@ export function PsychologistCardItem({
     : null;
 
   return (
-    <div className="flex flex-col gap-5 rounded-card bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] sm:flex-row sm:gap-6">
+    <div className="flex flex-col gap-5 rounded-card border-[1.5px] border-sand-dark bg-white p-5 sm:flex-row sm:gap-6">
       <div className="relative h-56 w-full shrink-0 self-start sm:aspect-[4/5] sm:h-auto sm:w-56">
         {psychologist.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -300,12 +321,24 @@ export function PsychologistCardItem({
         </div>
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-1">
-          <span className="flex items-center gap-1.5 text-base font-bold">
-            <ClockIcon className="h-4 w-4 shrink-0 text-ink-muted" />
-            <span className="text-ink-muted">{activeDurationMinutes} хв</span>
-            <span className="text-ink-muted"> · </span>
-            <span className="text-ink-muted">{activePriceUah} ₴</span>
-          </span>
+          {showBothPricing &&
+          psychologist.couplePriceMinor !== null &&
+          psychologist.coupleSessionDurationMinutes !== null ? (
+            <div className="flex flex-col gap-1">
+              <PriceRow
+                durationMinutes={INDIVIDUAL_SESSION_DURATION_MINUTES}
+                priceMinor={psychologist.priceMinor}
+                label="індивідуальна"
+              />
+              <PriceRow
+                durationMinutes={psychologist.coupleSessionDurationMinutes}
+                priceMinor={psychologist.couplePriceMinor}
+                label="парна"
+              />
+            </div>
+          ) : (
+            <PriceRow durationMinutes={activeDurationMinutes} priceMinor={activePriceMinor} />
+          )}
           <Link
             href={`/psychologist/${psychologist.profileId}`}
             className="flex items-center gap-1.5 rounded-full bg-ink-muted px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-sage"

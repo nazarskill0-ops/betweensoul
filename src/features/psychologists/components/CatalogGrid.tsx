@@ -11,6 +11,9 @@ export function CatalogGrid({ filters }: { filters: PsychologistFilters }) {
   const searchParams = useSearchParams();
   const { data, isLoading } = usePsychologists(filters);
   const isCoupleService = filters.service === "Парна терапія";
+  // "Усі фахівці" — жоден тип послуги не обрано, тож показуємо обидва
+  // варіанти ціни/тривалості, якщо психолог проводить парні сесії.
+  const showBothPricing = !filters.service;
 
   const resetFilters = () => {
     const service = searchParams.get("service");
@@ -54,6 +57,7 @@ export function CatalogGrid({ filters }: { filters: PsychologistFilters }) {
           key={psychologist.profileId}
           psychologist={psychologist}
           isCoupleService={isCoupleService}
+          showBothPricing={showBothPricing}
         />
       ))}
     </div>
