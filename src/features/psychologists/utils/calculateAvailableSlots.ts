@@ -5,9 +5,11 @@
   Замість того, щоб генерувати слоти циклом (тривалість+перерва) від початку
   кожного вільного шматка часу (де одне бронювання посеред дня непередбачувано
   зсуває час усіх наступних слотів), кандидати перевіряються на ФІКСОВАНИХ
-  контрольних точках через рівний крок (CONTROL_POINT_STEP_MINUTES, за
-  замовчуванням 30 хв) у межах робочого вікна — 9:00, 9:30, 10:00, 10:30...
-  незалежно від того, що вже заброньовано.
+  контрольних точках через рівний крок (`controlPointStepMinutes` — власна
+  настройка психолога "Крок часу для запису" з профілю, за замовчуванням
+  60 хв, або 30 хв) у межах робочого вікна — 9:00, 9:30/10:00, ...
+  незалежно від того, що вже заброньовано. Обов'язковий параметр, без
+  внутрішнього дефолту — щоб не розходитись мовчки зі збереженою настройкою.
 
   Контрольна точка валідна для типу сесії, якщо [точка, точка + тривалість +
   перерва) не перетинається з жодним зайнятим інтервалом (бронювання чи ручне
@@ -26,9 +28,6 @@
 */
 
 export type TimeInterval = { start: string; end: string }; // "HH:MM", 24-годинний формат
-
-/** Крок контрольних точок — 9:00, 9:30, 10:00... */
-export const CONTROL_POINT_STEP_MINUTES = 30;
 
 export function toMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
@@ -91,7 +90,7 @@ export function calculateAvailableSlots(params: {
   individualDurationMinutes: number;
   coupleDurationMinutes: number | null;
   breakMinutes: number;
-  controlPointStepMinutes?: number;
+  controlPointStepMinutes: number;
 }): AvailableSlots {
   const {
     workingWindow,
@@ -99,7 +98,7 @@ export function calculateAvailableSlots(params: {
     individualDurationMinutes,
     coupleDurationMinutes,
     breakMinutes,
-    controlPointStepMinutes = CONTROL_POINT_STEP_MINUTES,
+    controlPointStepMinutes,
   } = params;
 
   if (!workingWindow) return { individual: [], couple: [] };

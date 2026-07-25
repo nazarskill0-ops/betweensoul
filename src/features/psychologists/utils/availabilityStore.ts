@@ -48,6 +48,10 @@ export type CoupleSettings = {
   coupleSessionDurationMinutes: number;
 };
 
+/** Крок контрольних точок (варіант Б) — свій для кожного психолога, з профілю. */
+export const BOOKING_STEP_OPTIONS = [30, 60] as const;
+export type BookingStepMinutes = (typeof BOOKING_STEP_OPTIONS)[number];
+
 // TODO: verify field names with Illia's booking schema — тижнева сітка поки
 // що на моках, реальні дані підуть із bookings + availability_slots.
 export type RecurringBooking = {
@@ -87,6 +91,8 @@ let coupleSettings: CoupleSettings = {
   offersCoupleTherapy: true,
   coupleSessionDurationMinutes: 80,
 };
+
+let bookingStepMinutes: BookingStepMinutes = 60;
 
 const recurringBookings: RecurringBooking[] = [
   {
@@ -193,6 +199,15 @@ export function getCoupleSettings(psychologistId: string): CoupleSettings | null
 export function setCoupleSettings(psychologistId: string, next: CoupleSettings) {
   if (psychologistId !== TEMPLATED_PSYCHOLOGIST_ID) return;
   coupleSettings = next;
+}
+
+export function getBookingStepMinutes(psychologistId: string): BookingStepMinutes | null {
+  return psychologistId === TEMPLATED_PSYCHOLOGIST_ID ? bookingStepMinutes : null;
+}
+
+export function setBookingStepMinutes(psychologistId: string, next: BookingStepMinutes) {
+  if (psychologistId !== TEMPLATED_PSYCHOLOGIST_ID) return;
+  bookingStepMinutes = next;
 }
 
 export function getRecurringBookings(psychologistId: string): RecurringBooking[] {

@@ -4,15 +4,18 @@ import {
   TEMPLATED_PSYCHOLOGIST_ID,
   addExceptionRange,
   getBlockedSlots as getBlockedSlotsFromStore,
+  getBookingStepMinutes,
   getCoupleSettings,
   getExceptions,
   getRecurringBookings,
   getWeeklyAvailability,
   removeExceptionRange,
+  setBookingStepMinutes,
   setCoupleSettings,
   setWeeklyAvailability,
   toggleBlockedSlot as toggleBlockedSlotInStore,
   type BlockedSlot,
+  type BookingStepMinutes,
 } from "@/features/psychologists/utils/availabilityStore";
 import {
   mockClientSessionHistory,
@@ -82,6 +85,18 @@ export async function fetchAvailability(): Promise<AvailabilityValues> {
 export async function updateAvailability(values: AvailabilityValues): Promise<void> {
   await delay(300);
   setWeeklyAvailability(TEMPLATED_PSYCHOLOGIST_ID, values);
+}
+
+// Крок контрольних точок (варіант Б) для обох типів сесій — частина профілю
+// психолога, те саме сховище (availabilityStore), де й тривалість парної сесії.
+export async function fetchBookingStepMinutes(): Promise<BookingStepMinutes> {
+  await delay(200);
+  return getBookingStepMinutes(TEMPLATED_PSYCHOLOGIST_ID) ?? 60;
+}
+
+export async function updateBookingStepMinutes(value: BookingStepMinutes): Promise<void> {
+  await delay(200);
+  setBookingStepMinutes(TEMPLATED_PSYCHOLOGIST_ID, value);
 }
 
 export async function fetchAvailabilityExceptions(): Promise<AvailabilityException[]> {

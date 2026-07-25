@@ -14,6 +14,7 @@
 */
 
 import {
+  getBookingStepMinutes,
   getBusyIntervals,
   getCoupleSettings,
   getWeeklyAvailability,
@@ -115,6 +116,7 @@ function generateTemplatedDaySlots(
     individualDurationMinutes: INDIVIDUAL_SESSION_DURATION_MINUTES,
     coupleDurationMinutes,
     breakMinutes: SESSION_BREAK_MINUTES,
+    controlPointStepMinutes: getBookingStepMinutes(psychologistId) ?? 60,
   });
 
   return (serviceType === "couple" ? couple : individual).map((slot) => ({

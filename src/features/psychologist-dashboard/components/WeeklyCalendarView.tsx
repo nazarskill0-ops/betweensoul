@@ -16,12 +16,12 @@ import {
   calculateAvailableSlots,
   toMinutes,
   toTime,
-  CONTROL_POINT_STEP_MINUTES,
   type TimeInterval,
 } from "@/features/psychologists/utils/calculateAvailableSlots";
 import { toggleBlockedSlot } from "../api";
 import { useAvailability } from "../hooks/useAvailability";
 import { useAvailabilityExceptions } from "../hooks/useAvailabilityExceptions";
+import { useBookingStep } from "../hooks/useBookingStep";
 import { BLOCKED_SLOTS_QUERY_KEY, useBlockedSlots } from "../hooks/useBlockedSlots";
 import { useMyProfile } from "../hooks/useMyProfile";
 import { useWeeklyCalendar } from "../hooks/useWeeklyCalendar";
@@ -35,15 +35,7 @@ const DEFAULT_TIMELINE_START_MINUTES = 9 * 60;
 const DEFAULT_TIMELINE_END_MINUTES = 18 * 60;
 const DAY_COLUMN_WIDTH = 140;
 const HEADER_HEIGHT = 40;
-/* Вільні слоти тепер — незалежні контрольні точки з кроком
-   CONTROL_POINT_STEP_MINUTES (варіант Б), а не послідовний нецикл: сусідні
-   кандидати того самого типу можуть перекриватись у часі (напр. 09:00-09:50
-   і 09:30-10:20 для 50-хв сесії з кроком 30 хв) — це свідомо прийнятий
-   компроміс алгоритму, не помилка. Малювати їх блоками на всю реальну
-   тривалість (як бронювання й блокування) означало б, що вони візуально
-   накладаються одне на одного. Тому кожен вільний слот займає лише свій
-   власний крок сітки — позиція (top) все одно за реальним часом початку. */
-const FREE_SLOT_MARKER_HEIGHT = CONTROL_POINT_STEP_MINUTES * PX_PER_MINUTE;
+const DEFAULT_BOOKING_STEP_MINUTES = 60;
 
 function ChevronIcon({ direction, className }: { direction: "left" | "right"; className?: string }) {
   return (
@@ -77,6 +69,7 @@ export function WeeklyCalendarView() {
   const { data: bookings } = useWeeklyCalendar();
   const { data: blockedSlots } = useBlockedSlots();
   const { data: profile } = useMyProfile();
+  const { data: bookingStep } = useBookingStep();
   const queryClient = useQueryClient();
 
   const toggleMutation = useMutation({
@@ -100,6 +93,16 @@ export function WeeklyCalendarView() {
   const coupleDurationMinutes = profile?.offersCoupleTherapy
     ? (profile.coupleSessionDurationMinutes ?? null)
     : null;
+  const controlPointStepMinutes = bookingStep ?? DEFAULT_BOOKING_STEP_MINUTES;
+  /* Вільні слоти — незалежні контрольні точки з кроком controlPointStepMinutes
+     (варіант Б), а не послідовний цикл: сусідні кандидати того самого типу
+     можуть перекриватись у часі (напр. 09:00-09:50 і 09:30-10:20 для 50-хв
+     сесії з кроком 30 хв) — це свідомо прийнятий компроміс алгоритму, не
+     помилка. Малювати їх блоками на всю реальну тривалість (як бронювання й
+     блокування) означало б, що вони візуально накладаються одне на одного.
+     Тому кожен вільний слот займає лише свій власний крок сітки — позиція
+     (top) все одно за реальним часом початку. */
+  const freeSlotMarkerHeight = controlPointStepMinutes * PX_PER_MINUTE;
 
   const days = WEEKDAY_VALUES.map((weekday, i) => {
     const date = new Date(weekStart);
@@ -218,6 +221,7 @@ export function WeeklyCalendarView() {
                     individualDurationMinutes: INDIVIDUAL_SESSION_DURATION_MINUTES,
                     coupleDurationMinutes,
                     breakMinutes: SESSION_BREAK_MINUTES,
+                    controlPointStepMinutes,
                   })
                 : { individual: [], couple: [] };
 
@@ -305,7 +309,7 @@ export function WeeklyCalendarView() {
                         onClick={() => requestBlock(dateIso, slot)}
                         style={{
                           top: topFor(slot.start),
-                          height: FREE_SLOT_MARKER_HEIGHT,
+                          height: freeSlotMarkerHeight,
                           left: 2,
                           right: hasCoupleLane ? "51%" : 2,
                         }}
@@ -325,7 +329,7 @@ export function WeeklyCalendarView() {
                           onClick={() => requestBlock(dateIso, slot)}
                           style={{
                             top: topFor(slot.start),
-                            height: FREE_SLOT_MARKER_HEIGHT,
+                            height: freeSlotMarkerHeight,
                             left: "51%",
                             right: 2,
                           }}

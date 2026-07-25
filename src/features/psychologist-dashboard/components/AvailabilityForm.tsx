@@ -6,8 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { useClickOutside } from "@/lib/hooks/use-click-outside";
-import { updateAvailability } from "../api";
+import { BOOKING_STEP_OPTIONS, type BookingStepMinutes } from "@/features/psychologists/utils/availabilityStore";
+import { updateAvailability, updateBookingStepMinutes } from "../api";
 import { useAvailability } from "../hooks/useAvailability";
+import { BOOKING_STEP_QUERY_KEY, useBookingStep } from "../hooks/useBookingStep";
 import {
   weeklyAvailabilitySchema,
   WEEKDAYS,
@@ -70,6 +72,7 @@ function ApplyToAllPopover({
 
 export function AvailabilityForm() {
   const { data } = useAvailability();
+  const { data: bookingStep } = useBookingStep();
   const queryClient = useQueryClient();
   const {
     handleSubmit,
@@ -78,10 +81,15 @@ export function AvailabilityForm() {
     setValue,
     formState: { errors },
   } = useForm<AvailabilityValues>({ resolver: zodResolver(weeklyAvailabilitySchema) });
+  const [stepValue, setStepValue] = useState<BookingStepMinutes>(60);
 
   useEffect(() => {
     if (data) reset(data);
   }, [data, reset]);
+
+  useEffect(() => {
+    if (bookingStep) setStepValue(bookingStep);
+  }, [bookingStep]);
 
   const days = watch();
   const hasWorkingDay = WEEKDAYS.some((day) => days?.[day.value]);
@@ -90,6 +98,11 @@ export function AvailabilityForm() {
     mutationFn: updateAvailability,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["psychologist-dashboard", "availability"] }),
+  });
+
+  const stepMutation = useMutation({
+    mutationFn: updateBookingStepMinutes,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: BOOKING_STEP_QUERY_KEY }),
   });
 
   function toggleDay(day: Weekday) {
@@ -109,7 +122,10 @@ export function AvailabilityForm() {
 
   return (
     <form
-      onSubmit={handleSubmit((v) => mutation.mutate(v))}
+      onSubmit={handleSubmit((v) => {
+        mutation.mutate(v);
+        stepMutation.mutate(stepValue);
+      })}
       className="flex flex-col gap-5 rounded-card border-[1.5px] border-sand-dark bg-white p-6"
     >
       <div>
@@ -166,6 +182,24 @@ export function AvailabilityForm() {
           })}
         </div>
         {!hasWorkingDay && <span className={errorClass}>Оберіть хоча б один робочий день</span>}
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium">Крок часу для запису</label>
+        <select
+          value={stepValue}
+          onChange={(e) => setStepValue(Number(e.target.value) as BookingStepMinutes)}
+          className="w-40 rounded-[10px] border-[1.5px] border-sand-dark bg-sand px-4 py-3 text-sm outline-none transition-colors focus:border-sage"
+        >
+          {BOOKING_STEP_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {option} хв
+            </option>
+          ))}
+        </select>
+        <p className="mt-1.5 text-xs text-ink-muted">
+          Інтервал між контрольними точками запису — впливає на обидва типи сесій.
+        </p>
       </div>
 
       {mutation.isSuccess && (
