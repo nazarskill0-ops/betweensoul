@@ -60,7 +60,7 @@ export function FeaturedTopicsSection() {
   // the closest proxy for popularity currently in the data model. The list is
   // static and not filtered by the selected topic tag (planned separately).
   const { data } = usePsychologists({});
-  const featured = [...(data ?? [])]
+  const featured = [...(data?.items ?? [])]
     .sort((a, b) => b.sessionsCount - a.sessionsCount)
     .slice(0, FEATURED_COUNT);
 

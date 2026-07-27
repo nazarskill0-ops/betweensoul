@@ -8,7 +8,24 @@ import { z } from "zod";
 /** Послуги. Значення зберігаються в URL/фільтрах/моках — не перейменовувати без міграції. */
 export const SERVICES = ["Індивідуальна терапія", "Парна терапія"] as const;
 
-/** Теми запитів, сгруппированы для мега-меню. */
+/** Три базовые услуги для стартового выбора в каталоге. */
+export const CORE_SERVICES = SERVICES.slice(0, 3);
+
+/** Типізоване значення SERVICES — замість порівнянь із рядковими літералами. */
+export type Service = (typeof SERVICES)[number];
+/** Іменована типізована константа замість "магічного рядка" у порівняннях. */
+export const COUPLE_THERAPY_SERVICE: Service = "Парна терапія";
+
+/**
+ * Значення SERVICES — це те саме, що зберігається в URL/фільтрах/моках
+ * (`?service=Особиста терапія`, `p.services.includes(...)`), тож саме
+ * значення не перейменовуємо без міграції. Тут лише те, що бачить клієнт.
+ */
+export function formatServiceLabel(service: string): string {
+  return service === "Особиста терапія" ? "Індивідуальна терапія" : service;
+}
+
+/** Теми запитів, сгруппированы як в мега-меню Rozmova. */
 export const TOPIC_GROUPS = [
   {
     group: "Емоційний стан",
@@ -189,10 +206,16 @@ export const psychologistProfileSchema = psychologistCardSchema.extend({
 });
 export type PsychologistProfile = z.infer<typeof psychologistProfileSchema>;
 
+/** Скільки карток психологів показувати на одній сторінці каталогу. */
+export const CATALOG_PAGE_SIZE = 10;
+
 /** Фильтры каталога. 1:1 с search-параметрами URL. */
 export const psychologistFiltersSchema = z.object({
   q: z.string().optional(), // поиск по имени
-  service: z.string().optional(),
+  // .catch(undefined) — щоб застаріле/зіпсоване ?service=... в URL (напр.
+  // збережене посилання після перейменування значення) не валило весь
+  // рендер каталогу винятком, а просто трактувалось як "нема фільтра".
+  service: z.enum(SERVICES).optional().catch(undefined),
   topics: z.array(z.string()).optional(), // ищет и в основной, и во вторичной экспертизе
   specializations: z.array(z.string()).optional(),
   languages: z.array(z.string()).optional(),
@@ -201,5 +224,6 @@ export const psychologistFiltersSchema = z.object({
   qualification: z.string().optional(),
   priceMin: z.coerce.number().int().nonnegative().optional(),
   priceMax: z.coerce.number().int().positive().optional(),
+  page: z.coerce.number().int().positive().optional().catch(undefined),
 });
 export type PsychologistFilters = z.infer<typeof psychologistFiltersSchema>;

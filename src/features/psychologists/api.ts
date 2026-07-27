@@ -1,9 +1,17 @@
 import { mockPsychologists } from "./mock";
+import { CATALOG_PAGE_SIZE } from "./schema";
 import type {
   PsychologistCard,
   PsychologistFilters,
   PsychologistProfile,
 } from "./schema";
+
+export type PsychologistsPage = {
+  items: PsychologistCard[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
 
 /*
   Единственное место, где берутся данные о психологах.
@@ -16,10 +24,10 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export async function fetchPsychologists(
   filters: PsychologistFilters
-): Promise<PsychologistCard[]> {
+): Promise<PsychologistsPage> {
   await delay(300);
 
-  return mockPsychologists.filter((p) => {
+  const filtered = mockPsychologists.filter((p) => {
     if (
       filters.q &&
       !p.fullName.toLowerCase().includes(filters.q.toLowerCase())
@@ -64,6 +72,15 @@ export async function fetchPsychologists(
     if (filters.priceMin && p.priceMinor < filters.priceMin) return false;
     return true;
   });
+
+  const page = filters.page ?? 1;
+  const start = (page - 1) * CATALOG_PAGE_SIZE;
+  return {
+    items: filtered.slice(start, start + CATALOG_PAGE_SIZE),
+    total: filtered.length,
+    page,
+    pageSize: CATALOG_PAGE_SIZE,
+  };
 }
 
 export async function fetchPsychologistById(
