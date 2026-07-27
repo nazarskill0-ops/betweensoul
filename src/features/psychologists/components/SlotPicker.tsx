@@ -9,11 +9,44 @@ import {
   type SlotServiceType,
 } from "../utils/generateFakeSlots";
 import { formatSlotRange } from "../utils/formatSlotRange";
-import { ServiceTypeDropdown } from "./ServiceTypeDropdown";
 
 const INDIVIDUAL_SESSION_DURATION_MINUTES = 50;
 const INITIAL_VISIBLE_DAYS = 3;
 const LOAD_MORE_DAYS_STEP = 3;
+
+const SERVICE_TYPE_TABS: { value: SlotServiceType; label: string }[] = [
+  { value: "individual", label: "Індивідуальна" },
+  { value: "couple", label: "Парна" },
+];
+
+function ServiceTypeTabs({
+  serviceType,
+  onChange,
+}: {
+  serviceType: SlotServiceType;
+  onChange: (type: SlotServiceType) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-1 rounded-full bg-sage-light p-1">
+      {SERVICE_TYPE_TABS.map((tab) => {
+        const isActive = tab.value === serviceType;
+        return (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => onChange(tab.value)}
+            aria-pressed={isActive}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+              isActive ? "bg-sage text-white" : "text-sage hover:text-ink"
+            }`}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 type DayGroup = { dateIso: string; date: Date; times: string[] };
 
@@ -54,6 +87,7 @@ export function SlotPicker({
   coupleSessionDurationMinutes,
   serviceType,
   onServiceTypeChange,
+  onBack,
 }: {
   psychologistId: string;
   individualPriceMinor: number;
@@ -61,6 +95,8 @@ export function SlotPicker({
   coupleSessionDurationMinutes: number | null;
   serviceType: SlotServiceType;
   onServiceTypeChange: (type: SlotServiceType) => void;
+  /** Показує кнопку "Назад" поруч із кнопкою бронювання — для випадків, коли SlotPicker рендериться в модалці. */
+  onBack?: () => void;
 }) {
   const hasCoupleTherapy = couplePriceMinor !== null;
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot>(null);
@@ -109,15 +145,11 @@ export function SlotPicker({
 
   return (
     <div className="flex flex-col gap-4 rounded-card bg-white p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-xl font-bold text-ink">Оберіть зручний час</h2>
+      <h2 className="font-display text-xl font-bold text-ink">Оберіть зручний час</h2>
 
-        {hasCoupleTherapy && (
-          <div className="w-64 shrink-0">
-            <ServiceTypeDropdown serviceType={serviceType} onServiceTypeChange={changeServiceType} />
-          </div>
-        )}
-      </div>
+      {hasCoupleTherapy && (
+        <ServiceTypeTabs serviceType={serviceType} onChange={changeServiceType} />
+      )}
 
       {dayGroups.length === 0 ? (
         <p className="text-sm text-ink-muted">Немає доступних слотів найближчим часом.</p>
@@ -198,7 +230,18 @@ export function SlotPicker({
         </div>
       )}
 
-      <div className="flex flex-wrap items-center justify-end gap-3">
+      <div
+        className={`flex flex-wrap items-center gap-3 ${onBack ? "justify-between" : "justify-end"}`}
+      >
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-fit rounded-full border-[1.5px] border-sand-dark px-6 py-3 text-sm font-medium text-ink-muted transition-colors hover:border-sage hover:text-sage"
+          >
+            Назад
+          </button>
+        )}
         <button
           type="button"
           disabled={!selectedSlot}

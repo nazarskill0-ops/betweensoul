@@ -5,7 +5,6 @@ import { useClientSessions } from "../hooks/useClientSessions";
 import type { ClientSession } from "../schema";
 import { SessionCard } from "./SessionCard";
 import { SessionsEmptyState } from "./SessionsEmptyState";
-import { SessionsTable } from "./SessionsTable";
 
 type Tab = "upcoming" | "history";
 
@@ -84,14 +83,11 @@ export function SessionsView() {
       ) : sessions.length === 0 ? (
         <SessionsEmptyState tab={tab} />
       ) : (
-        <>
-          <SessionsTable sessions={sessions} />
-          <div className="flex flex-col gap-3 md:hidden">
-            {sessions.map((session) => (
-              <SessionCard key={session.id} session={session} />
-            ))}
-          </div>
-        </>
+        <div className="flex flex-col gap-3">
+          {sessions.map((session) => (
+            <SessionCard key={session.id} session={session} />
+          ))}
+        </div>
       )}
     </div>
   );

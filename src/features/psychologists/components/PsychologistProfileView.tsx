@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { usePsychologist } from "../hooks/usePsychologist";
 import { PsychologistSidebarCard } from "./PsychologistSidebarCard";
@@ -17,6 +17,14 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 export function PsychologistProfileView({ id }: { id: string }) {
   const { data, isLoading } = usePsychologist(id);
   const [serviceType, setServiceType] = useState<SlotServiceType>("individual");
+
+  // Дані вантажаться асинхронно, тож #booking з'являється в DOM вже після
+  // того, як браузер спробував проскролити за хешем із посилання — доскролюємо вручну.
+  useEffect(() => {
+    if (data && window.location.hash === "#booking") {
+      document.getElementById("booking")?.scrollIntoView({ behavior: "instant", block: "start" });
+    }
+  }, [data]);
 
   if (isLoading) {
     return (
