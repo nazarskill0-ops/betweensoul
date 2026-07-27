@@ -63,6 +63,7 @@ export function ProfileInfoSections({
         {hasEducation && (
           <CollapsibleSection
             bare
+            defaultOpen
             title="Моя освіта"
             icon={<GraduationCapIcon className="h-4 w-4 text-sage" />}
           >

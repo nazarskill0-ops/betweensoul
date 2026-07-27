@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { PsychologistCard } from "@/features/psychologists/schema";
+import { calculateExperienceYears } from "@/features/psychologists/utils/formatters";
 
 function CheckIcon({ className }: { className?: string }) {
   return (
@@ -66,8 +67,8 @@ export function MinimalPsychologistCard({
           {psychologist.fullName.split(" ")[0]}
         </p>
         <p className="mt-0.5 flex items-center gap-1 text-[10px] whitespace-nowrap text-white/85">
-          {psychologist.experienceYears !== null
-            ? `${psychologist.experienceYears} р. досвіду`
+          {psychologist.practiceStartYear !== null
+            ? `${calculateExperienceYears(psychologist.practiceStartYear)} р. досвіду`
             : "Психолог"}
           <CheckIcon className="h-2.5 w-2.5 shrink-0" />
         </p>

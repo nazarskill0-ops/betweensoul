@@ -48,8 +48,6 @@ export function ScheduleView() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-display text-3xl text-ink">Розклад</h1>
-
       <div className="flex items-center gap-5 border-b border-sand-dark">
         <TabButton
           label="Доступність"

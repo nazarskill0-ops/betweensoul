@@ -13,6 +13,7 @@ import { ReviewsList } from "./ReviewsList";
 import { SlotPicker } from "./SlotPicker";
 import { FAQAccordion } from "./FAQAccordion";
 import type { SlotServiceType } from "../utils/generateFakeSlots";
+import { getFirstName } from "../utils/formatters";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 
 /**
@@ -50,7 +51,7 @@ export function PsychologistProfileView({
         items={[
           { label: "Calmi", href: "/" },
           { label: "Каталог", href: "/catalog" },
-          { label: data.fullName },
+          { label: getFirstName(data.fullName) },
         ]}
       />
 

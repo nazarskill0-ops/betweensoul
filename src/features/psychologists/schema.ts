@@ -114,7 +114,6 @@ export const LANGUAGES = [
 export const QUALIFICATIONS = [
   { value: "psychologist", label: "Психолог" },
   { value: "psychotherapist", label: "Психотерапевт" },
-  { value: "psychiatrist", label: "Психіатр" },
 ] as const;
 
 export const GENDERS = [
@@ -135,8 +134,8 @@ export const psychologistCardSchema = z.object({
   headline: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   gender: z.enum(["female", "male"]),
-  qualification: z.enum(["psychologist", "psychotherapist", "psychiatrist"]),
-  experienceYears: z.number().int().nonnegative().nullable(),
+  qualification: z.enum(["psychologist", "psychotherapist"]),
+  practiceStartYear: z.number().int().positive().nullable(), // досвід рахується як поточний_рік − цей рік
   priceMinor: z.number().int().nonnegative(), // ціна за годину
   sessionsCount: z.number().int().nonnegative(), // проведено сесій (бейдж доверия)
   formats: z.array(z.string()), // пока всегда ['online']
@@ -148,7 +147,7 @@ export const psychologistCardSchema = z.object({
   aboutMe: z.string(), // «Про мене» — власні слова психотерапевта
   clientCategories: z.array(z.string()).default([]),
   videoUrl: z.string().nullable().default(null),
-  age: z.number().int().positive(),
+  birthDate: z.string(), // YYYY-MM-DD; вік рахується від цієї дати, не зберігається окремим числом
   couplePriceMinor: z.number().int().nonnegative().nullable().default(null), // ціна за парну сесію
   coupleSessionDurationMinutes: z.number().int().positive().nullable().default(null),
 });

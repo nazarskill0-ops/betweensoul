@@ -10,7 +10,14 @@ import {
   type SlotServiceType,
 } from "../utils/generateFakeSlots";
 import { formatSlotRange } from "../utils/formatSlotRange";
-import { formatAge, formatExperienceYears, formatSessionsCountBadge } from "../utils/formatters";
+import {
+  calculateAge,
+  calculateExperienceYears,
+  formatAge,
+  formatExperienceYears,
+  formatSessionsCountBadge,
+  getFirstName,
+} from "../utils/formatters";
 import { BriefcaseIcon, CheckIcon, ClockIcon, CloseIcon, GlobeIcon, PersonIcon } from "./icons";
 import { InfoRow } from "./InfoRow";
 import { NearestTimeWidget } from "./NearestTimeWidget";
@@ -28,13 +35,13 @@ function CompactInfoSummary({
       <InfoRow
         icon={<PersonIcon className="h-4 w-4 shrink-0 text-sage" />}
         label="Вік"
-        value={formatAge(psychologist.age)}
+        value={formatAge(calculateAge(psychologist.birthDate))}
       />
-      {psychologist.experienceYears !== null && (
+      {psychologist.practiceStartYear !== null && (
         <InfoRow
           icon={<BriefcaseIcon className="h-4 w-4 shrink-0 text-sage" />}
           label="Досвід"
-          value={formatExperienceYears(psychologist.experienceYears)}
+          value={formatExperienceYears(calculateExperienceYears(psychologist.practiceStartYear))}
         />
       )}
       {languageLabels.length > 0 && (
@@ -146,7 +153,7 @@ export function PsychologistSidebarCard({
       <div className="mt-3 flex shrink-0 items-start justify-between gap-4">
         <div className="flex-1">
           <h1 className="font-display text-xl font-bold leading-tight text-ink">
-            {psychologist.fullName}
+            {getFirstName(psychologist.fullName)}
           </h1>
           {qualificationLabel && (
             <span className="text-sm text-ink-muted">{qualificationLabel}</span>
@@ -234,7 +241,7 @@ export function PsychologistSidebarCard({
             <div className="mt-4 flex flex-col gap-2 text-sm">
               <div className="flex justify-between gap-3">
                 <span className="text-ink-muted">Психолог</span>
-                <span className="font-medium text-ink">{psychologist.fullName}</span>
+                <span className="font-medium text-ink">{getFirstName(psychologist.fullName)}</span>
               </div>
               {hasCoupleTherapy && (
                 <div className="flex justify-between gap-3">

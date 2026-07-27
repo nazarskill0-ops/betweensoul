@@ -3,6 +3,7 @@ import {
   INDIVIDUAL_SESSION_DURATION_MINUTES,
   TEMPLATED_PSYCHOLOGIST_ID,
   addExceptionRange,
+  bookingStartsAtIso,
   getBlockedSlots as getBlockedSlotsFromStore,
   getBookingStepMinutes,
   getCoupleSettings,
@@ -17,12 +18,7 @@ import {
   type BlockedSlot,
   type BookingStepMinutes,
 } from "@/features/psychologists/utils/availabilityStore";
-import {
-  mockClientSessionHistory,
-  mockPayoutSessions,
-  mockProfile,
-  mockUpcomingSessions,
-} from "./mock";
+import { mockClientSessionHistory, mockPayoutSessions, mockProfile } from "./mock";
 import type {
   AddExceptionValues,
   AvailabilityException,
@@ -49,9 +45,19 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 let profileState: ProfileFormValues = { ...mockProfile };
 
+// Ті самі бронювання, що й у сітці "Перегляд" (getRecurringBookings) — не
+// окремий мок-масив, інакше дашборд і "Перегляд" могли б розходитись
+// (бачити різні "зайняті" інтервали для того самого дня).
 export async function fetchUpcomingSessions(): Promise<UpcomingSession[]> {
   await delay(300);
-  return mockUpcomingSessions;
+  return getRecurringBookings(TEMPLATED_PSYCHOLOGIST_ID).map((b) => ({
+    id: b.id,
+    startsAt: bookingStartsAtIso(b.date, b.startTime),
+    durationMinutes: b.durationMinutes,
+    clientName: b.clientName,
+    clientAvatarUrl: b.clientAvatarUrl,
+    type: b.type,
+  }));
 }
 
 export async function fetchClientSessionHistory(): Promise<ClientSessionHistoryEntry[]> {

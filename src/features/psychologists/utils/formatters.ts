@@ -1,3 +1,23 @@
+/** Вік на сьогодні за датою народження (YYYY-MM-DD) — не зберігається окремим числом. */
+export function calculateAge(birthDate: string, today: Date = new Date()): number {
+  const [y, m, d] = birthDate.split("-").map(Number);
+  let age = today.getFullYear() - y;
+  const hasHadBirthdayThisYear =
+    today.getMonth() + 1 > m || (today.getMonth() + 1 === m && today.getDate() >= d);
+  if (!hasHadBirthdayThisYear) age -= 1;
+  return age;
+}
+
+/** Роки досвіду — поточний рік мінус рік початку практики. */
+export function calculateExperienceYears(startYear: number, today: Date = new Date()): number {
+  return today.getFullYear() - startYear;
+}
+
+/** "Олена Коваленко" → "Олена" — публічний UI показує лише ім'я, прізвище лишається в базі. */
+export function getFirstName(fullName: string): string {
+  return fullName.trim().split(/\s+/)[0] ?? fullName;
+}
+
 export function formatAge(age: number): string {
   const mod100 = age % 100;
   const mod10 = age % 10;

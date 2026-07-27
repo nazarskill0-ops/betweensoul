@@ -28,7 +28,7 @@ export function ProfilePreviewModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-sand">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-white">
       <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 bg-ink px-5 py-3 text-white">
         <p className="text-sm">
           Це попередній перегляд. Зміни ще не видно іншим користувачам, поки їх не

@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 import { LANGUAGES, type PsychologistProfile } from "../schema";
-import { formatAge, formatExperienceYears } from "../utils/formatters";
+import {
+  calculateAge,
+  calculateExperienceYears,
+  formatAge,
+  formatExperienceYears,
+} from "../utils/formatters";
 import { BriefcaseIcon, ChatBubbleIcon, FlagIcon, GlobeIcon, PersonIcon } from "./icons";
 
 type Stat = { icon: ReactNode; label: string; value: string };
@@ -47,14 +52,14 @@ export function GeneralInfoBlock({
     {
       icon: <PersonIcon className="h-4 w-4 shrink-0 text-sage" />,
       label: "Вік",
-      value: formatAge(psychologist.age),
+      value: formatAge(calculateAge(psychologist.birthDate)),
     },
-    ...(psychologist.experienceYears !== null
+    ...(psychologist.practiceStartYear !== null
       ? [
           {
             icon: <BriefcaseIcon className="h-4 w-4 shrink-0 text-sage" />,
             label: "Досвід",
-            value: formatExperienceYears(psychologist.experienceYears),
+            value: formatExperienceYears(calculateExperienceYears(psychologist.practiceStartYear)),
           },
         ]
       : []),

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { QUALIFICATIONS } from "@/features/psychologists/schema";
 import type { Weekday } from "@/features/psychologists/utils/availabilityStore";
 
 /*
@@ -26,6 +27,12 @@ export const SESSION_TYPE_LABELS: Record<(typeof SESSION_TYPES)[number], string>
   individual: "Індивідуальна",
   couple: "Парна",
 };
+
+type Qualification = (typeof QUALIFICATIONS)[number]["value"];
+export const QUALIFICATION_VALUES = QUALIFICATIONS.map((q) => q.value) as [
+  Qualification,
+  ...Qualification[],
+];
 
 export const dashboardStatsSchema = z.object({
   monthlyRevenueMinor: z.number().int().nonnegative(),
@@ -118,7 +125,7 @@ export type AddExceptionValues = z.infer<typeof addExceptionSchema>;
 // що на моках, реальні дані підуть із bookings + availability_slots.
 export const calendarBookingSchema = z.object({
   id: z.string(),
-  dayOfWeek: z.enum(WEEKDAY_VALUES),
+  date: z.string(), // YYYY-MM-DD
   startTime: z.string(), // "HH:MM"
   durationMinutes: z.number().int().positive(),
   clientName: z.string(),
@@ -143,10 +150,20 @@ export type EducationRowValues = z.infer<typeof educationRowSchema>;
 
 export const profileFormSchema = z
   .object({
+    // Ім'я/прізвище й відео-презентація психолог не редагує сам (не в цій
+    // формі) — лишаються з базового запису, як і статус верифікації диплома,
+    // кількість сесій тощо.
+    qualification: z.enum(QUALIFICATION_VALUES),
+    birthDate: z.string().min(1, "Вкажіть дату народження"),
+    practiceStartYear: z.number().int().positive().nullable(),
+    languages: z.array(z.string()).min(1, "Оберіть хоча б одну мову"),
+    experienceText: z.string().min(1, "Розкажіть про досвід і компетенції"),
+    therapyStyle: z.string().min(1, "Опишіть особливості вашої терапії"),
     avatarUrl: z.string().nullable(),
     aboutMe: z.string().min(1, "Розкажіть про себе"),
     educationHigher: z.array(educationRowSchema),
     educationCourses: z.array(educationRowSchema),
+    educationOther: z.array(educationRowSchema),
     specializations: z.array(z.string()).min(1, "Оберіть хоча б один метод"),
     topics: z.array(z.string()).min(1, "Оберіть хоча б одну тему"),
     priceMinor: z.number().int().positive("Вкажіть ціну індивідуальної сесії"),

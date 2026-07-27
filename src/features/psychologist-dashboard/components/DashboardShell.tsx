@@ -16,8 +16,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-8">
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
+    <div className="w-full px-4 py-8 sm:px-6">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-6">
         <aside className="md:w-64 md:shrink-0">
           <nav className="flex gap-2 overflow-x-auto pb-1 md:hidden">
             {NAV_ITEMS.map((item) => {

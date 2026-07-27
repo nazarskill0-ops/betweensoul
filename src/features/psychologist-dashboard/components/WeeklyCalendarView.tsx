@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   formatWeekRange,
@@ -11,6 +11,7 @@ import {
   addMinutesToTime,
   INDIVIDUAL_SESSION_DURATION_MINUTES,
   SESSION_BREAK_MINUTES,
+  weekdayOfDate,
 } from "@/features/psychologists/utils/availabilityStore";
 import {
   calculateAvailableSlots,
@@ -33,7 +34,6 @@ import { SESSION_TYPE_LABELS, WEEKDAYS, WEEKDAY_VALUES } from "../schema";
 const PX_PER_MINUTE = 1.2;
 const DEFAULT_TIMELINE_START_MINUTES = 9 * 60;
 const DEFAULT_TIMELINE_END_MINUTES = 18 * 60;
-const DAY_COLUMN_WIDTH = 140;
 const HEADER_HEIGHT = 40;
 const DEFAULT_BOOKING_STEP_MINUTES = 60;
 
@@ -64,6 +64,13 @@ export function WeeklyCalendarView() {
   const [pending, setPending] = useState<PendingAction | null>(null);
   const weekStart = getWeekStart(weekOffset);
 
+  // "Сьогодні" опівночі — поріг для визначення минулих днів. Перевіряється
+  // на рівні КОЖНОГО дня колонки (date < today), а не всього тижня: інакше
+  // в тижні, що ще не завершився (напр. сьогодні середа), уже минулі
+  // понеділок і вівторок лишались би білими й клікабельними.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const { data: availability, isLoading: isAvailabilityLoading } = useAvailability();
   const { data: exceptions } = useAvailabilityExceptions();
   const { data: bookings } = useWeeklyCalendar();
@@ -71,6 +78,35 @@ export function WeeklyCalendarView() {
   const { data: profile } = useMyProfile();
   const { data: bookingStep } = useBookingStep();
   const queryClient = useQueryClient();
+
+  // Якщо в поточному тижні від сьогодні й до неділі взагалі не лишилось
+  // жодного доступного дня (напр. сьогодні неділя й вона вихідний) —
+  // початковий "поточний тиждень" уже повністю позаду. Перемикаємось на
+  // наступний тиждень одразу після завантаження шаблону/винятків, один раз,
+  // щоб не показувати вкладку одразу на мертвому тижні.
+  const hasAutoAdvancedRef = useRef(false);
+  useEffect(() => {
+    if (hasAutoAdvancedRef.current) return;
+    if (weekOffset !== 0) return;
+    if (!availability || exceptions === undefined) return;
+    hasAutoAdvancedRef.current = true;
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const thisWeekStart = getWeekStart(0);
+    const hasAvailableDayAhead = Array.from({ length: 7 }).some((_, i) => {
+      const d = new Date(thisWeekStart);
+      d.setDate(d.getDate() + i);
+      if (d < now) return false;
+      if (!availability[weekdayOfDate(d)]) return false;
+      const dIso = toLocalDateIso(d);
+      return !exceptions.some((e) => dIso >= e.startDate && dIso <= e.endDate);
+    });
+
+    if (!hasAvailableDayAhead) {
+      setWeekOffset(1);
+    }
+  }, [availability, exceptions, weekOffset]);
 
   const toggleMutation = useMutation({
     mutationFn: toggleBlockedSlot,
@@ -103,6 +139,15 @@ export function WeeklyCalendarView() {
      Тому кожен вільний слот займає лише свій власний крок сітки — позиція
      (top) все одно за реальним часом початку. */
   const freeSlotMarkerHeight = controlPointStepMinutes * PX_PER_MINUTE;
+  /* Індивідуальний вільний слот — висота за реальною тривалістю (50 хв), а не
+     повним кроком сітки: різниця (напр. 10 хв при кроці 60) лишається порожнім
+     простором знизу блоку, читається як перерва перед наступною контрольною
+     точкою. Обмежено `Math.min` з кроком, щоб при кроці 30 хв (< 50) не
+     повернути той самий overlap, якого свідомо уникали вище (тоді висота
+     лишається на рівні кроку, як і раніше). Парні слоти — без змін,
+     freeSlotMarkerHeight повністю. */
+  const individualFreeSlotHeight =
+    Math.min(controlPointStepMinutes, INDIVIDUAL_SESSION_DURATION_MINUTES) * PX_PER_MINUTE;
 
   const days = WEEKDAY_VALUES.map((weekday, i) => {
     const date = new Date(weekStart);
@@ -178,7 +223,7 @@ export function WeeklyCalendarView() {
       </div>
 
       <div className="overflow-x-auto">
-        <div className="flex gap-2" style={{ minWidth: 44 + days.length * (DAY_COLUMN_WIDTH + 8) }}>
+        <div className="flex gap-2">
           {/* Спільний гутер з підписами годин — вирівняний по тих самих top, що й лінії сітки в колонках днів. */}
           <div className="w-11 shrink-0">
             <div style={{ height: HEADER_HEIGHT }} />
@@ -202,7 +247,7 @@ export function WeeklyCalendarView() {
               (e) => dateIso >= e.startDate && dateIso <= e.endDate
             );
 
-            const dayBookings = (bookings ?? []).filter((b) => b.dayOfWeek === weekday);
+            const dayBookings = (bookings ?? []).filter((b) => b.date === dateIso);
             const dayBlocked = (blockedSlots ?? []).filter((b) => b.date === dateIso);
 
             const busyIntervals: TimeInterval[] = [
@@ -226,15 +271,23 @@ export function WeeklyCalendarView() {
                 : { individual: [], couple: [] };
 
             const hasCoupleLane = coupleDurationMinutes != null;
+            const isPastDay = date < today;
+            // Виняток блокує лише нові вільні слоти (вже відображено вище в
+            // розрахунку freeSlots) — існуючі бронювання того дня показуємо
+            // завжди, психолог повинен бачити, що там реально заброньовано.
+            const hideFreeSlots = isPastDay || !!exception;
 
             return (
               <div
                 key={dateIso}
-                className="shrink-0 rounded-card border-[1.5px] border-sand-dark bg-white p-2"
-                style={{ width: DAY_COLUMN_WIDTH }}
+                className={`min-w-[104px] flex-1 rounded-card border-[1.5px] p-2 ${
+                  isPastDay ? "border-sand-dark/60 bg-sand/50" : "border-sand-dark bg-white"
+                }`}
               >
                 <div style={{ height: HEADER_HEIGHT }} className="flex flex-col items-center justify-center text-center">
-                  <p className="text-sm font-semibold text-ink">{dayLabel}</p>
+                  <p className={`text-sm font-semibold ${isPastDay ? "text-ink-muted" : "text-ink"}`}>
+                    {dayLabel}
+                  </p>
                   <p className="text-xs text-ink-muted">
                     {date.toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
                   </p>
@@ -242,14 +295,16 @@ export function WeeklyCalendarView() {
 
                 {!workingWindow ? (
                   <p className="py-4 text-center text-xs text-ink-muted">Вихідний</p>
-                ) : exception ? (
-                  <p className="py-4 text-center text-xs text-rose">
-                    {exception.reason ?? "Недоступно"}
-                  </p>
                 ) : (
-                  <div className="relative" style={{ height: timelineHeight }}>
-                    {/* Фонова погодинна сітка */}
-                    {hourMarks.map((m) => (
+                  <>
+                    {exception && (
+                      <p className="mb-1 truncate rounded-[6px] bg-rose/10 px-1 py-0.5 text-center text-[9px] font-medium text-rose">
+                        {exception.reason ?? "Недоступно"}
+                      </p>
+                    )}
+                    <div className="relative" style={{ height: timelineHeight }}>
+                      {/* Фонова погодинна сітка */}
+                      {hourMarks.map((m) => (
                       <div
                         key={m}
                         className="absolute inset-x-0 border-t border-sand-dark/50"
@@ -257,7 +312,8 @@ export function WeeklyCalendarView() {
                       />
                     ))}
 
-                    {/* Заброньовані сесії — лише перегляд, без дій */}
+                    {/* Заброньовані сесії — лише перегляд, без дій. Минулі — сірим,
+                        як архівний запис (уже відбулось), решта — зеленим. */}
                     {dayBookings.map((booking) => {
                       const end = addMinutesToTime(booking.startTime, booking.durationMinutes);
                       const h = heightFor(booking.startTime, end);
@@ -265,12 +321,22 @@ export function WeeklyCalendarView() {
                         <div
                           key={booking.id}
                           style={{ top: topFor(booking.startTime), height: h }}
-                          className="absolute inset-x-0.5 flex flex-col justify-center overflow-hidden rounded-[8px] bg-sage-light px-1.5 py-1 leading-tight"
+                          className={`absolute inset-x-0.5 flex flex-col justify-center overflow-hidden rounded-[8px] px-1.5 py-1 leading-tight ${
+                            isPastDay ? "bg-sand" : "bg-sage-light"
+                          }`}
                         >
-                          <p className="truncate text-[10px] font-semibold text-sage">
+                          <p
+                            className={`truncate text-[10px] font-semibold ${
+                              isPastDay ? "text-ink-muted" : "text-sage"
+                            }`}
+                          >
                             {booking.startTime}–{end}
                           </p>
-                          <p className="truncate text-[10px] text-ink">{booking.clientName}</p>
+                          <p
+                            className={`truncate text-[10px] ${isPastDay ? "text-ink-muted" : "text-ink"}`}
+                          >
+                            {booking.clientName}
+                          </p>
                           {h > 38 && (
                             <p className="truncate text-[9px] text-ink-muted">
                               {SESSION_TYPE_LABELS[booking.type]}
@@ -280,66 +346,88 @@ export function WeeklyCalendarView() {
                       );
                     })}
 
-                    {/* Заблоковані інтервали — клік розблоковує */}
-                    {dayBlocked.map((blocked) => (
-                      <button
-                        key={blocked.id}
-                        type="button"
-                        onClick={() =>
-                          requestUnblock(dateIso, { start: blocked.startTime, end: blocked.endTime })
-                        }
-                        style={{
-                          top: topFor(blocked.startTime),
-                          height: heightFor(blocked.startTime, blocked.endTime),
-                        }}
-                        className="absolute inset-x-0.5 flex flex-col items-center justify-center overflow-hidden rounded-[8px] border-[1.5px] border-rose bg-rose/15 px-1 leading-tight text-rose transition-colors hover:bg-rose/25"
-                      >
-                        <span className="truncate text-[10px] font-semibold">
-                          {blocked.startTime}–{blocked.endTime}
-                        </span>
-                        <span className="truncate text-[9px]">заблоковано</span>
-                      </button>
-                    ))}
-
-                    {/* Вільні індивідуальні — біла заливка, сіра обводка */}
-                    {freeSlots.individual.map((slot) => (
-                      <button
-                        key={`ind-${slot.start}`}
-                        type="button"
-                        onClick={() => requestBlock(dateIso, slot)}
-                        style={{
-                          top: topFor(slot.start),
-                          height: freeSlotMarkerHeight,
-                          left: 2,
-                          right: hasCoupleLane ? "51%" : 2,
-                        }}
-                        className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sand-dark bg-white px-0.5 text-center text-ink-muted transition-colors hover:border-sage hover:text-sage"
-                      >
-                        <span className="text-[9px] leading-none font-medium">{slot.start}</span>
-                        <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
-                      </button>
-                    ))}
-
-                    {/* Вільні парні — білий фон (без заливки), лише sage-обводка відрізняє від індивідуальних */}
-                    {hasCoupleLane &&
-                      freeSlots.couple.map((slot) => (
-                        <button
-                          key={`couple-${slot.start}`}
-                          type="button"
-                          onClick={() => requestBlock(dateIso, slot)}
+                    {/* Заблоковані інтервали — в минулому лише перегляд, у решті клік розблоковує */}
+                    {dayBlocked.map((blocked) =>
+                      isPastDay ? (
+                        <div
+                          key={blocked.id}
                           style={{
-                            top: topFor(slot.start),
-                            height: freeSlotMarkerHeight,
-                            left: "51%",
-                            right: 2,
+                            top: topFor(blocked.startTime),
+                            height: heightFor(blocked.startTime, blocked.endTime),
                           }}
-                          className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sage bg-white px-0.5 text-center text-sage transition-colors hover:bg-sage-light/40"
+                          className="absolute inset-x-0.5 flex flex-col items-center justify-center overflow-hidden rounded-[8px] border-[1.5px] border-rose/40 bg-rose/10 px-1 leading-tight text-rose/70"
                         >
-                          <span className="text-[9px] leading-none font-medium">{slot.start}</span>
-                          <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
+                          <span className="truncate text-[10px] font-semibold">
+                            {blocked.startTime}–{blocked.endTime}
+                          </span>
+                          <span className="truncate text-[9px]">заблоковано</span>
+                        </div>
+                      ) : (
+                        <button
+                          key={blocked.id}
+                          type="button"
+                          onClick={() =>
+                            requestUnblock(dateIso, { start: blocked.startTime, end: blocked.endTime })
+                          }
+                          style={{
+                            top: topFor(blocked.startTime),
+                            height: heightFor(blocked.startTime, blocked.endTime),
+                          }}
+                          className="absolute inset-x-0.5 flex flex-col items-center justify-center overflow-hidden rounded-[8px] border-[1.5px] border-rose bg-rose/15 px-1 leading-tight text-rose transition-colors hover:bg-rose/25"
+                        >
+                          <span className="truncate text-[10px] font-semibold">
+                            {blocked.startTime}–{blocked.endTime}
+                          </span>
+                          <span className="truncate text-[9px]">заблоковано</span>
                         </button>
-                      ))}
-                  </div>
+                      )
+                    )}
+
+                    {/* Вільні слоти — не показуємо в минулому й у дні з винятком доступності */}
+                    {!hideFreeSlots && (
+                      <>
+                        {/* Вільні індивідуальні — біла заливка, сіра обводка */}
+                        {freeSlots.individual.map((slot) => (
+                          <button
+                            key={`ind-${slot.start}`}
+                            type="button"
+                            onClick={() => requestBlock(dateIso, slot)}
+                            style={{
+                              top: topFor(slot.start),
+                              height: individualFreeSlotHeight,
+                              left: 2,
+                              right: hasCoupleLane ? "51%" : 2,
+                            }}
+                            className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sand-dark bg-white px-0.5 text-center text-ink-muted transition-colors hover:border-sage hover:text-sage"
+                          >
+                            <span className="text-[9px] leading-none font-medium">{slot.start}</span>
+                            <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
+                          </button>
+                        ))}
+
+                        {/* Вільні парні — білий фон (без заливки), лише sage-обводка відрізняє від індивідуальних */}
+                        {hasCoupleLane &&
+                          freeSlots.couple.map((slot) => (
+                            <button
+                              key={`couple-${slot.start}`}
+                              type="button"
+                              onClick={() => requestBlock(dateIso, slot)}
+                              style={{
+                                top: topFor(slot.start),
+                                height: freeSlotMarkerHeight,
+                                left: "51%",
+                                right: 2,
+                              }}
+                              className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sage bg-white px-0.5 text-center text-sage transition-colors hover:bg-sage-light/40"
+                            >
+                              <span className="text-[9px] leading-none font-medium">{slot.start}</span>
+                              <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
+                            </button>
+                          ))}
+                      </>
+                    )}
+                    </div>
+                  </>
                 )}
               </div>
             );
@@ -350,7 +438,8 @@ export function WeeklyCalendarView() {
       <p className="text-xs text-ink-muted">
         Клікніть на вільний слот, щоб заблокувати його для клієнтів — білий з сірою обводкою
         для індивідуальних, sage для парних. Заброньовані сесії (зелені) — лише перегляд,
-        заблоковані (червоні) — клікніть, щоб розблокувати.
+        заблоковані (червоні) — клікніть, щоб розблокувати. Минулі дні — сірі й неактивні,
+        сесії, що вже відбулись, показані архівним сірим кольором.
       </p>
 
       {pending && (

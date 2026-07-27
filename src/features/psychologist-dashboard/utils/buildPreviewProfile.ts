@@ -14,7 +14,8 @@ function toEducationItem(row: EducationRowValues) {
  * Зливає "чернеткові" (ще не збережені) значення форми редагування профілю
  * поверх реального каталожного запису психолога — для прев'ю через ту саму
  * публічну верстку PsychologistProfileView. Поля, які кабінет психолога не
- * редагує (ім'я, вік, досвід, відгуки, відео тощо), лишаються з базового
+ * редагує (ім'я/прізвище, відео-презентація, відгуки, кількість сесій,
+ * статус верифікації тощо — модеровані чи системні), лишаються з базового
  * запису.
  */
 export function buildPreviewProfile(
@@ -23,6 +24,12 @@ export function buildPreviewProfile(
 ): PsychologistProfile {
   return {
     ...base,
+    qualification: draft.qualification,
+    birthDate: draft.birthDate,
+    practiceStartYear: draft.practiceStartYear,
+    languages: draft.languages,
+    experienceText: draft.experienceText,
+    therapyStyle: draft.therapyStyle,
     avatarUrl: draft.avatarUrl,
     aboutMe: draft.aboutMe,
     specializations: draft.specializations,
@@ -36,7 +43,7 @@ export function buildPreviewProfile(
     education: {
       higher: draft.educationHigher.map(toEducationItem),
       courses: draft.educationCourses.map(toEducationItem),
-      other: base.education.other,
+      other: draft.educationOther.map(toEducationItem),
     },
   };
 }

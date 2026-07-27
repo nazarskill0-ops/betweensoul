@@ -4,7 +4,13 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import { useFieldArray, useForm, type UseFormRegister } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { SPECIALIZATIONS, TOPICS } from "@/features/psychologists/schema";
+import { LANGUAGES, QUALIFICATIONS, SPECIALIZATIONS, TOPICS } from "@/features/psychologists/schema";
+import {
+  calculateAge,
+  calculateExperienceYears,
+  formatAge,
+  formatExperienceYears,
+} from "@/features/psychologists/utils/formatters";
 import { updateMyProfile } from "../api";
 import { useMyProfile } from "../hooks/useMyProfile";
 import {
@@ -77,6 +83,8 @@ function CertificateChip({
   );
 }
 
+type EducationBasePath = "educationHigher" | "educationCourses" | "educationOther";
+
 function EducationList({
   title,
   basePath,
@@ -89,7 +97,7 @@ function EducationList({
   register,
 }: {
   title: string;
-  basePath: "educationHigher" | "educationCourses";
+  basePath: EducationBasePath;
   fields: { id: string }[];
   rows: ProfileFormValues["educationHigher"];
   onAdd: () => void;
@@ -207,14 +215,20 @@ export function ProfileEditForm() {
 
   const higherFields = useFieldArray({ control, name: "educationHigher" });
   const coursesFields = useFieldArray({ control, name: "educationCourses" });
+  const otherFields = useFieldArray({ control, name: "educationOther" });
 
   const specializations = watch("specializations") ?? [];
   const topics = watch("topics") ?? [];
+  const languages = watch("languages") ?? [];
+  const qualification = watch("qualification");
+  const birthDate = watch("birthDate");
+  const practiceStartYear = watch("practiceStartYear");
   const offersCoupleTherapy = watch("offersCoupleTherapy");
   const priceMinor = watch("priceMinor");
   const couplePriceMinor = watch("couplePriceMinor");
   const educationHigherRows = watch("educationHigher") ?? [];
   const educationCoursesRows = watch("educationCourses") ?? [];
+  const educationOtherRows = watch("educationOther") ?? [];
   const draftValues = watch();
 
   const mutation = useMutation({
@@ -231,20 +245,23 @@ export function ProfileEditForm() {
     setValue("avatarUrl", url);
   }
 
-  function toggleValue(field: "specializations" | "topics", value: string) {
-    const current = field === "specializations" ? specializations : topics;
+  function toggleValue(field: "specializations" | "topics" | "languages", value: string) {
+    const current =
+      field === "specializations" ? specializations : field === "topics" ? topics : languages;
     const next = current.includes(value)
       ? current.filter((v) => v !== value)
       : [...current, value];
     setValue(field, next, { shouldValidate: true });
   }
 
-  function addCertificateFiles(
-    basePath: "educationHigher" | "educationCourses",
-    index: number,
-    files: FileList
-  ) {
-    const rows = basePath === "educationHigher" ? educationHigherRows : educationCoursesRows;
+  function educationRows(basePath: EducationBasePath) {
+    if (basePath === "educationHigher") return educationHigherRows;
+    if (basePath === "educationCourses") return educationCoursesRows;
+    return educationOtherRows;
+  }
+
+  function addCertificateFiles(basePath: EducationBasePath, index: number, files: FileList) {
+    const rows = educationRows(basePath);
     const current = rows[index]?.certificateFiles ?? [];
     const next = [
       ...current,
@@ -254,11 +271,11 @@ export function ProfileEditForm() {
   }
 
   function removeCertificateFile(
-    basePath: "educationHigher" | "educationCourses",
+    basePath: EducationBasePath,
     index: number,
     fileIndex: number
   ) {
-    const rows = basePath === "educationHigher" ? educationHigherRows : educationCoursesRows;
+    const rows = educationRows(basePath);
     const current = rows[index]?.certificateFiles ?? [];
     setValue(
       `${basePath}.${index}.certificateFiles`,
@@ -300,10 +317,88 @@ export function ProfileEditForm() {
         </label>
       </div>
 
+      <div className="flex flex-col gap-4 rounded-card border-[1.5px] border-sand-dark bg-white p-6">
+        <h2 className="font-display text-lg text-ink">Основна інформація</h2>
+        <p className="-mt-2 text-xs text-ink-muted">
+          Ім'я та прізвище вказуються при реєстрації й не редагуються тут.
+        </p>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Кваліфікація</label>
+            <div className={`${inputClass} cursor-not-allowed text-ink-muted`} aria-disabled="true">
+              {QUALIFICATIONS.find((q) => q.value === qualification)?.label ?? "—"}
+            </div>
+            <p className="mt-1.5 text-xs text-ink-muted">
+              Підтверджується разом з дипломом, не редагується тут.
+            </p>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Дата народження</label>
+            <input type="date" className={inputClass} {...register("birthDate")} />
+            {errors.birthDate ? (
+              <span className={errorClass}>{errors.birthDate.message}</span>
+            ) : (
+              birthDate && (
+                <p className="mt-1.5 text-xs text-ink-muted">
+                  {formatAge(calculateAge(birthDate))} — показується на публічному профілі
+                </p>
+              )
+            )}
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Рік початку практики</label>
+            <input
+              type="number"
+              min={1950}
+              max={new Date().getFullYear()}
+              className={inputClass}
+              {...register("practiceStartYear", {
+                setValueAs: (v) => (v === "" ? null : Number(v)),
+              })}
+            />
+            {practiceStartYear != null && (
+              <p className="mt-1.5 text-xs text-ink-muted">
+                {formatExperienceYears(calculateExperienceYears(practiceStartYear))} досвіду
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium">Мова надання сесій</label>
+          <div className="flex flex-wrap gap-2">
+            {LANGUAGES.map((l) => (
+              <ToggleChip
+                key={l.value}
+                label={l.label}
+                isActive={languages.includes(l.value)}
+                onClick={() => toggleValue("languages", l.value)}
+              />
+            ))}
+          </div>
+          {errors.languages && <span className={errorClass}>{errors.languages.message}</span>}
+        </div>
+      </div>
+
       <div className="rounded-card border-[1.5px] border-sand-dark bg-white p-6">
         <label className="mb-1.5 block text-sm font-medium">Про мене</label>
         <textarea rows={5} className={inputClass} {...register("aboutMe")} />
         {errors.aboutMe && <span className={errorClass}>{errors.aboutMe.message}</span>}
+      </div>
+
+      <div className="rounded-card border-[1.5px] border-sand-dark bg-white p-6">
+        <label className="mb-1.5 block text-sm font-medium">Досвід і компетенції</label>
+        <textarea rows={4} className={inputClass} {...register("experienceText")} />
+        {errors.experienceText && (
+          <span className={errorClass}>{errors.experienceText.message}</span>
+        )}
+      </div>
+
+      <div className="rounded-card border-[1.5px] border-sand-dark bg-white p-6">
+        <label className="mb-1.5 block text-sm font-medium">Особливості терапії</label>
+        <textarea rows={4} className={inputClass} {...register("therapyStyle")} />
+        {errors.therapyStyle && <span className={errorClass}>{errors.therapyStyle.message}</span>}
       </div>
 
       <div className="flex flex-col gap-5 rounded-card border-[1.5px] border-sand-dark bg-white p-6">
@@ -335,6 +430,21 @@ export function ProfileEditForm() {
           onAddFiles={(index, files) => addCertificateFiles("educationCourses", index, files)}
           onRemoveFile={(index, fileIndex) =>
             removeCertificateFile("educationCourses", index, fileIndex)
+          }
+          register={register}
+        />
+        <EducationList
+          title="Інший досвід"
+          basePath="educationOther"
+          fields={otherFields.fields}
+          rows={educationOtherRows}
+          onAdd={() =>
+            otherFields.append({ title: "", speciality: "", years: "", certificateFiles: [] })
+          }
+          onRemove={otherFields.remove}
+          onAddFiles={(index, files) => addCertificateFiles("educationOther", index, files)}
+          onRemoveFile={(index, fileIndex) =>
+            removeCertificateFile("educationOther", index, fileIndex)
           }
           register={register}
         />
@@ -471,6 +581,14 @@ export function ProfileEditForm() {
       >
         {mutation.isPending ? "Зберігаємо..." : "Зберегти профіль"}
       </button>
+
+      <p className="text-xs text-ink-muted">
+        Не бачите поле, яке хочете змінити? Напишіть нам на{" "}
+        <a href="mailto:support@calmi.in.ua" className="text-sage hover:text-sage/80">
+          support@calmi.in.ua
+        </a>{" "}
+        — ми допоможемо.
+      </p>
 
       {isPreviewOpen && (
         <ProfilePreviewModal draft={draftValues} onClose={() => setIsPreviewOpen(false)} />

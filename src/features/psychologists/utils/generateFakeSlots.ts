@@ -112,7 +112,7 @@ function generateTemplatedDaySlots(
 
   const { individual, couple } = calculateAvailableSlots({
     workingWindow,
-    busyIntervals: getBusyIntervals(psychologistId, dateIso, weekday),
+    busyIntervals: getBusyIntervals(psychologistId, dateIso),
     individualDurationMinutes: INDIVIDUAL_SESSION_DURATION_MINUTES,
     coupleDurationMinutes,
     breakMinutes: SESSION_BREAK_MINUTES,

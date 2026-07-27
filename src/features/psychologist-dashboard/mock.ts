@@ -1,62 +1,28 @@
 import { INDIVIDUAL_SESSION_DURATION_MINUTES } from "@/features/psychologists/utils/availabilityStore";
-import type {
-  ClientSessionHistoryEntry,
-  PayoutSession,
-  ProfileFormValues,
-  UpcomingSession,
-} from "./schema";
+import type { ClientSessionHistoryEntry, PayoutSession, ProfileFormValues } from "./schema";
 
 export const MOCK_PSYCHOLOGIST_NAME = "Олена Коваленко";
 
-export const mockUpcomingSessions: UpcomingSession[] = [
-  {
-    id: "up-1",
-    startsAt: "2026-07-21T09:00:00.000Z",
-    durationMinutes: 50,
-    clientName: "Оксана Петренко",
-    clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
-    type: "individual",
-  },
-  {
-    id: "up-2",
-    startsAt: "2026-07-21T13:00:00.000Z",
-    durationMinutes: 50,
-    clientName: "Максим Ткаченко",
-    clientAvatarUrl: null,
-    type: "individual",
-  },
-  {
-    id: "up-3",
-    startsAt: "2026-07-21T17:00:00.000Z",
-    durationMinutes: 80,
-    clientName: "Дарʼя і Богдан",
-    clientAvatarUrl: "https://i.pravatar.cc/150?img=25",
-    type: "couple",
-  },
-  {
-    id: "up-4",
-    startsAt: "2026-07-22T10:00:00.000Z",
-    durationMinutes: 50,
-    clientName: "Софія Романюк",
-    clientAvatarUrl: "https://i.pravatar.cc/150?img=45",
-    type: "individual",
-  },
-  {
-    id: "up-5",
-    startsAt: "2026-07-23T11:00:00.000Z",
-    durationMinutes: 50,
-    clientName: "Ігор Власенко",
-    clientAvatarUrl: "https://i.pravatar.cc/150?img=13",
-    type: "individual",
-  },
-];
+/* Мок-дати рахуються відносно поточної дати (не хардкоджені), щоб сценарії
+   "історія" / "виплати цього місяця" завжди виглядали актуальними незалежно
+   від того, коли відкривається сторінка під час розробки. dayOffset — зсув у
+   днях від сьогодні (може бути відʼємним).
+   "Найближчі сеанси" (fetchUpcomingSessions в api.ts) тут немає — вони
+   рахуються з тих самих recurringBookings у availabilityStore, що й сітка
+   "Перегляд", а не з окремого мок-масиву, щоб два місця не розходились. */
+function relativeIso(dayOffset: number, hour: number, minute = 0): string {
+  const d = new Date();
+  d.setHours(hour, minute, 0, 0);
+  d.setDate(d.getDate() + dayOffset);
+  return d.toISOString();
+}
 
 // Минулі сесії з клієнтами — для розгорнутого списку "Історія з клієнтом" у
 // вкладці "Мої сеанси" (дата, час, статус відвідування).
 export const mockClientSessionHistory: ClientSessionHistoryEntry[] = [
   {
     id: "hist-1",
-    startsAt: "2026-06-10T09:00:00.000Z",
+    startsAt: relativeIso(-40, 9),
     durationMinutes: 50,
     clientName: "Оксана Петренко",
     clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
@@ -65,7 +31,7 @@ export const mockClientSessionHistory: ClientSessionHistoryEntry[] = [
   },
   {
     id: "hist-2",
-    startsAt: "2026-06-24T09:00:00.000Z",
+    startsAt: relativeIso(-26, 9),
     durationMinutes: 50,
     clientName: "Оксана Петренко",
     clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
@@ -74,7 +40,7 @@ export const mockClientSessionHistory: ClientSessionHistoryEntry[] = [
   },
   {
     id: "hist-3",
-    startsAt: "2026-07-01T09:00:00.000Z",
+    startsAt: relativeIso(-19, 9),
     durationMinutes: 50,
     clientName: "Оксана Петренко",
     clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
@@ -83,7 +49,7 @@ export const mockClientSessionHistory: ClientSessionHistoryEntry[] = [
   },
   {
     id: "hist-4",
-    startsAt: "2026-07-08T09:00:00.000Z",
+    startsAt: relativeIso(-12, 9),
     durationMinutes: 50,
     clientName: "Оксана Петренко",
     clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
@@ -92,7 +58,7 @@ export const mockClientSessionHistory: ClientSessionHistoryEntry[] = [
   },
   {
     id: "hist-5",
-    startsAt: "2026-06-17T13:00:00.000Z",
+    startsAt: relativeIso(-33, 13),
     durationMinutes: 50,
     clientName: "Максим Ткаченко",
     clientAvatarUrl: null,
@@ -101,7 +67,7 @@ export const mockClientSessionHistory: ClientSessionHistoryEntry[] = [
   },
   {
     id: "hist-6",
-    startsAt: "2026-07-01T13:00:00.000Z",
+    startsAt: relativeIso(-19, 13),
     durationMinutes: 50,
     clientName: "Максим Ткаченко",
     clientAvatarUrl: null,
@@ -110,7 +76,7 @@ export const mockClientSessionHistory: ClientSessionHistoryEntry[] = [
   },
   {
     id: "hist-7",
-    startsAt: "2026-06-20T17:00:00.000Z",
+    startsAt: relativeIso(-30, 17),
     durationMinutes: 80,
     clientName: "Дарʼя і Богдан",
     clientAvatarUrl: "https://i.pravatar.cc/150?img=25",
@@ -126,6 +92,14 @@ export const mockClientSessionHistory: ClientSessionHistoryEntry[] = [
 // психолога (профіль, дашборд-статистика, виплати).
 
 export const mockProfile: ProfileFormValues = {
+  qualification: "psychologist",
+  birthDate: "1992-03-15",
+  practiceStartYear: 2018,
+  languages: ["uk", "en"],
+  experienceText:
+    "За вісім років роботи провела понад 640 сесій у когнітивно-поведінковому підході. Спеціалізуюсь на схема-терапії для тих, чиї труднощі мають глибше коріння, ніж здається на перший погляд.",
+  therapyStyle:
+    "Працюю структуровано: даю конкретні техніки та домашні завдання між сесіями. Вважаю, що терапія — це навички, а не одноразове полегшення.",
   avatarUrl: "https://i.pravatar.cc/300?img=47",
   aboutMe:
     "Працюю з тривожністю, самооцінкою та вигоранням. Використовую КПТ та гештальт-підхід, адаптую формат під запит клієнта.",
@@ -149,6 +123,7 @@ export const mockProfile: ProfileFormValues = {
       certificateFiles: [],
     },
   ],
+  educationOther: [],
   specializations: ["КПТ", "Гештальт"],
   topics: ["Тривога та панічні атаки", "Вигорання та виснаження"],
   priceMinor: 90000,
@@ -162,42 +137,42 @@ export const mockProfile: ProfileFormValues = {
 export const mockPayoutSessions: PayoutSession[] = [
   {
     id: "po-1",
-    date: "2026-07-18T13:00:00.000Z",
+    date: relativeIso(-2, 13),
     clientName: "Оксана Петренко",
     priceMinor: 90000,
     status: "paid",
   },
   {
     id: "po-2",
-    date: "2026-07-15T10:00:00.000Z",
+    date: relativeIso(-5, 10),
     clientName: "Максим Ткаченко",
     priceMinor: 90000,
     status: "paid",
   },
   {
     id: "po-3",
-    date: "2026-07-10T15:00:00.000Z",
+    date: relativeIso(-10, 15),
     clientName: "Софія Романюк",
     priceMinor: 140000,
     status: "paid",
   },
   {
     id: "po-4",
-    date: "2026-07-05T09:00:00.000Z",
+    date: relativeIso(-15, 9),
     clientName: "Ігор Власенко",
     priceMinor: 90000,
     status: "pending",
   },
   {
     id: "po-5",
-    date: "2026-06-28T11:00:00.000Z",
+    date: relativeIso(-22, 11),
     clientName: "Дарʼя Коваль",
     priceMinor: 90000,
     status: "paid",
   },
   {
     id: "po-6",
-    date: "2026-06-20T14:00:00.000Z",
+    date: relativeIso(-30, 14),
     clientName: "Богдан Сидоренко",
     priceMinor: 90000,
     status: "failed",

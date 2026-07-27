@@ -54,12 +54,17 @@ export type BookingStepMinutes = (typeof BOOKING_STEP_OPTIONS)[number];
 
 // TODO: verify field names with Illia's booking schema — тижнева сітка поки
 // що на моках, реальні дані підуть із bookings + availability_slots.
+// Прив'язані до конкретної дати (не до дня тижня) — інакше одне й те саме
+// бронювання "повторювалось" би на цей день тижня в кожному майбутньому
+// тижні назавжди, і навігація по тижнях у "Перегляд" ніколи б не показувала
+// іншого набору даних.
 export type RecurringBooking = {
   id: string;
-  dayOfWeek: Weekday;
+  date: string; // YYYY-MM-DD
   startTime: string; // "HH:MM"
   durationMinutes: number;
   clientName: string;
+  clientAvatarUrl: string | null;
   type: SessionType;
 };
 
@@ -94,45 +99,102 @@ let coupleSettings: CoupleSettings = {
 
 let bookingStepMinutes: BookingStepMinutes = 60;
 
+const WEEKDAY_INDEX: Record<Weekday, number> = {
+  mon: 0,
+  tue: 1,
+  wed: 2,
+  thu: 3,
+  fri: 4,
+  sat: 5,
+  sun: 6,
+};
+
+function toIsoDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Зсуває дату вперед (макс. 14 днів), поки не знайде день, який одночасно і
+ * робочий за weeklyAvailability, і не потрапляє в жоден виняток доступності
+ * (Лікарняний/Відпустка) — щоб мокові бронювання ніколи не генерувались на
+ * дату, яку сам психолог позначив недоступною.
+ */
+function nextAvailableDateIso(from: Date): string {
+  const date = new Date(from);
+  for (let i = 0; i < 14; i++) {
+    const iso = toIsoDate(date);
+    if (weeklyAvailability[weekdayOfDate(date)] && !isDateExcepted(TEMPLATED_PSYCHOLOGIST_ID, iso)) {
+      return iso;
+    }
+    date.setDate(date.getDate() + 1);
+  }
+  return toIsoDate(date);
+}
+
+/**
+ * Дата (YYYY-MM-DD) заданого дня тижня в тижні, зсунутому на `weekOffset`
+ * тижнів від поточного (0 = цей тиждень, тиждень рахується з понеділка) —
+ * рахується від системної дати, не хардкоджена. Той самий алгоритм пошуку
+ * початку тижня, що й `getWeekStart` у generateFakeSlots.ts, продубльований
+ * тут локально, щоб не створювати циклічний імпорт (той файл сам імпортує
+ * з availabilityStore). Якщо результат потрапляє на вихідний чи виняток —
+ * зсуває на найближчий реально доступний день (див. nextAvailableDateIso).
+ */
+function dateOfWeekday(weekday: Weekday, weekOffset: number): string {
+  const now = new Date();
+  const diffToMonday = (now.getDay() + 6) % 7;
+  const date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  date.setDate(date.getDate() - diffToMonday + weekOffset * 7 + WEEKDAY_INDEX[weekday]);
+  return nextAvailableDateIso(date);
+}
+
 const recurringBookings: RecurringBooking[] = [
   {
     id: "cb-1",
-    dayOfWeek: "mon",
+    date: dateOfWeekday("mon", 0),
     startTime: "10:00",
     durationMinutes: INDIVIDUAL_SESSION_DURATION_MINUTES,
-    clientName: "Оксана П.",
+    clientName: "Оксана Петренко",
+    clientAvatarUrl: "https://i.pravatar.cc/150?img=32",
     type: "individual",
   },
   {
     id: "cb-2",
-    dayOfWeek: "mon",
+    date: dateOfWeekday("mon", 0),
     startTime: "14:00",
     durationMinutes: INDIVIDUAL_SESSION_DURATION_MINUTES,
-    clientName: "Максим Т.",
+    clientName: "Максим Ткаченко",
+    clientAvatarUrl: null,
     type: "individual",
   },
   {
     id: "cb-3",
-    dayOfWeek: "wed",
+    date: dateOfWeekday("wed", 0),
     startTime: "11:00",
     durationMinutes: 80,
     clientName: "Дарʼя і Богдан",
+    clientAvatarUrl: "https://i.pravatar.cc/150?img=25",
     type: "couple",
   },
   {
     id: "cb-4",
-    dayOfWeek: "thu",
+    date: dateOfWeekday("thu", 1),
     startTime: "16:00",
     durationMinutes: INDIVIDUAL_SESSION_DURATION_MINUTES,
-    clientName: "Софія Р.",
+    clientName: "Софія Романюк",
+    clientAvatarUrl: "https://i.pravatar.cc/150?img=45",
     type: "individual",
   },
   {
     id: "cb-5",
-    dayOfWeek: "fri",
+    date: dateOfWeekday("fri", 0),
     startTime: "09:00",
     durationMinutes: INDIVIDUAL_SESSION_DURATION_MINUTES,
-    clientName: "Ігор В.",
+    clientName: "Ігор Власенко",
+    clientAvatarUrl: "https://i.pravatar.cc/150?img=13",
     type: "individual",
   },
 ];
@@ -214,6 +276,14 @@ export function getRecurringBookings(psychologistId: string): RecurringBooking[]
   return psychologistId === TEMPLATED_PSYCHOLOGIST_ID ? recurringBookings : [];
 }
 
+/** `date` ("YYYY-MM-DD") + `startTime` ("HH:MM", локальний wall-clock, як і
+ *  всюди в цьому сховищі) → ISO-рядок (UTC) для полів на кшталт `startsAt`. */
+export function bookingStartsAtIso(date: string, startTime: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  const [h, min] = startTime.split(":").map(Number);
+  return new Date(y, m - 1, d, h, min, 0, 0).toISOString();
+}
+
 export function addMinutesToTime(time: string, minutes: number): string {
   const [h, m] = time.split(":").map(Number);
   const total = h * 60 + m + minutes;
@@ -227,13 +297,9 @@ export function addMinutesToTime(time: string, minutes: number): string {
  * блокування) — вхід для `calculateAvailableSlots`. Бронювання незмінні,
  * тут лише конвертуються в `{start, end}`; блокування вже зберігаються так.
  */
-export function getBusyIntervals(
-  psychologistId: string,
-  dateIso: string,
-  weekday: Weekday
-): TimeInterval[] {
+export function getBusyIntervals(psychologistId: string, dateIso: string): TimeInterval[] {
   const busyFromBookings = getRecurringBookings(psychologistId)
-    .filter((b) => b.dayOfWeek === weekday)
+    .filter((b) => b.date === dateIso)
     .map((b) => ({ start: b.startTime, end: addMinutesToTime(b.startTime, b.durationMinutes) }));
 
   const busyFromBlocks = getBlockedSlots(psychologistId)

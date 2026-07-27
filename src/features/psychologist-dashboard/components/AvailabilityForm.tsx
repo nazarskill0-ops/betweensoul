@@ -20,6 +20,80 @@ import {
 const errorClass = "mt-1.5 block text-xs font-medium text-rose";
 const DEFAULT_DAY_WINDOW = { start: "09:00", end: "18:00" };
 
+function ChevronDownIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+/**
+ * Кастомний dropdown для кроку часу (30/60 хв) — той самий патерн поповера,
+ * що й TimePicker (useClickOutside, button-тригер + список з sage-підсвіткою
+ * активного варіанту), а не нативний select.
+ */
+function BookingStepDropdown({
+  value,
+  onChange,
+}: {
+  value: BookingStepMinutes;
+  onChange: (value: BookingStepMinutes) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useClickOutside(ref, () => setOpen(false));
+
+  return (
+    <div ref={ref} className="relative w-40">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`flex w-full items-center justify-between gap-2 rounded-[10px] border-[1.5px] bg-sand px-4 py-3 text-sm outline-none transition-colors ${
+          open ? "border-sage" : "border-sand-dark"
+        }`}
+      >
+        <span className="text-ink">{value} хв</span>
+        <ChevronDownIcon
+          className={`h-4 w-4 shrink-0 text-ink-muted transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-20 mt-2 w-full rounded-[14px] border-[1.5px] border-sand-dark bg-white p-1.5 shadow-lg">
+          {BOOKING_STEP_OPTIONS.map((option) => {
+            const isActive = option === value;
+            return (
+              <button
+                key={option}
+                type="button"
+                data-active={isActive}
+                onClick={() => {
+                  onChange(option);
+                  setOpen(false);
+                }}
+                className={`block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                  isActive ? "bg-sage-light font-medium text-sage" : "text-ink hover:bg-sand"
+                }`}
+              >
+                {option} хв
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ApplyToAllPopover({
   workingDays,
   onApply,
@@ -186,17 +260,7 @@ export function AvailabilityForm() {
 
       <div>
         <label className="mb-1.5 block text-sm font-medium">Крок часу для запису</label>
-        <select
-          value={stepValue}
-          onChange={(e) => setStepValue(Number(e.target.value) as BookingStepMinutes)}
-          className="w-40 rounded-[10px] border-[1.5px] border-sand-dark bg-sand px-4 py-3 text-sm outline-none transition-colors focus:border-sage"
-        >
-          {BOOKING_STEP_OPTIONS.map((option) => (
-            <option key={option} value={option}>
-              {option} хв
-            </option>
-          ))}
-        </select>
+        <BookingStepDropdown value={stepValue} onChange={setStepValue} />
         <p className="mt-1.5 text-xs text-ink-muted">
           Інтервал між контрольними точками запису — впливає на обидва типи сесій.
         </p>

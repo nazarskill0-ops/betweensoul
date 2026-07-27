@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { QUALIFICATIONS, type PsychologistCard } from "../schema";
 import { INDIVIDUAL_SESSION_DURATION_MINUTES } from "../utils/availabilityStore";
-import { formatSessionsCountBadge } from "../utils/formatters";
+import { calculateExperienceYears, formatSessionsCountBadge } from "../utils/formatters";
 import { CheckIcon } from "./icons";
 
 const MAX_TOPIC_BADGES = 4;
@@ -233,7 +233,7 @@ export function PsychologistCardItem({
           <h3 className="font-display text-2xl font-bold leading-tight text-ink">
             {psychologist.fullName}
           </h3>
-          {(qualificationLabel || psychologist.experienceYears !== null) && (
+          {(qualificationLabel || psychologist.practiceStartYear !== null) && (
             <div className="flex items-center gap-1.5 text-sm font-semibold text-ink-muted">
               {qualificationLabel && (
                 <>
@@ -241,11 +241,13 @@ export function PsychologistCardItem({
                   <span>{qualificationLabel}</span>
                 </>
               )}
-              {qualificationLabel && psychologist.experienceYears !== null && (
+              {qualificationLabel && psychologist.practiceStartYear !== null && (
                 <span className="font-normal text-ink-muted"> · </span>
               )}
-              {psychologist.experienceYears !== null && (
-                <span>{formatExperienceYears(psychologist.experienceYears)}</span>
+              {psychologist.practiceStartYear !== null && (
+                <span>
+                  {formatExperienceYears(calculateExperienceYears(psychologist.practiceStartYear))}
+                </span>
               )}
             </div>
           )}
