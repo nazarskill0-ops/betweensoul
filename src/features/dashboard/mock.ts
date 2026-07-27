@@ -77,4 +77,15 @@ export const mockClientSessions: ClientSession[] = [
     priceMinor: 140000,
     status: "cancelled",
   },
+  {
+    id: "s-06",
+    psychologistId: "p-02",
+    psychologistName: "Андрій Шевченко",
+    psychologistAvatarUrl: "https://i.pravatar.cc/300?img=12",
+    startsAt: "2026-05-14T11:00:00.000Z",
+    durationMinutes: 50,
+    type: "individual",
+    priceMinor: 120000,
+    status: "completed",
+  },
 ];

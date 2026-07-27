@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Logo } from "@/components/layout/logo";
 import { SERVICES, TOPIC_GROUPS } from "@/features/psychologists/schema";
 import { slugifyMethod } from "@/features/psychologists/utils/methodSlug";
@@ -16,7 +19,10 @@ const FOOTER_METHODS = [
 ] as const;
 
 export function AppFooter() {
+  const pathname = usePathname();
   const year = new Date().getFullYear();
+
+  if (pathname.startsWith("/dashboard")) return null;
 
   return (
     <footer className="bg-sand-dark px-5 py-14 md:px-12">
