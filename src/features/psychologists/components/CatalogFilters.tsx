@@ -5,30 +5,67 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { TOPICS, SPECIALIZATIONS, LANGUAGES, GENDERS, CLIENT_CATEGORIES } from "../schema";
 
 const PRICE_THRESHOLD_MINOR = 170000; // 1700 грн
+const FILTER_DEBOUNCE_MS = 400;
 
 /*
-  Панель фильтров каталога. Каждый выбор пишется прямо в URL через
-  router.replace — состояния в useState нет, источник правды один.
+  Панель фильтров каталога. URL лишається єдиним джерелом правди, але кожен
+  клік не пише в нього напряму: спочатку оновлюється localParams (миттєвий
+  UI-фідбек — чекбокси/бейджі відповідають натиснутому одразу), а фактичний
+  router.replace (і, відповідно, запит через queryKey) дебаунситься. Кілька
+  швидких змін поспіль (напр. 3 теми підряд) зливаються в один
+  router.replace/запит замість трьох, які могли б "перебити" один одного
+  неправильним порядком відповіді.
 */
 export function CatalogFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [localParams, setLocalParams] = useState(
+    () => new URLSearchParams(searchParams.toString())
+  );
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Синхронізація з URL при зовнішній навігації (назад/вперед, посилання) і
+  // коли дебаунснутий запис нарешті приземлюється — searchParams лишається
+  // джерелом правди, localParams лише кешує його для миттєвого рендеру.
+  useEffect(() => {
+    setLocalParams(new URLSearchParams(searchParams.toString()));
+  }, [searchParams]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  const commit = (next: URLSearchParams, options: { immediate?: boolean } = {}) => {
+    setLocalParams(next);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    const push = () => router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+    if (options.immediate) {
+      push();
+    } else {
+      debounceRef.current = setTimeout(push, FILTER_DEBOUNCE_MS);
+    }
+  };
+
   const getArrayParam = (key: string): string[] => {
-    const raw = searchParams.get(key);
+    const raw = localParams.get(key);
     if (!raw) return [];
     return raw.split(",").filter(Boolean);
   };
 
   const setArrayParam = (key: string, values: string[]) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(localParams.toString());
     if (values.length > 0) {
       params.set(key, values.join(","));
     } else {
       params.delete(key);
     }
-    router.replace(`${pathname}?${params.toString()}`);
+    params.delete("page"); // будь-яка зміна фільтра скидає пагінацію на 1-шу сторінку
+    commit(params);
   };
 
   const toggleArrayValue = (key: string, value: string) => {
@@ -40,17 +77,18 @@ export function CatalogFilters() {
   };
 
   const setParam = (key: string, value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(localParams.toString());
     if (value) {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-    router.replace(`${pathname}?${params.toString()}`);
+    params.delete("page");
+    commit(params);
   };
 
   const setPriceRange = (range: string) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(localParams.toString());
     params.delete("priceMax");
     params.delete("priceMin");
     if (range === "under") {
@@ -58,29 +96,32 @@ export function CatalogFilters() {
     } else if (range === "over") {
       params.set("priceMin", String(PRICE_THRESHOLD_MINOR));
     }
-    router.replace(`${pathname}?${params.toString()}`);
+    params.delete("page");
+    commit(params);
   };
 
   const resetFilters = () => {
-    const service = searchParams.get("service");
+    const service = localParams.get("service");
     const params = new URLSearchParams();
     if (service) params.set("service", service);
-    router.replace(`${pathname}?${params.toString()}`);
+    // Явна одноразова дія (не серія швидких кліків) — застосовуємо одразу,
+    // без дебаунсу.
+    commit(params, { immediate: true });
   };
 
-  const hasActiveFilters = Array.from(searchParams.keys()).some(
-    (key) => key !== "service"
+  const hasActiveFilters = Array.from(localParams.keys()).some(
+    (key) => key !== "service" && key !== "page"
   );
 
   const selectedTopics = getArrayParam("topics");
   const selectedSpecializations = getArrayParam("specializations");
   const selectedLanguages = getArrayParam("languages");
   const selectedClientCategories = getArrayParam("clientCategories");
-  const selectedGender = searchParams.get("gender") ?? "";
+  const selectedGender = localParams.get("gender") ?? "";
   const priceRangeValue =
-    searchParams.get("priceMax") === String(PRICE_THRESHOLD_MINOR)
+    localParams.get("priceMax") === String(PRICE_THRESHOLD_MINOR)
       ? "under"
-      : searchParams.get("priceMin") === String(PRICE_THRESHOLD_MINOR)
+      : localParams.get("priceMin") === String(PRICE_THRESHOLD_MINOR)
         ? "over"
         : "";
 
