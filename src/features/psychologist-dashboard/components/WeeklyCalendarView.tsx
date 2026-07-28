@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  combineDateAndTime,
   formatWeekRange,
   getWeekStart,
   toLocalDateIso,
@@ -64,12 +65,17 @@ export function WeeklyCalendarView() {
   const [pending, setPending] = useState<PendingAction | null>(null);
   const weekStart = getWeekStart(weekOffset);
 
-  // "Сьогодні" опівночі — поріг для визначення минулих днів. Перевіряється
-  // на рівні КОЖНОГО дня колонки (date < today), а не всього тижня: інакше
-  // в тижні, що ще не завершився (напр. сьогодні середа), уже минулі
-  // понеділок і вівторок лишались би білими й клікабельними.
+  // "Сьогодні" опівночі — поріг для визначення минулих ДНІВ (isPastDay нижче).
+  // Перевіряється на рівні КОЖНОГО дня колонки (date < today), а не всього
+  // тижня: інакше в тижні, що ще не завершився (напр. сьогодні середа), уже
+  // минулі понеділок і вівторок лишались би білими й клікабельними.
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  // Поточний момент (не опівночі) — для перевірки минулого в межах
+  // СЬОГОДНІШНЬОГО дня: isPastDay сам по собі не ловить минулі години
+  // сьогодні (для today.getDate() === date.getDate() isPastDay завжди
+  // false), тож кожен вільний слот додатково звіряється з now окремо.
+  const now = new Date();
 
   const { data: availability, isLoading: isAvailabilityLoading } = useAvailability();
   const { data: exceptions } = useAvailabilityExceptions();
@@ -383,47 +389,76 @@ export function WeeklyCalendarView() {
                       )
                     )}
 
-                    {/* Вільні слоти — не показуємо в минулому й у дні з винятком доступності */}
+                    {/* Вільні слоти — не показуємо в минулому й у дні з винятком доступності.
+                        В межах самого дня (насамперед сьогодні) кожен слот додатково звіряється
+                        з `now` окремо — isPastDay/hideFreeSlots ловить лише повністю минулі дні. */}
                     {!hideFreeSlots && (
                       <>
-                        {/* Вільні індивідуальні — біла заливка, сіра обводка */}
-                        {freeSlots.individual.map((slot) => (
-                          <button
-                            key={`ind-${slot.start}`}
-                            type="button"
-                            onClick={() => requestBlock(dateIso, slot)}
-                            style={{
-                              top: topFor(slot.start),
-                              height: individualFreeSlotHeight,
-                              left: 2,
-                              right: hasCoupleLane ? "51%" : 2,
-                            }}
-                            className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sand-dark bg-white px-0.5 text-center text-ink-muted transition-colors hover:border-sage hover:text-sage"
-                          >
-                            <span className="text-[9px] leading-none font-medium">{slot.start}</span>
-                            <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
-                          </button>
-                        ))}
-
-                        {/* Вільні парні — білий фон (без заливки), лише sage-обводка відрізняє від індивідуальних */}
-                        {hasCoupleLane &&
-                          freeSlots.couple.map((slot) => (
+                        {/* Вільні індивідуальні — біла заливка, сіра обводка; минулі години сьогодні — сірі й неактивні */}
+                        {freeSlots.individual.map((slot) => {
+                          const isSlotPast = combineDateAndTime(date, slot.start) < now;
+                          const style = {
+                            top: topFor(slot.start),
+                            height: individualFreeSlotHeight,
+                            left: 2,
+                            right: hasCoupleLane ? "51%" : 2,
+                          };
+                          return isSlotPast ? (
+                            <div
+                              key={`ind-${slot.start}`}
+                              style={style}
+                              className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sand-dark/40 bg-sand/40 px-0.5 text-center text-ink-muted/50"
+                            >
+                              <span className="text-[9px] leading-none font-medium">{slot.start}</span>
+                              <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
+                            </div>
+                          ) : (
                             <button
-                              key={`couple-${slot.start}`}
+                              key={`ind-${slot.start}`}
                               type="button"
                               onClick={() => requestBlock(dateIso, slot)}
-                              style={{
-                                top: topFor(slot.start),
-                                height: freeSlotMarkerHeight,
-                                left: "51%",
-                                right: 2,
-                              }}
-                              className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sage bg-white px-0.5 text-center text-sage transition-colors hover:bg-sage-light/40"
+                              style={style}
+                              className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sand-dark bg-white px-0.5 text-center text-ink-muted transition-colors hover:border-sage hover:text-sage"
                             >
                               <span className="text-[9px] leading-none font-medium">{slot.start}</span>
                               <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
                             </button>
-                          ))}
+                          );
+                        })}
+
+                        {/* Вільні парні — білий фон (без заливки), лише sage-обводка відрізняє від індивідуальних;
+                            минулі години сьогодні — так само сірі й неактивні */}
+                        {hasCoupleLane &&
+                          freeSlots.couple.map((slot) => {
+                            const isSlotPast = combineDateAndTime(date, slot.start) < now;
+                            const style = {
+                              top: topFor(slot.start),
+                              height: freeSlotMarkerHeight,
+                              left: "51%",
+                              right: 2,
+                            };
+                            return isSlotPast ? (
+                              <div
+                                key={`couple-${slot.start}`}
+                                style={style}
+                                className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sand-dark/40 bg-sand/40 px-0.5 text-center text-ink-muted/50"
+                              >
+                                <span className="text-[9px] leading-none font-medium">{slot.start}</span>
+                                <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
+                              </div>
+                            ) : (
+                              <button
+                                key={`couple-${slot.start}`}
+                                type="button"
+                                onClick={() => requestBlock(dateIso, slot)}
+                                style={style}
+                                className="absolute flex flex-col items-center justify-center gap-px overflow-hidden rounded-[8px] border-[1.5px] border-sage bg-white px-0.5 text-center text-sage transition-colors hover:bg-sage-light/40"
+                              >
+                                <span className="text-[9px] leading-none font-medium">{slot.start}</span>
+                                <span className="text-[8px] leading-none opacity-70">{slot.end}</span>
+                              </button>
+                            );
+                          })}
                       </>
                     )}
                     </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "@/components/layout/logo";
+import { isDashboardRoute } from "@/components/layout/dashboard-routes";
 import { SERVICES, TOPIC_GROUPS } from "@/features/psychologists/schema";
 import { slugifyMethod } from "@/features/psychologists/utils/methodSlug";
 
@@ -22,7 +23,7 @@ export function AppFooter() {
   const pathname = usePathname();
   const year = new Date().getFullYear();
 
-  if (pathname.startsWith("/dashboard")) return null;
+  if (isDashboardRoute(pathname)) return null;
 
   return (
     <footer className="bg-sand-dark px-5 py-14 md:px-12">
