@@ -144,10 +144,25 @@ export const FORMATS = [
   { value: "offline", label: "Офлайн" },
 ] as const;
 
-/** Психолог в списке каталога. `topics` — это «Основна експертиза». */
+/**
+ * Статус модерації профілю. Значення й назва поля дзеркалять
+ * `psychologist_status` з supabase/migrations/0001_init.sql — коли фіча
+ * переїде з моків на Supabase, перейменовувати нічого не треба.
+ */
+export const PSYCHOLOGIST_STATUSES = [
+  { value: "pending", label: "На модерації" },
+  { value: "approved", label: "Опубліковано" },
+  { value: "rejected", label: "Відхилено" },
+] as const;
+export type PsychologistStatus = (typeof PSYCHOLOGIST_STATUSES)[number]["value"];
+
+/** Психолог в списке каталога. `topics` — это «Основна экспертиза». */
 export const psychologistCardSchema = z.object({
   profileId: z.string(),
   fullName: z.string(),
+  email: z.string(), // TODO(backend): на бэке живёт в auth.users, не в psychologists — тут для адмінки
+  status: z.enum(["pending", "approved", "rejected"]),
+  createdAt: z.string(), // ISO; дата реєстрації, для адмінки
   headline: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   gender: z.enum(["female", "male"]),

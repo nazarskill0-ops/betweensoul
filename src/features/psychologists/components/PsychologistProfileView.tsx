@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { notFound } from "next/navigation";
 import { usePsychologist } from "../hooks/usePsychologist";
+import { useUser } from "@/features/auth/hooks/useUser";
 import type { PsychologistProfile } from "../schema";
 import { PsychologistSidebarCard } from "./PsychologistSidebarCard";
 import { VideoIntroBlock } from "./VideoIntroBlock";
@@ -33,6 +34,7 @@ export function PsychologistProfileView({
     enabled: !previewData && !!id,
   });
   const data = previewData ?? fetchedData;
+  const { data: user, isLoading: isUserLoading } = useUser();
   const [serviceType, setServiceType] = useState<SlotServiceType>("individual");
 
   // Дані вантажаться асинхронно, тож #booking з'являється в DOM вже після
@@ -43,13 +45,20 @@ export function PsychologistProfileView({
     }
   }, [data]);
 
-  if (!previewData && isLoading) {
+  if (!previewData && (isLoading || isUserLoading)) {
     return (
       <div className="h-96 animate-pulse rounded-card border-[1.5px] border-sand-dark bg-sand" />
     );
   }
 
   if (!data) {
+    notFound();
+  }
+
+  // Неопубліковані профілі бачить лише сам психолог (кабінет — через
+  // previewData, сюди взагалі не заходить) та адмін (перегляд перед
+  // публікацією з /admin/psychologists). Для решти — як і не існує.
+  if (!previewData && data.status !== "approved" && user?.role !== "admin") {
     notFound();
   }
 

@@ -16,6 +16,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-01",
     fullName: "Олена Коваленко",
+    email: "o.kovalenko@example.com",
+    status: "approved",
+    createdAt: "2026-05-12T09:00:00Z",
     headline: "Психологиня, КПТ-терапевтка",
     avatarUrl: "https://i.pravatar.cc/300?img=47",
     gender: "female",
@@ -145,6 +148,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-02",
     fullName: "Андрій Шевченко",
+    email: "a.shevchenko@example.com",
+    status: "approved",
+    createdAt: "2026-05-18T10:30:00Z",
     headline: "Психотерапевт, гештальт-підхід",
     avatarUrl: "https://i.pravatar.cc/300?img=12",
     gender: "male",
@@ -210,6 +216,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-03",
     fullName: "Катерина Бондаренко",
+    email: "k.bondarenko@example.com",
+    status: "approved",
+    createdAt: "2026-05-25T11:00:00Z",
     headline: "Дитяча та підліткова психологиня",
     avatarUrl: "https://i.pravatar.cc/300?img=32",
     gender: "female",
@@ -289,6 +298,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-04",
     fullName: "Ірина Мельник",
+    email: "i.melnyk@example.com",
+    status: "approved",
+    createdAt: "2026-06-01T08:15:00Z",
     headline: "Травматерапевтка, EMDR",
     avatarUrl: "https://i.pravatar.cc/300?img=44",
     gender: "female",
@@ -354,6 +366,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-05",
     fullName: "Дмитро Ткаченко",
+    email: "d.tkachenko@example.com",
+    status: "approved",
+    createdAt: "2026-06-05T14:45:00Z",
     headline: "Психолог, психоаналітичний підхід",
     avatarUrl: "https://i.pravatar.cc/300?img=59",
     gender: "male",
@@ -413,6 +428,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-06",
     fullName: "Наталія Кравченко",
+    email: "n.kravchenko@example.com",
+    status: "pending",
+    createdAt: "2026-07-22T09:20:00Z",
     headline: "Сімейна психотерапевтка",
     avatarUrl: "https://i.pravatar.cc/300?img=26",
     gender: "female",
@@ -463,6 +481,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-07",
     fullName: "Юлія Савченко",
+    email: "y.savchenko@example.com",
+    status: "approved",
+    createdAt: "2026-06-14T16:00:00Z",
     headline: "Психологиня, робота з РХП та тілесністю",
     avatarUrl: "https://i.pravatar.cc/300?img=20",
     gender: "female",
@@ -522,6 +543,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-08",
     fullName: "Максим Поліщук",
+    email: "m.polishchuk@example.com",
+    status: "approved",
+    createdAt: "2026-06-18T12:10:00Z",
     headline: "Психолог для підприємців і керівників",
     avatarUrl: "https://i.pravatar.cc/300?img=68",
     gender: "male",
@@ -581,6 +605,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-09",
     fullName: "Оксана Лисенко",
+    email: "o.lysenko@example.com",
+    status: "approved",
+    createdAt: "2026-06-22T10:05:00Z",
     headline: "Психологиня, перинатальний напрям",
     avatarUrl: "https://i.pravatar.cc/300?img=38",
     gender: "female",
@@ -646,6 +673,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-10",
     fullName: "Тарас Романюк",
+    email: "t.romaniuk@example.com",
+    status: "approved",
+    createdAt: "2026-06-29T13:40:00Z",
     headline: "Психотерапевт, залежності та співзалежність",
     avatarUrl: "https://i.pravatar.cc/300?img=53",
     gender: "male",
@@ -711,6 +741,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-11",
     fullName: "Світлана Гончар",
+    email: "s.honchar@example.com",
+    status: "rejected",
+    createdAt: "2026-07-10T15:30:00Z",
     headline: "Психологиня, підтримка в еміграції",
     avatarUrl: "https://i.pravatar.cc/300?img=16",
     gender: "female",
@@ -770,6 +803,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-12",
     fullName: "Вікторія Дорошенко",
+    email: "v.doroshenko@example.com",
+    status: "pending",
+    createdAt: "2026-07-27T08:50:00Z",
     headline: "Психологиня, підліткова та сімейна терапія",
     avatarUrl: "https://i.pravatar.cc/300?img=41",
     gender: "female",
@@ -819,6 +855,9 @@ export const mockPsychologists: PsychologistProfile[] = [
   {
     profileId: "p-13",
     fullName: "Мар'яна Гнатюк",
+    email: "m.hnatiuk@example.com",
+    status: "approved",
+    createdAt: "2026-07-05T11:20:00Z",
     headline: "Психологиня, підтримка вразливих груп",
     avatarUrl: "https://i.pravatar.cc/300?img=25",
     gender: "female",

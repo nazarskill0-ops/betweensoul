@@ -28,6 +28,9 @@ export async function fetchPsychologists(
   await delay(300);
 
   const filtered = mockPsychologists.filter((p) => {
+    // Публічний каталог показує тільки опубліковані профілі — draft/rejected
+    // видно лише самому психологу (кабінет) та адмінці (/admin/psychologists).
+    if (p.status !== "approved") return false;
     if (
       filters.q &&
       !p.fullName.toLowerCase().includes(filters.q.toLowerCase())

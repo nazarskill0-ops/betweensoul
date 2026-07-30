@@ -19,9 +19,12 @@ export type DashboardNavItem = {
 export function DashboardSidebarShell({
   navItems,
   children,
+  contentClassName = "max-w-4xl",
 }: {
   navItems: DashboardNavItem[];
   children: React.ReactNode;
+  /** Ширина контентної колонки. За замовчуванням вузька (форми, картки) — адмінка передає ширший клас під таблицю. */
+  contentClassName?: string;
 }) {
   const pathname = usePathname();
 
@@ -79,7 +82,7 @@ export function DashboardSidebarShell({
       </aside>
 
       <div className="min-w-0 flex-1 px-5 py-8 md:px-8">
-        <div className="max-w-4xl">{children}</div>
+        <div className={contentClassName}>{children}</div>
       </div>
     </div>
   );
