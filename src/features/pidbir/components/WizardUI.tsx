@@ -7,25 +7,46 @@ import { PIDBIR_STEPS, PIDBIR_STEP_LABELS, type PidbirStep } from "@/stores/pidb
   вибору. Тримаються разом, бо всі три кроки складені з тих самих деталей.
 */
 
-/** Прогрес зверху сторінки: пройдені та активний крок — sage, майбутні — сірі. */
-export function ProgressSteps({ current }: { current: PidbirStep }) {
+/**
+ * Прогрес зверху сторінки: пройдені та активний крок — sage, майбутні — сірі.
+ * Пройдені кроки клікабельні (повернення зі збереженням уже введених даних),
+ * поточний і майбутні — ні: вперед стрибати не можна, бо крок попереду ще не
+ * заповнений і його валідація не пройдена.
+ */
+export function ProgressSteps({
+  current,
+  onNavigate,
+}: {
+  current: PidbirStep;
+  onNavigate: (step: PidbirStep) => void;
+}) {
   const currentIndex = PIDBIR_STEPS.indexOf(current);
 
   return (
     <nav aria-label="Прогрес анкети" className="grid grid-cols-3 gap-3 md:gap-6">
       {PIDBIR_STEPS.map((step, i) => {
         const isDone = i <= currentIndex;
+        const isCurrent = i === currentIndex;
+        const isClickable = i < currentIndex;
+
         return (
           <div key={step} className="flex flex-col gap-2">
-            <span
-              className={`text-center text-sm ${
-                i === currentIndex ? "font-medium text-sage" : "text-ink-muted"
+            <button
+              type="button"
+              disabled={!isClickable}
+              onClick={() => onNavigate(step)}
+              aria-current={isCurrent ? "step" : undefined}
+              className={`text-center text-sm transition-colors ${
+                isCurrent ? "font-medium text-sage" : "text-ink-muted"
+              } ${
+                isClickable
+                  ? "cursor-pointer hover:text-sage"
+                  : "cursor-default disabled:opacity-100"
               }`}
             >
               {PIDBIR_STEP_LABELS[step]}
-            </span>
+            </button>
             <span
-              aria-current={i === currentIndex ? "step" : undefined}
               className={`h-1 rounded-full transition-colors ${
                 isDone ? "bg-sage" : "bg-sand-dark"
               }`}

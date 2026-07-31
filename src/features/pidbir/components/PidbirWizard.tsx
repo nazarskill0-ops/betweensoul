@@ -24,10 +24,17 @@ export function PidbirWizard() {
     () => false
   );
 
-  // Залогіненому користувачу міні-логін не потрібен: беремо email та ім'я з
-  // профілю й одразу переходимо до запиту.
+  /*
+    Крок «Профіль» пропускається ТІЛЬКИ за наявної сесії Supabase: без user
+    (тобто для гостя) анкета завжди починається з нього.
+
+    `profile.email` тут — ознака, що ми вже підставили дані з сесії. Без цієї
+    умови автопропуск бив би по руках усім, хто повернувся на «Профіль»
+    кліком у прогрес-барі: крок відкривався б і миттєво закривався. Після
+    reset() email порожній, тож для залогіненого пропуск знову спрацює.
+  */
   useEffect(() => {
-    if (isUserLoading || !user || step !== "profile") return;
+    if (isUserLoading || !user || step !== "profile" || profile.email) return;
     setProfile({
       ...profile,
       email: user.email,
@@ -48,7 +55,7 @@ export function PidbirWizard() {
 
   return (
     <div className="flex flex-col gap-10 md:gap-14">
-      <ProgressSteps current={step} />
+      <ProgressSteps current={step} onNavigate={goTo} />
 
       {step === "profile" && <ProfileStep />}
       {step === "request" && <RequestStep />}
