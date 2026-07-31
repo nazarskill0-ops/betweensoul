@@ -1,152 +1,122 @@
 import { z } from "zod";
-import { SERVICES, TOPICS } from "@/features/psychologists/schema";
+import { SERVICES, SPECIALIZATIONS, TOPICS } from "@/features/psychologists/schema";
 
 /*
-  Анкета підбору психолога (/pidbir).
-  Таксономії (теми, послуги, методи) не дублюються — беруться з
+  Анкета підбору психолога (/pidbir): Профіль → Запит → Результат.
+  Таксономії (теми, методи, послуги) не дублюються — беруться з
   features/psychologists/schema.ts, щоб відповіді били по тих самих значеннях,
   якими описані психологи в каталозі.
 */
 
-/** Шкала стилю: 1..5. Значення — позиція на осі, а не порядковий номер варіанту. */
-export const styleValueSchema = z.number().int().min(1).max(5);
+/* ────────────────────────────── Крок 1: профіль ───────────────────────────── */
+
+export const profileSchema = z.object({
+  email: z.string().min(1, "Вкажіть email").email("Схоже, в адресі помилка"),
+  name: z.string().trim().min(1, "Вкажіть ім'я"),
+  /*
+    Вік необов'язковий, тож порожній рядок — валідне значення. Поле навмисно
+    лишається рядком (а не z.coerce.number): коерція робить вхідний тип
+    unknown, і react-hook-form перестає виводити типи форми.
+  */
+  age: z.string().refine(
+    (v) => v === "" || (/^\d+$/.test(v) && Number(v) >= 16 && Number(v) <= 100),
+    { message: "Вік має бути числом від 16 до 100" }
+  ),
+  consent: z.boolean(),
+});
+export type ProfileValues = z.infer<typeof profileSchema>;
+
+/* ─────────────────────────────── Крок 2: запит ─────────────────────────────── */
+
+/** Для кого шукають психолога. Значення = SERVICES, ними ж описані психологи. */
+export const AUDIENCE_OPTIONS = [
+  { value: SERVICES[0], label: "Для себе" },
+  { value: SERVICES[1], label: "Для пари" },
+] as const;
+
+/**
+ * Шкала стилю: 1..3. Профілі методів у matching.ts живуть на шкалі 1..5,
+ * тож три відповіді розкладаються на її полюси й середину (див. STYLE_SCALE).
+ */
+export const styleValueSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+]);
 export type StyleValue = z.infer<typeof styleValueSchema>;
 
-/** Осі стилю терапії. Кожна — окреме питання кроку 3. */
 export const STYLE_AXES = ["structure", "lead", "timeFocus"] as const;
 export type StyleAxis = (typeof STYLE_AXES)[number];
-
-export type StyleOption = {
-  value: StyleValue;
-  label: string;
-};
 
 export type StyleQuestion = {
   axis: StyleAxis;
   title: string;
-  hint: string;
-  options: StyleOption[];
+  options: { value: StyleValue; label: string }[];
 };
 
 /*
-  Формулювання власні, під тон Calmi. Порядок варіантів = напрямок осі:
-  1 — один полюс, 5 — протилежний. Саме ці числа порівнюються з профілями
-  методів у matching.ts, тож порядок міняти не можна без правки профілів.
+  Формулювання власні, під тон Calmi. Порядок варіантів = напрямок осі
+  (1 — один полюс, 3 — протилежний), і саме ці числа порівнюються з профілями
+  методів, тож переставляти їх не можна без правки matching.ts.
 */
 export const STYLE_QUESTIONS: StyleQuestion[] = [
   {
     axis: "structure",
-    title: "Як вам комфортніше проводити сесію?",
-    hint: "Немає правильної відповіді — просто оберіть те, що ближче",
+    title: "Структура сесії",
     options: [
-      { value: 1, label: "За чітким планом: тема й структура на кожну зустріч" },
-      { value: 2, label: "Здебільшого за планом, але з місцем для відступів" },
-      { value: 3, label: "Порівну — трохи структури, трохи вільної розмови" },
-      { value: 4, label: "Здебільшого вільно, структура з'являється за потреби" },
-      { value: 5, label: "Повністю вільно — тема народжується під час розмови" },
+      { value: 1, label: "Чіткий план і фокус" },
+      { value: 2, label: "Баланс структури і вільної розмови" },
+      { value: 3, label: "Вільний потік" },
     ],
   },
   {
     axis: "lead",
-    title: "Якої участі ви чекаєте від терапевта?",
-    hint: "Йдеться про те, скільки простору лишається вам",
+    title: "Роль терапевта",
     options: [
-      { value: 1, label: "Уважно слухає й дає мені виговоритись" },
-      { value: 2, label: "Переважно слухає, зрідка ставить запитання" },
-      { value: 3, label: "Порівну слухає й ставить запитання" },
-      { value: 4, label: "Часто запитує й ділиться спостереженнями" },
-      { value: 5, label: "Веде розмову й дає прямий зворотний зв'язок" },
+      { value: 1, label: "Переважно слухає" },
+      { value: 2, label: "Збалансований діалог" },
+      { value: 3, label: "Активно веде і дає зворотний зв'язок" },
     ],
   },
   {
     axis: "timeFocus",
-    title: "На чому хочеться зосередитись у роботі?",
-    hint: "Терапія може йти від сьогодення вглиб — або починатися з глибини",
+    title: "Фокус у часі",
     options: [
-      { value: 1, label: "На тому, що відбувається в житті просто зараз" },
-      { value: 2, label: "Здебільшого на теперішньому, з оглядкою на минуле" },
-      { value: 3, label: "Порівну на теперішньому і на його корінні" },
-      { value: 4, label: "Здебільшого на тому, звідки це все тягнеться" },
-      { value: 5, label: "На глибинних причинах і досвіді, що мене сформував" },
+      { value: 1, label: "Те, що відбувається зараз" },
+      { value: 2, label: "Баланс минулого і теперішнього" },
+      { value: 3, label: "Глибинні причини і минуле" },
     ],
   },
 ];
 
-/** Крок 1 — формат терапії. Значення = SERVICES, ними ж описані психологи. */
-export const serviceStepSchema = z.object({
-  service: z.enum(SERVICES, { message: "Оберіть формат терапії" }),
-});
-export type ServiceStepValues = z.infer<typeof serviceStepSchema>;
+/** Вікові групи психолога. Рахуються з birthDate, окремим полем не зберігаються. */
+export const PSYCHOLOGIST_AGE_GROUPS = [
+  { value: "under30", label: "До 30", min: 0, max: 29 },
+  { value: "30_40", label: "30–40", min: 30, max: 40 },
+  { value: "40_50", label: "40–50", min: 41, max: 50 },
+  { value: "50plus", label: "50+", min: 51, max: 200 },
+] as const;
+export type PsychologistAgeGroup = (typeof PSYCHOLOGIST_AGE_GROUPS)[number]["value"];
 
-/** Крок 2 — теми запиту. Мінімум одна, інакше підбір не має на чому працювати. */
-export const topicsStepSchema = z.object({
+export const requestSchema = z.object({
+  service: z.enum(SERVICES),
   topics: z
     .array(z.enum(TOPICS as [string, ...string[]]))
     .min(1, "Оберіть хоча б одну тему"),
-});
-export type TopicsStepValues = z.infer<typeof topicsStepSchema>;
-
-/** Крок 3 — стиль терапії. Усі три осі обов'язкові. */
-export const styleStepSchema = z.object({
-  structure: styleValueSchema,
-  lead: styleValueSchema,
-  timeFocus: styleValueSchema,
-});
-export type StyleStepValues = z.infer<typeof styleStepSchema>;
-
-/*
-  Крок 4 — уточнення, за замовчуванням пропускається.
-  Форма працює рядками, бо саме рядки дає радіо-група, а "" означає «не має
-  значення». Схема форми навмисно не робить z.preprocess: тоді вхідний тип
-  став би unknown і react-hook-form не зміг би вивести типи поля.
-*/
-export const criteriaFormSchema = z.object({
-  gender: z.union([z.literal(""), z.enum(["female", "male"])]),
-  priceMaxMinor: z.union([z.literal(""), z.string().regex(/^\d+$/)]),
-});
-export type CriteriaFormValues = z.infer<typeof criteriaFormSchema>;
-
-/** Нормалізовані уточнення — те, з чим працює підбір. */
-export const criteriaSchema = z.object({
+  style: z.object({
+    structure: styleValueSchema,
+    lead: styleValueSchema,
+    timeFocus: styleValueSchema,
+  }),
+  // Уточнення необов'язкові: null / порожній масив означає «байдуже».
   gender: z.enum(["female", "male"]).nullable(),
-  priceMaxMinor: z.number().int().positive().nullable(),
+  ageGroup: z.enum(["under30", "30_40", "40_50", "50plus"]).nullable(),
+  methods: z.array(z.enum(SPECIALIZATIONS)),
 });
-export type CriteriaValues = z.infer<typeof criteriaSchema>;
+export type RequestValues = z.infer<typeof requestSchema>;
 
-/** "" з форми → null; рядок ціни → копійки числом. */
-export function normalizeCriteria(values: CriteriaFormValues): CriteriaValues {
-  return {
-    gender: values.gender === "" ? null : values.gender,
-    priceMaxMinor: values.priceMaxMinor === "" ? null : Number(values.priceMaxMinor),
-  };
-}
-
-/** Зворотний бік: збережені відповіді → значення полів форми. */
-export function criteriaToFormValues(values: CriteriaValues): CriteriaFormValues {
-  return {
-    gender: values.gender ?? "",
-    priceMaxMinor: values.priceMaxMinor === null ? "" : String(values.priceMaxMinor),
-  };
-}
-
-/** Повний набір відповідей — те, що йде в matching.ts. */
-export const pidbirAnswersSchema = serviceStepSchema
-  .extend(topicsStepSchema.shape)
-  .extend({ style: styleStepSchema })
-  .extend(criteriaSchema.shape);
-export type PidbirAnswers = z.infer<typeof pidbirAnswersSchema>;
-
-/*
-  Пороги цін підібрані під реальний розкид у каталозі (650–1500 грн за
-  індивідуальну сесію), щоб кожен варіант справді щось відсікав, а не був
-  порожнім фільтром. Значення — копійки (docs/RULES.md, правило 7).
-*/
-export const PRICE_OPTIONS = [
-  { value: 80000, label: "До 800 ₴" },
-  { value: 100000, label: "До 1 000 ₴" },
-  { value: 130000, label: "До 1 300 ₴" },
-] as const;
+/** Скільки тем показувати в групі до натискання «Ще N». */
+export const TOPICS_VISIBLE_LIMIT = 6;
 
 /** Скільки психологів показуємо в результаті. */
-export const MIN_RESULTS = 3;
 export const MAX_RESULTS = 5;

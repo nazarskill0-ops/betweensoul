@@ -1,37 +1,58 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import { useUser } from "@/features/auth/hooks/useUser";
 import { usePidbirStore } from "@/stores/pidbir";
-import { ProgressBar, StepTransition } from "./WizardChrome";
-import { ServiceStep } from "./ServiceStep";
-import { TopicsStep } from "./TopicsStep";
-import { StyleStep } from "./StyleStep";
-import { CriteriaStep } from "./CriteriaStep";
+import { ProgressSteps } from "./WizardUI";
+import { ProfileStep } from "./ProfileStep";
+import { RequestStep } from "./RequestStep";
 import { ResultsStep } from "./ResultsStep";
 
 export function PidbirWizard() {
-  const { step, withCriteria } = usePidbirStore();
+  const { step, profile, setProfile, goTo } = usePidbirStore();
+  const { data: user, isLoading: isUserLoading } = useUser();
 
-  // Екрани різної висоти: після довгого списку тем короткий екран питання
-  // інакше відкривався б прокрученим, із заголовком над видимою областю.
+  /*
+    Стан анкети персиститься в localStorage, тож до регідратації store на
+    клієнті його вміст не збігається з тим, що відрендерив сервер. Підписуємось
+    на подію самого persist (а не просто на монтування) і до неї малюємо
+    каркас — інакше React лається на неспівпадіння гідратації.
+  */
+  const isHydrated = useSyncExternalStore(
+    (onChange) => usePidbirStore.persist.onFinishHydration(onChange),
+    () => usePidbirStore.persist.hasHydrated(),
+    () => false
+  );
+
+  // Залогіненому користувачу міні-логін не потрібен: беремо email та ім'я з
+  // профілю й одразу переходимо до запиту.
+  useEffect(() => {
+    if (isUserLoading || !user || step !== "profile") return;
+    setProfile({
+      ...profile,
+      email: user.email,
+      name: profile.name || user.fullName,
+    });
+    goTo("request");
+  }, [user, isUserLoading, step, profile, setProfile, goTo]);
+
+  // Кроки різної висоти: без цього результат після довгої форми відкривався б
+  // прокрученим до середини сторінки.
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
-  return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
-      <ProgressBar step={step} withCriteria={withCriteria} />
+  if (!isHydrated) {
+    return <div className="h-96 animate-pulse rounded-card bg-white" />;
+  }
 
-      {/* key={step} перемонтовує вміст, щоб кожен екран програвав появу заново */}
-      <StepTransition key={step}>
-        {step === "service" && <ServiceStep />}
-        {step === "topics" && <TopicsStep />}
-        {step === "structure" && <StyleStep axis="structure" />}
-        {step === "lead" && <StyleStep axis="lead" />}
-        {step === "timeFocus" && <StyleStep axis="timeFocus" />}
-        {step === "criteria" && <CriteriaStep />}
-        {step === "results" && <ResultsStep />}
-      </StepTransition>
+  return (
+    <div className="flex flex-col gap-10 md:gap-14">
+      <ProgressSteps current={step} />
+
+      {step === "profile" && <ProfileStep />}
+      {step === "request" && <RequestStep />}
+      {step === "results" && <ResultsStep />}
     </div>
   );
 }

@@ -1,84 +1,91 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { PsychologistCardItem } from "@/features/psychologists/components/PsychologistCardItem";
 import { COUPLE_THERAPY_SERVICE } from "@/features/psychologists/schema";
+import { getFirstName } from "@/features/psychologists/utils/formatters";
 import { usePidbirStore } from "@/stores/pidbir";
 import { findMatches } from "../api";
-import { MIN_RESULTS, pidbirAnswersSchema } from "../schema";
-import { PrimaryButton } from "./WizardChrome";
+import { requestSchema } from "../schema";
 
-/** 1 спеціаліст · 2–4 спеціалісти · 5+ спеціалістів — той самий підхід, що й у formatters.ts. */
+/** 1 фахівець · 2–4 фахівці · 5+ фахівців. */
 function formatSpecialistsCount(count: number): string {
   const mod100 = count % 100;
   const mod10 = count % 10;
-  if (mod10 === 1 && mod100 !== 11) return `${count} спеціаліста`;
+  if (mod10 === 1 && mod100 !== 11) return `${count} фахівець`;
   if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
-    return `${count} спеціалісти`;
+    return `${count} фахівці`;
   }
-  return `${count} спеціалістів`;
+  return `${count} фахівців`;
+}
+
+function formatReadyLabel(count: number): string {
+  const mod100 = count % 100;
+  const mod10 = count % 10;
+  const verb =
+    mod10 === 1 && mod100 !== 11 ? "готовий допомогти" : "готові допомогти";
+  return `${formatSpecialistsCount(count)} ${verb}`;
 }
 
 export function ResultsStep() {
-  const { service, topics, style, criteria, withCriteria, goTo, reset } =
-    usePidbirStore();
+  const { request, goTo, reset } = usePidbirStore();
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Той самий Zod-контракт, що й у кроків: якщо стан неповний (наприклад,
-  // користувач відкрив /pidbir і смикнув крок вручну), краще чесно показати
-  // порожній стан, ніж рахувати підбір з дірками.
-  const answers = useMemo(
-    () =>
-      pidbirAnswersSchema.safeParse({
-        service,
-        topics,
-        style,
-        gender: criteria.gender,
-        priceMaxMinor: criteria.priceMaxMinor,
-      }),
-    [service, topics, style, criteria]
-  );
-
+  // Той самий Zod-контракт, що й у кроці запиту: якщо стан неповний
+  // (наприклад, крок відкрили напряму), чесніше показати порожній стан.
+  const parsed = useMemo(() => requestSchema.safeParse(request), [request]);
   const matches = useMemo(
-    () => (answers.success ? findMatches(answers.data) : []),
-    [answers]
+    () => (parsed.success ? findMatches(parsed.data) : []),
+    [parsed]
   );
 
-  if (!answers.success) {
+  function selectPsychologist(profileId: string) {
+    setActiveId(profileId);
+    cardRefs.current[profileId]?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
+
+  if (!parsed.success) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
         <p className="text-ink-muted">
-          Схоже, анкета заповнена не до кінця. Почнімо спочатку — це швидко.
+          Схоже, анкета заповнена не до кінця. Повернімось на крок назад.
         </p>
-        <PrimaryButton type="button" onClick={reset}>
-          Пройти анкету
-        </PrimaryButton>
+        <button
+          type="button"
+          onClick={() => goTo("request")}
+          className="rounded-full bg-sage px-8 py-3.5 font-semibold text-white transition-colors hover:bg-sage/90"
+        >
+          До анкети
+        </button>
       </div>
     );
   }
 
-  const isCoupleService = answers.data.service === COUPLE_THERAPY_SERVICE;
+  const isCoupleService = parsed.data.service === COUPLE_THERAPY_SERVICE;
 
   if (matches.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-16 text-center">
-        <h1 className="font-display text-2xl tracking-tight text-ink">
+        <h2 className="font-display text-2xl font-semibold text-ink">
           Поки нікого не знайшли
-        </h1>
+        </h2>
         <p className="max-w-md text-sm text-ink-muted">
           За такими умовами вільних спеціалістів немає. Спробуйте пом&apos;якшити
-          побажання або перегляньте весь каталог.
+          додаткові критерії або перегляньте весь каталог.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
-          {withCriteria && (
-            <button
-              type="button"
-              onClick={() => goTo("criteria")}
-              className="rounded-full border-[1.5px] border-sand-dark px-6 py-3.5 text-sm font-medium text-ink transition-colors hover:border-sage hover:text-sage"
-            >
-              Змінити критерії
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => goTo("request")}
+            className="rounded-full border-[1.5px] border-sand-dark bg-white px-6 py-3.5 text-sm font-medium text-ink transition-colors hover:border-sage hover:text-sage"
+          >
+            Змінити критерії
+          </button>
           <Link
             href="/catalog"
             className="rounded-full bg-sage px-8 py-3.5 font-semibold text-white transition-colors hover:bg-sage/90"
@@ -91,55 +98,86 @@ export function ResultsStep() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="font-display text-2xl tracking-tight text-ink md:text-3xl">
-          {matches.length === 1
-            ? "Знайшли спеціаліста для вас"
-            : `Підібрали ${formatSpecialistsCount(matches.length)}`}
-        </h1>
-        <p className="text-sm text-ink-muted">
-          Список відсортований за тим, наскільки психолог збігається з вашим
-          запитом і стилем роботи.
+    <div className="flex flex-col gap-8">
+      {/* Стек аватарок: і показує, скільки знайшлось, і перемикає на картку. */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="font-display text-lg font-semibold text-ink">
+          {formatReadyLabel(matches.length)}
         </p>
-      </div>
 
-      {matches.length < MIN_RESULTS && (
-        <p className="rounded-card border-[1.5px] border-sand-dark bg-white px-4 py-3 text-sm text-ink-muted">
-          Варіантів небагато — за вашими умовами підійшли не всі. Спробуйте
-          пом&apos;якшити побажання, щоб побачити більше.
-        </p>
-      )}
-
-      <div className="flex flex-col gap-4">
-        {matches.map((match) => (
-          <div key={match.psychologist.profileId} className="flex flex-col gap-2">
-            {(match.matchedTopics.length > 0 || match.matchedMethod) && (
-              <div className="flex flex-wrap items-center gap-2 px-1">
-                {match.matchedMethod && (
-                  <span className="rounded-full bg-sage-light px-3 py-1 text-xs font-medium text-sage">
-                    Підхід: {match.matchedMethod}
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {matches.map((match) => {
+            const { profileId, avatarUrl, fullName } = match.psychologist;
+            const isActive = activeId === profileId;
+            return (
+              <button
+                key={profileId}
+                type="button"
+                onClick={() => selectPsychologist(profileId)}
+                title={fullName}
+                aria-label={`Показати профіль: ${fullName}`}
+                className={`h-12 w-12 shrink-0 overflow-hidden rounded-full border-2 transition-colors ${
+                  isActive ? "border-sage" : "border-white hover:border-sage/50"
+                }`}
+              >
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center bg-sage-light text-sm font-medium text-sage">
+                    {getFirstName(fullName).charAt(0)}
                   </span>
                 )}
-                {match.matchedTopics.slice(0, 3).map((topic) => (
-                  <span
-                    key={topic}
-                    className="rounded-full bg-sand px-3 py-1 text-xs text-ink-muted"
-                  >
-                    {topic}
-                  </span>
-                ))}
-              </div>
-            )}
-            <PsychologistCardItem
-              psychologist={match.psychologist}
-              isCoupleService={isCoupleService}
-            />
-          </div>
-        ))}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4">
+        {matches.map((match) => {
+          const { profileId } = match.psychologist;
+          return (
+            <div
+              key={profileId}
+              ref={(el) => {
+                cardRefs.current[profileId] = el;
+              }}
+              className={`flex flex-col gap-2 rounded-card transition-shadow ${
+                activeId === profileId ? "ring-2 ring-sage ring-offset-4" : ""
+              }`}
+            >
+              {(match.matchedMethod || match.matchedTopics.length > 0) && (
+                <div className="flex flex-wrap items-center gap-2 px-1">
+                  {match.matchedMethod && (
+                    <span className="rounded-full bg-sage-light px-3 py-1 text-xs font-medium text-sage">
+                      Підхід: {match.matchedMethod}
+                    </span>
+                  )}
+                  {match.matchedTopics.slice(0, 3).map((topic) => (
+                    <span
+                      key={topic}
+                      className="rounded-full bg-white px-3 py-1 text-xs text-ink-muted"
+                    >
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <PsychologistCardItem
+                psychologist={match.psychologist}
+                isCoupleService={isCoupleService}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={reset}
@@ -149,7 +187,7 @@ export function ResultsStep() {
         </button>
         <Link
           href="/catalog"
-          className="rounded-full border-[1.5px] border-sand-dark px-6 py-3.5 text-center text-sm font-medium text-ink transition-colors hover:border-sage hover:text-sage"
+          className="rounded-full border-[1.5px] border-sand-dark bg-white px-6 py-3.5 text-center text-sm font-medium text-ink transition-colors hover:border-sage hover:text-sage"
         >
           Переглянути весь каталог
         </Link>

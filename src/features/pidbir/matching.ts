@@ -1,5 +1,29 @@
 import type { PsychologistProfile } from "@/features/psychologists/schema";
-import type { PidbirAnswers, StyleStepValues } from "./schema";
+import { calculateAge } from "@/features/psychologists/utils/formatters";
+import {
+  PSYCHOLOGIST_AGE_GROUPS,
+  type RequestValues,
+  type StyleAxis,
+  type StyleValue,
+} from "./schema";
+
+/** Профіль методу на осях стилю (шкала 1..5, див. METHOD_STYLE). */
+type StyleProfile = Record<StyleAxis, number>;
+
+/**
+ * Відповіді анкети йдуть по шкалі 1..3, а профілі методів описані детальніше —
+ * на 1..5. Три варіанти лягають на полюси й середину цієї шкали, тож
+ * спрощення питань не потребує перепису всіх профілів.
+ */
+const STYLE_SCALE: Record<StyleValue, number> = { 1: 1, 2: 3, 3: 5 };
+
+function toProfileScale(style: RequestValues["style"]): StyleProfile {
+  return {
+    structure: STYLE_SCALE[style.structure],
+    lead: STYLE_SCALE[style.lead],
+    timeFocus: STYLE_SCALE[style.timeFocus],
+  };
+}
 
 /*
   Логіка підбору: чиста функція над масивом психологів, без запитів і без
@@ -17,7 +41,7 @@ import type { PidbirAnswers, StyleStepValues } from "./schema";
  * (features/psychologists/mock.ts) + рештою SPECIALIZATIONS, щоб нові
  * психологи з уже наявної таксономії не падали в дефолт.
  */
-const METHOD_STYLE: Record<string, StyleStepValues> = {
+const METHOD_STYLE: Record<string, StyleProfile> = {
   "КПТ": { structure: 1, lead: 5, timeFocus: 1 },
   "ДПТ": { structure: 1, lead: 5, timeFocus: 2 },
   "НЛП": { structure: 1, lead: 5, timeFocus: 1 },
@@ -42,7 +66,7 @@ const METHOD_STYLE: Record<string, StyleStepValues> = {
 };
 
 /** Метод поза таксономією не має валити підбір — рахуємо його нейтральним. */
-const NEUTRAL_STYLE: StyleStepValues = { structure: 3, lead: 3, timeFocus: 3 };
+const NEUTRAL_STYLE: StyleProfile = { structure: 3, lead: 3, timeFocus: 3 };
 
 /** Максимальна сума відхилень по трьох осях: |1-5| * 3. */
 const MAX_STYLE_DISTANCE = 12;
@@ -69,7 +93,7 @@ export type MatchResult = {
   matchedTopics: string[];
 };
 
-function styleDistance(a: StyleStepValues, b: StyleStepValues): number {
+function styleDistance(a: StyleProfile, b: StyleProfile): number {
   return (
     Math.abs(a.structure - b.structure) +
     Math.abs(a.lead - b.lead) +
@@ -84,7 +108,7 @@ function styleDistance(a: StyleStepValues, b: StyleStepValues): number {
  */
 function bestMethodMatch(
   specializations: string[],
-  answers: StyleStepValues
+  answers: StyleProfile
 ): { score: number; method: string | null } {
   let best = { score: 0, method: null as string | null };
 
@@ -126,19 +150,34 @@ function topicMatch(
   };
 }
 
+function isInAgeGroup(
+  psychologist: PsychologistProfile,
+  group: NonNullable<RequestValues["ageGroup"]>
+): boolean {
+  const range = PSYCHOLOGIST_AGE_GROUPS.find((g) => g.value === group);
+  if (!range) return true;
+  const age = calculateAge(psychologist.birthDate);
+  return age >= range.min && age <= range.max;
+}
+
 /**
- * Чи проходить психолог жорсткі умови: формат сесії, статус публікації і
- * уточнення з кроку 4. Стать і ціна — саме фільтр, а не вага: якщо клієнт
- * назвав межу бюджету, дорожчий психолог у видачі йому не допоможе.
+ * Жорсткі умови: формат сесії, статус публікації і уточнення з блоку
+ * «Уточнити критерії». Стать, вік і метод — саме фільтр, а не вага: це прямо
+ * названі побажання клієнта, і показувати всупереч їм немає сенсу.
+ * Ціни тут навмисно немає — вона є в каталозі й на картці психолога.
  */
 function passesHardFilters(
   psychologist: PsychologistProfile,
-  answers: PidbirAnswers
+  answers: RequestValues
 ): boolean {
   if (psychologist.status !== "approved") return false;
   if (!psychologist.services.includes(answers.service)) return false;
   if (answers.gender && psychologist.gender !== answers.gender) return false;
-  if (answers.priceMaxMinor && psychologist.priceMinor > answers.priceMaxMinor) {
+  if (answers.ageGroup && !isInAgeGroup(psychologist, answers.ageGroup)) return false;
+  if (
+    answers.methods.length > 0 &&
+    !answers.methods.some((m) => psychologist.specializations.includes(m))
+  ) {
     return false;
   }
   return true;
@@ -147,13 +186,15 @@ function passesHardFilters(
 /** Підбір: жорсткі фільтри → скор → сортування. Повертає всіх, хто пройшов. */
 export function rankPsychologists(
   psychologists: PsychologistProfile[],
-  answers: PidbirAnswers
+  answers: RequestValues
 ): MatchResult[] {
+  const styleAnswers = toProfileScale(answers.style);
+
   return psychologists
     .filter((p) => passesHardFilters(p, answers))
     .map((psychologist) => {
       const topic = topicMatch(psychologist, answers.topics);
-      const style = bestMethodMatch(psychologist.specializations, answers.style);
+      const style = bestMethodMatch(psychologist.specializations, styleAnswers);
       const score =
         TOPIC_WEIGHT * topic.score +
         STYLE_WEIGHT * style.score -

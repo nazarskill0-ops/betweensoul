@@ -1,76 +1,130 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type {
-  CriteriaValues,
+  ProfileValues,
+  PsychologistAgeGroup,
+  RequestValues,
   StyleAxis,
   StyleValue,
 } from "@/features/pidbir/schema";
 
 /*
-  Стан візарда підбору (/pidbir): на якому кроці користувач і що вже відповів.
+  Стан анкети підбору (/pidbir): на якому кроці користувач і що вже відповів.
   Це стан інтерфейсу, не серверні дані — див. docs/RULES.md, правило 4.
   Самі психологи сюди не потрапляють: підбір рахується з mock-масиву в
-  features/pidbir/api.ts у момент рендеру результатів.
+  features/pidbir/api.ts у момент рендеру результату.
+
+  Стан персиститься в localStorage, щоб довга форма запиту не зникала, якщо
+  користувач пішов подивитись профіль психолога й повернувся.
 */
 
-/** Екрани візарда по порядку. Крок «criteria» додається, лише якщо його відкрили. */
-export const PIDBIR_STEPS = [
-  "service",
-  "topics",
-  "structure",
-  "lead",
-  "timeFocus",
-  "criteria",
-  "results",
-] as const;
+export const PIDBIR_STEPS = ["profile", "request", "results"] as const;
 export type PidbirStep = (typeof PIDBIR_STEPS)[number];
 
-type PidbirAnswersState = {
-  service: string | null;
-  topics: string[];
-  style: Partial<Record<StyleAxis, StyleValue>>;
-  criteria: CriteriaValues;
+export const PIDBIR_STEP_LABELS: Record<PidbirStep, string> = {
+  profile: "Профіль",
+  request: "Запит",
+  results: "Результат",
 };
 
-const EMPTY_ANSWERS: PidbirAnswersState = {
-  service: null,
+/** Форма запиту в процесі заповнення: стиль ще може бути неповним. */
+export type RequestDraft = Omit<RequestValues, "style"> & {
+  style: Partial<Record<StyleAxis, StyleValue>>;
+};
+
+const EMPTY_PROFILE: ProfileValues = {
+  email: "",
+  name: "",
+  age: "",
+  consent: false,
+};
+
+const EMPTY_REQUEST: RequestDraft = {
+  service: "Індивідуальна терапія",
   topics: [],
   style: {},
-  criteria: { gender: null, priceMaxMinor: null },
+  gender: null,
+  ageGroup: null,
+  methods: [],
 };
 
-type PidbirStore = PidbirAnswersState & {
+type PidbirStore = {
   step: PidbirStep;
-  /** Крок уточнення показуємо тільки на явний запит — за замовчуванням пропускається. */
+  profile: ProfileValues;
+  request: RequestDraft;
+  /** Чи розкритий блок уточнень («Уточнити критерії» проти «Немає переваг»). */
   withCriteria: boolean;
-  setService: (service: string) => void;
-  setTopics: (topics: string[]) => void;
-  setStyleAnswer: (axis: StyleAxis, value: StyleValue) => void;
-  setCriteria: (criteria: CriteriaValues) => void;
+
   goTo: (step: PidbirStep) => void;
-  openCriteria: () => void;
+  setProfile: (profile: ProfileValues) => void;
+  setService: (service: RequestValues["service"]) => void;
+  toggleTopic: (topic: string) => void;
+  setStyleAnswer: (axis: StyleAxis, value: StyleValue) => void;
+  setWithCriteria: (withCriteria: boolean) => void;
+  setGender: (gender: RequestValues["gender"]) => void;
+  setAgeGroup: (ageGroup: PsychologistAgeGroup | null) => void;
+  toggleMethod: (method: RequestValues["methods"][number]) => void;
   reset: () => void;
 };
 
-export const usePidbirStore = create<PidbirStore>((set) => ({
-  ...EMPTY_ANSWERS,
-  step: "service",
-  withCriteria: false,
+const toggle = <T,>(list: T[], value: T): T[] =>
+  list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
-  setService: (service) => set({ service }),
-  setTopics: (topics) => set({ topics }),
-  setStyleAnswer: (axis, value) =>
-    set((s) => ({ style: { ...s.style, [axis]: value } })),
-  setCriteria: (criteria) => set({ criteria }),
+export const usePidbirStore = create<PidbirStore>()(
+  persist(
+    (set) => ({
+      step: "profile",
+      profile: EMPTY_PROFILE,
+      request: EMPTY_REQUEST,
+      withCriteria: false,
 
-  goTo: (step) => set({ step }),
-  openCriteria: () => set({ withCriteria: true, step: "criteria" }),
+      goTo: (step) => set({ step }),
+      setProfile: (profile) => set({ profile }),
 
-  reset: () => set({ ...EMPTY_ANSWERS, step: "service", withCriteria: false }),
-}));
+      setService: (service) =>
+        set((s) => ({ request: { ...s.request, service } })),
+      toggleTopic: (topic) =>
+        set((s) => ({
+          request: { ...s.request, topics: toggle(s.request.topics, topic) },
+        })),
+      setStyleAnswer: (axis, value) =>
+        set((s) => ({
+          request: { ...s.request, style: { ...s.request.style, [axis]: value } },
+        })),
 
-/** Порядок екранів для прогрес-бару: без «results» і без пропущеного «criteria». */
-export function visibleSteps(withCriteria: boolean): PidbirStep[] {
-  return PIDBIR_STEPS.filter(
-    (s) => s !== "results" && (withCriteria || s !== "criteria")
-  );
-}
+      // Згорнули уточнення — скидаємо і самі значення, інакше прихований
+      // фільтр мовчки звужував би видачу.
+      setWithCriteria: (withCriteria) =>
+        set((s) => ({
+          withCriteria,
+          request: withCriteria
+            ? s.request
+            : { ...s.request, gender: null, ageGroup: null, methods: [] },
+        })),
+      setGender: (gender) => set((s) => ({ request: { ...s.request, gender } })),
+      setAgeGroup: (ageGroup) => set((s) => ({ request: { ...s.request, ageGroup } })),
+      toggleMethod: (method) =>
+        set((s) => ({
+          request: { ...s.request, methods: toggle(s.request.methods, method) },
+        })),
+
+      reset: () =>
+        set({
+          step: "profile",
+          profile: EMPTY_PROFILE,
+          request: EMPTY_REQUEST,
+          withCriteria: false,
+        }),
+    }),
+    {
+      name: "calmi-pidbir",
+      // Крок не персистимо: після перезавантаження логічніше почати з початку
+      // анкети з уже заповненими даними, ніж опинитись на порожньому результаті.
+      partialize: (s) => ({
+        profile: s.profile,
+        request: s.request,
+        withCriteria: s.withCriteria,
+      }),
+    }
+  )
+);
