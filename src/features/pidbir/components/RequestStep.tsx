@@ -9,10 +9,8 @@ import {
 import { usePidbirStore } from "@/stores/pidbir";
 import {
   AUDIENCE_OPTIONS,
-  PSYCHOLOGIST_AGE_GROUPS,
   STYLE_QUESTIONS,
   TOPICS_VISIBLE_LIMIT,
-  type PsychologistAgeGroup,
   type StyleValue,
 } from "../schema";
 import {
@@ -74,7 +72,6 @@ export function RequestStep() {
     setStyleAnswer,
     setWithCriteria,
     setGender,
-    setAgeGroup,
     toggleMethod,
     goTo,
   } = usePidbirStore();
@@ -180,25 +177,15 @@ export function RequestStep() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2.5">
-                <h3 className="font-semibold text-ink">Вікова група психолога</h3>
-                <div className="flex flex-wrap gap-2">
-                  {PSYCHOLOGIST_AGE_GROUPS.map((group) => (
-                    <SelectablePill
-                      key={group.value}
-                      label={group.label}
-                      isSelected={request.ageGroup === group.value}
-                      onClick={() =>
-                        setAgeGroup(
-                          request.ageGroup === group.value
-                            ? null
-                            : (group.value as PsychologistAgeGroup)
-                        )
-                      }
-                    />
-                  ))}
-                </div>
-              </div>
+              {/*
+                Фільтр за віковою групою психолога свідомо не показуємо: при
+                десятку опублікованих спеціалістів він разом зі статтю й
+                методом надто часто зводив би видачу до нуля. Усе під ним —
+                PSYCHOLOGIST_AGE_GROUPS у schema.ts, поле `ageGroup` і
+                isInAgeGroup() у matching.ts — лишилось робочим, тож повернути
+                блок можна одним <SelectablePill>-списком, коли психологів
+                стане більше.
+              */}
 
               <div className="flex flex-col gap-2.5">
                 <h3 className="font-semibold text-ink">Метод роботи</h3>

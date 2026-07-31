@@ -62,6 +62,7 @@ type PidbirStore = {
   setStyleAnswer: (axis: StyleAxis, value: StyleValue) => void;
   setWithCriteria: (withCriteria: boolean) => void;
   setGender: (gender: RequestValues["gender"]) => void;
+  /** Поки не викликається: блок вікових груп прихований в анкеті (див. schema.ts). */
   setAgeGroup: (ageGroup: PsychologistAgeGroup | null) => void;
   toggleMethod: (method: RequestValues["methods"][number]) => void;
   reset: () => void;
@@ -118,12 +119,18 @@ export const usePidbirStore = create<PidbirStore>()(
     }),
     {
       name: "calmi-pidbir",
-      // Крок не персистимо: після перезавантаження логічніше почати з початку
-      // анкети з уже заповненими даними, ніж опинитись на порожньому результаті.
+      /*
+        Крок не персистимо: після перезавантаження логічніше почати з початку
+        анкети з уже заповненими даними, ніж опинитись на порожньому результаті.
+
+        Уточнення (withCriteria + самі значення) теж навмисно не зберігаються:
+        «Немає переваг» має бути станом за замовчуванням при кожному заході, а
+        не липнути після одного кліку. Зберігати значення без прапорця було б
+        ще гірше — блок згорнутий, а фільтр мовчки звужує видачу.
+      */
       partialize: (s) => ({
         profile: s.profile,
-        request: s.request,
-        withCriteria: s.withCriteria,
+        request: { ...s.request, gender: null, ageGroup: null, methods: [] },
       }),
     }
   )

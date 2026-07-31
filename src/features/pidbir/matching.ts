@@ -150,6 +150,7 @@ function topicMatch(
   };
 }
 
+/** Лишається робочим, хоча блок вікових груп зараз прихований в анкеті. */
 function isInAgeGroup(
   psychologist: PsychologistProfile,
   group: NonNullable<RequestValues["ageGroup"]>
