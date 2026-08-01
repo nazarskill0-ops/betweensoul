@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { signInWithGoogle } from "../api";
 
-export function GoogleButton() {
+/** `next` — куди повернутись після входу; без нього працює як і раніше. */
+export function GoogleButton({ next }: { next?: string } = {}) {
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
     setLoading(true);
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(next);
     } catch {
       setLoading(false);
     }

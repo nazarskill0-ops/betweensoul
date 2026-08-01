@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type {
-  ProfileValues,
   PsychologistAgeGroup,
   RequestValues,
   StyleAxis,
@@ -15,14 +14,14 @@ import type {
   features/pidbir/api.ts у момент рендеру результату.
 
   Стан персиститься в localStorage, щоб довга форма запиту не зникала, якщо
-  користувач пішов подивитись профіль психолога й повернувся.
+  користувач пішов подивитись профіль психолога (або на Google OAuth) і
+  повернувся.
 */
 
-export const PIDBIR_STEPS = ["profile", "request", "results"] as const;
+export const PIDBIR_STEPS = ["request", "results"] as const;
 export type PidbirStep = (typeof PIDBIR_STEPS)[number];
 
 export const PIDBIR_STEP_LABELS: Record<PidbirStep, string> = {
-  profile: "Профіль",
   request: "Запит",
   results: "Результат",
 };
@@ -30,13 +29,6 @@ export const PIDBIR_STEP_LABELS: Record<PidbirStep, string> = {
 /** Форма запиту в процесі заповнення: стиль ще може бути неповним. */
 export type RequestDraft = Omit<RequestValues, "style"> & {
   style: Partial<Record<StyleAxis, StyleValue>>;
-};
-
-const EMPTY_PROFILE: ProfileValues = {
-  email: "",
-  name: "",
-  age: "",
-  consent: false,
 };
 
 const EMPTY_REQUEST: RequestDraft = {
@@ -50,13 +42,18 @@ const EMPTY_REQUEST: RequestDraft = {
 
 type PidbirStore = {
   step: PidbirStep;
-  profile: ProfileValues;
   request: RequestDraft;
   /** Чи розкритий блок уточнень («Уточнити критерії» проти «Немає переваг»). */
   withCriteria: boolean;
+  /**
+   * Анкета заповнена, показ результату впирається лише в авторизацію.
+   * Персиститься, бо Google OAuth веде користувача геть зі сторінки — після
+   * повернення цей прапорець дає одразу відкрити результат, а не змушує
+   * тиснути «Підібрати фахівця» вдруге.
+   */
+  awaitingAuth: boolean;
 
   goTo: (step: PidbirStep) => void;
-  setProfile: (profile: ProfileValues) => void;
   setService: (service: RequestValues["service"]) => void;
   toggleTopic: (topic: string) => void;
   setStyleAnswer: (axis: StyleAxis, value: StyleValue) => void;
@@ -65,6 +62,7 @@ type PidbirStore = {
   /** Поки не викликається: блок вікових груп прихований в анкеті (див. schema.ts). */
   setAgeGroup: (ageGroup: PsychologistAgeGroup | null) => void;
   toggleMethod: (method: RequestValues["methods"][number]) => void;
+  setAwaitingAuth: (awaitingAuth: boolean) => void;
   reset: () => void;
 };
 
@@ -74,16 +72,18 @@ const toggle = <T,>(list: T[], value: T): T[] =>
 export const usePidbirStore = create<PidbirStore>()(
   persist(
     (set) => ({
-      step: "profile",
-      profile: EMPTY_PROFILE,
+      step: "request",
       request: EMPTY_REQUEST,
       withCriteria: false,
+      awaitingAuth: false,
 
       goTo: (step) => set({ step }),
-      setProfile: (profile) => set({ profile }),
 
+      // Теми для індивідуальної та парної терапії — різні набори, тож при
+      // перемиканні формату вибір скидається: інакше в запиті лишились би
+      // теми, яких у поточному списку вже немає.
       setService: (service) =>
-        set((s) => ({ request: { ...s.request, service } })),
+        set((s) => ({ request: { ...s.request, service, topics: [] } })),
       toggleTopic: (topic) =>
         set((s) => ({
           request: { ...s.request, topics: toggle(s.request.topics, topic) },
@@ -109,19 +109,21 @@ export const usePidbirStore = create<PidbirStore>()(
           request: { ...s.request, methods: toggle(s.request.methods, method) },
         })),
 
+      setAwaitingAuth: (awaitingAuth) => set({ awaitingAuth }),
+
       reset: () =>
         set({
-          step: "profile",
-          profile: EMPTY_PROFILE,
+          step: "request",
           request: EMPTY_REQUEST,
           withCriteria: false,
+          awaitingAuth: false,
         }),
     }),
     {
       name: "calmi-pidbir",
       /*
-        Крок не персистимо: після перезавантаження логічніше почати з початку
-        анкети з уже заповненими даними, ніж опинитись на порожньому результаті.
+        Крок не персистимо: після перезавантаження логічніше почати з анкети з
+        уже заповненими даними, ніж опинитись на порожньому результаті.
 
         Уточнення (withCriteria + самі значення) теж навмисно не зберігаються:
         «Немає переваг» має бути станом за замовчуванням при кожному заході, а
@@ -129,8 +131,8 @@ export const usePidbirStore = create<PidbirStore>()(
         ще гірше — блок згорнутий, а фільтр мовчки звужує видачу.
       */
       partialize: (s) => ({
-        profile: s.profile,
         request: { ...s.request, gender: null, ageGroup: null, methods: [] },
+        awaitingAuth: s.awaitingAuth,
       }),
     }
   )

@@ -26,11 +26,19 @@ export async function signUp(
   return { needsEmailConfirm: !data.session };
 }
 
-export async function signInWithGoogle() {
+/**
+ * `next` — куди повернути користувача після обміну коду на сесію. Потрібен
+ * там, де вхід стається посеред іншого сценарію (наприклад, у модалці
+ * підбору), і кидати людину в дашборд означало б загубити її прогрес.
+ */
+export async function signInWithGoogle(next?: string) {
   const supabase = createClient();
+  const callback = new URL("/auth/callback", window.location.origin);
+  if (next) callback.searchParams.set("next", next);
+
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: `${window.location.origin}/auth/callback` },
+    options: { redirectTo: callback.toString() },
   });
   if (error) throw new Error("Не вдалося увійти через Google");
 }

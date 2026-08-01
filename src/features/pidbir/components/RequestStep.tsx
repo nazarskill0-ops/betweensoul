@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  COUPLE_THERAPY_SERVICE,
   GENDERS,
   SPECIALIZATIONS,
   TOPIC_GROUPS,
@@ -9,6 +10,7 @@ import {
 import { usePidbirStore } from "@/stores/pidbir";
 import {
   AUDIENCE_OPTIONS,
+  COUPLE_TOPIC_GROUPS,
   STYLE_QUESTIONS,
   TOPICS_VISIBLE_LIMIT,
   type StyleValue,
@@ -63,7 +65,7 @@ function TopicGroup({
   );
 }
 
-export function RequestStep() {
+export function RequestStep({ onSubmitted }: { onSubmitted: () => void }) {
   const {
     request,
     withCriteria,
@@ -73,10 +75,18 @@ export function RequestStep() {
     setWithCriteria,
     setGender,
     toggleMethod,
-    goTo,
   } = usePidbirStore();
 
   const [showErrors, setShowErrors] = useState(false);
+
+  // Запит пари — про те, що відбувається між двома, тож і список тем інший.
+  const isCouple = request.service === COUPLE_THERAPY_SERVICE;
+  const topicGroups = isCouple
+    ? COUPLE_TOPIC_GROUPS.map((g) => ({
+        group: g.group,
+        topics: g.topics.map((t) => t.label),
+      }))
+    : TOPIC_GROUPS.map((g) => ({ group: g.group, topics: [...g.topics] }));
 
   const isStyleComplete = STYLE_QUESTIONS.every((q) => request.style[q.axis]);
   const hasTopics = request.topics.length > 0;
@@ -88,7 +98,8 @@ export function RequestStep() {
       setShowErrors(true);
       return;
     }
-    goTo("results");
+    // Куди йти далі, вирішує візард: результат бачать лише авторизовані.
+    onSubmitted();
   }
 
   return (
@@ -104,7 +115,7 @@ export function RequestStep() {
 
       <SectionRow title="Що хотіли б обговорити з психологом?">
         <div className="flex flex-col gap-7">
-          {TOPIC_GROUPS.map((g) => (
+          {topicGroups.map((g) => (
             <TopicGroup
               key={g.group}
               group={g.group}

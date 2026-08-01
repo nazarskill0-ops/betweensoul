@@ -2,6 +2,7 @@ import type { PsychologistProfile } from "@/features/psychologists/schema";
 import { calculateAge } from "@/features/psychologists/utils/formatters";
 import {
   PSYCHOLOGIST_AGE_GROUPS,
+  resolveTopicForMatching,
   type RequestValues,
   type StyleAxis,
   type StyleValue,
@@ -125,7 +126,17 @@ function topicMatch(
   psychologist: PsychologistProfile,
   selectedTopics: string[]
 ): { score: number; matched: string[]; excludedRatio: number } {
-  if (selectedTopics.length === 0) {
+  /*
+    Частина парних тем поки не має відповідника в профілях психологів
+    (див. COUPLE_TOPIC_GROUPS). Такі теми не беруть участі в скорі й не
+    потрапляють у знаменник — інакше вибір «Довіра та зрада» просто розмивав
+    би збіг за рештою тем однаково для всіх.
+  */
+  const resolvable = selectedTopics
+    .map((label) => ({ label, value: resolveTopicForMatching(label) }))
+    .filter((t): t is { label: string; value: string } => t.value !== null);
+
+  if (resolvable.length === 0) {
     return { score: 0, matched: [], excludedRatio: 0 };
   }
 
@@ -133,20 +144,22 @@ function topicMatch(
   let hits = 0;
   let excluded = 0;
 
-  for (const topic of selectedTopics) {
-    if (psychologist.topics.includes(topic)) {
+  for (const { label, value } of resolvable) {
+    if (psychologist.topics.includes(value)) {
       hits += 1;
-      matched.push(topic);
-    } else if (psychologist.topicsSecondary.includes(topic)) {
+      // У чипі результату показуємо формулювання з анкети, а не значення
+      // таксономії — користувач обирав саме його.
+      matched.push(label);
+    } else if (psychologist.topicsSecondary.includes(value)) {
       hits += SECONDARY_TOPIC_WEIGHT;
     }
-    if (psychologist.topicsExcluded.includes(topic)) excluded += 1;
+    if (psychologist.topicsExcluded.includes(value)) excluded += 1;
   }
 
   return {
-    score: hits / selectedTopics.length,
+    score: hits / resolvable.length,
     matched,
-    excludedRatio: excluded / selectedTopics.length,
+    excludedRatio: excluded / resolvable.length,
   };
 }
 

@@ -4,13 +4,21 @@ import { useEffect, useSyncExternalStore } from "react";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { usePidbirStore } from "@/stores/pidbir";
 import { ProgressSteps } from "./WizardUI";
-import { ProfileStep } from "./ProfileStep";
 import { RequestStep } from "./RequestStep";
 import { ResultsStep } from "./ResultsStep";
+import { AuthGateModal } from "./AuthGateModal";
 
 export function PidbirWizard() {
-  const { step, profile, setProfile, goTo } = usePidbirStore();
+  const { step, goTo, awaitingAuth, setAwaitingAuth } = usePidbirStore();
   const { data: user, isLoading: isUserLoading } = useUser();
+
+  /*
+    Видимість модалки не тримаємо окремим стейтом — вона повністю виводиться
+    зі стану: анкета заповнена (awaitingAuth) і користувач ще гість. Тоді й
+    закривати її вручну після входу не треба, і в ефекті нижче немає зайвого
+    setState.
+  */
+  const isAuthModalOpen = awaitingAuth && !isUserLoading && !user;
 
   /*
     Стан анкети персиститься в localStorage, тож до регідратації store на
@@ -25,29 +33,38 @@ export function PidbirWizard() {
   );
 
   /*
-    Крок «Профіль» пропускається ТІЛЬКИ за наявної сесії Supabase: без user
-    (тобто для гостя) анкета завжди починається з нього.
-
-    `profile.email` тут — ознака, що ми вже підставили дані з сесії. Без цієї
-    умови автопропуск бив би по руках усім, хто повернувся на «Профіль»
-    кліком у прогрес-барі: крок відкривався б і миттєво закривався. Після
-    reset() email порожній, тож для залогіненого пропуск знову спрацює.
+    Повернення з Google OAuth: анкета лишилась заповненою в localStorage, а
+    сесія вже є — відкриваємо результат одразу, не змушуючи тиснути
+    «Підібрати фахівця» вдруге.
   */
   useEffect(() => {
-    if (isUserLoading || !user || step !== "profile" || profile.email) return;
-    setProfile({
-      ...profile,
-      email: user.email,
-      name: profile.name || user.fullName,
-    });
-    goTo("request");
-  }, [user, isUserLoading, step, profile, setProfile, goTo]);
+    if (isUserLoading || !user || !awaitingAuth) return;
+    setAwaitingAuth(false);
+    goTo("results");
+  }, [user, isUserLoading, awaitingAuth, setAwaitingAuth, goTo]);
 
   // Кроки різної висоти: без цього результат після довгої форми відкривався б
   // прокрученим до середини сторінки.
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
+
+  /**
+   * Анкета заповнена. Результат бачать лише авторизовані — гостю замість
+   * редіректу показуємо модалку поверх сторінки.
+   */
+  function handleRequestSubmitted() {
+    if (user) {
+      goTo("results");
+      return;
+    }
+    setAwaitingAuth(true);
+  }
+
+  function handleAuthenticated() {
+    setAwaitingAuth(false);
+    goTo("results");
+  }
 
   if (!isHydrated) {
     return <div className="h-96 animate-pulse rounded-card bg-white" />;
@@ -57,9 +74,15 @@ export function PidbirWizard() {
     <div className="flex flex-col gap-10 md:gap-14">
       <ProgressSteps current={step} onNavigate={goTo} />
 
-      {step === "profile" && <ProfileStep />}
-      {step === "request" && <RequestStep />}
+      {step === "request" && <RequestStep onSubmitted={handleRequestSubmitted} />}
       {step === "results" && <ResultsStep />}
+
+      {isAuthModalOpen && (
+        <AuthGateModal
+          onClose={() => setAwaitingAuth(false)}
+          onAuthenticated={handleAuthenticated}
+        />
+      )}
     </div>
   );
 }
