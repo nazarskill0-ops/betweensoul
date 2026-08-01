@@ -2,36 +2,22 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { usePidbirStore, type PidbirProgressStep } from "@/stores/pidbir";
+import { usePidbirStore, type PidbirStep } from "@/stores/pidbir";
 import { ProgressSteps } from "./WizardUI";
-import {
-  REQUEST_SECTION_ID,
-  STYLE_SECTION_ID,
-  RequestStep,
-} from "./RequestStep";
+import { RequestStep } from "./RequestStep";
 import { ResultsStep } from "./ResultsStep";
 import { AuthGateModal } from "./AuthGateModal";
 
 /**
- * Скільки часу результат видно без модалки. Пауза навмисна: спершу людина має
- * побачити, що підбір справді щось знайшов, і лише потім отримати пропозицію
- * зареєструватись.
+ * Скільки часу результат видно без пропозиції зареєструватись. Пауза
+ * навмисна: спершу людина має побачити, що підбір справді щось знайшов.
  */
 const AUTH_GATE_DELAY_MS = 2800;
 
-/** Частка висоти екрана, після якої блок стилю вважається активним. */
-const STYLE_SECTION_ACTIVATION = 0.45;
-
-function scrollToSection(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
 export function PidbirWizard() {
-  const { step, goTo, awaitingAuth, setAwaitingAuth } = usePidbirStore();
+  const { step, goTo, awaitingAuth, setAwaitingAuth, isGateDismissed, dismissGate } =
+    usePidbirStore();
   const { data: user, isLoading: isUserLoading } = useUser();
-
-  /** Яка половина анкети зараз на екрані — підсвічує сегмент прогресу. */
-  const [activeSection, setActiveSection] = useState<"request" | "style">("request");
   const [isGateVisible, setIsGateVisible] = useState(false);
 
   /*
@@ -46,26 +32,9 @@ export function PidbirWizard() {
     () => false
   );
 
-  // Прогрес йде за скролом: анкета лишається однією сторінкою, але смуга
-  // заповнюється, коли користувач доходить до питань про стиль.
-  useEffect(() => {
-    if (step !== "request") return;
-
-    const onScroll = () => {
-      const el = document.getElementById(STYLE_SECTION_ID);
-      if (!el) return;
-      const isStyleReached =
-        el.getBoundingClientRect().top <= window.innerHeight * STYLE_SECTION_ACTIVATION;
-      setActiveSection(isStyleReached ? "style" : "request");
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [step]);
-
   /*
     Повернення з Google OAuth: анкета лишилась заповненою в localStorage, а
-    сесія вже є — знімаємо очікування, і результат просто лишається відкритим.
+    сесія вже є — знімаємо очікування, результат просто лишається відкритим.
   */
   useEffect(() => {
     if (isUserLoading || !user || !awaitingAuth) return;
@@ -73,18 +42,17 @@ export function PidbirWizard() {
     goTo("results");
   }, [user, isUserLoading, awaitingAuth, setAwaitingAuth, goTo]);
 
-  // Модалка приходить не одразу з результатом, а через паузу — див.
-  // AUTH_GATE_DELAY_MS. setState всередині таймера, тож ефект не синхронний.
+  // Панель приходить не одразу з результатом, а через паузу. setState всередині
+  // таймера, тож ефект лишається асинхронним.
   useEffect(() => {
-    if (step !== "results" || !awaitingAuth || isUserLoading || user) return;
+    if (step !== "results" || !awaitingAuth || isUserLoading || user || isGateDismissed) {
+      return;
+    }
     const timer = setTimeout(() => setIsGateVisible(true), AUTH_GATE_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [step, awaitingAuth, isUserLoading, user]);
+  }, [step, awaitingAuth, isUserLoading, user, isGateDismissed]);
 
-  const progressStep: PidbirProgressStep =
-    step === "results" ? "results" : activeSection;
-
-  /** Анкета заповнена: результат показуємо всім, ворота приходять пізніше. */
+  /** Анкета заповнена: результат показуємо всім, пропозиція приходить пізніше. */
   function handleRequestSubmitted() {
     if (!user) setAwaitingAuth(true);
     goTo("results");
@@ -96,21 +64,10 @@ export function PidbirWizard() {
     setIsGateVisible(false);
   }
 
-  function handleProgressNavigate(target: PidbirProgressStep) {
-    if (target === "results") return;
-
-    if (step === "results") {
-      setAwaitingAuth(false);
-      setIsGateVisible(false);
-      goTo("request");
-      // Секція існує лише після перемальовування кроку.
-      requestAnimationFrame(() =>
-        scrollToSection(target === "style" ? STYLE_SECTION_ID : REQUEST_SECTION_ID)
-      );
-      return;
-    }
-
-    scrollToSection(target === "style" ? STYLE_SECTION_ID : REQUEST_SECTION_ID);
+  function handleProgressNavigate(target: PidbirStep) {
+    setIsGateVisible(false);
+    goTo(target);
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
   }
 
   if (!isHydrated) {
@@ -119,16 +76,18 @@ export function PidbirWizard() {
 
   return (
     <div className="flex flex-col gap-10 md:gap-14">
-      <ProgressSteps current={progressStep} onNavigate={handleProgressNavigate} />
+      <ProgressSteps current={step} onNavigate={handleProgressNavigate} />
 
       {step === "request" && <RequestStep onSubmitted={handleRequestSubmitted} />}
       {step === "results" && <ResultsStep />}
 
-      {isGateVisible && awaitingAuth && !user && (
+      {isGateVisible && awaitingAuth && !user && !isGateDismissed && (
         <AuthGateModal
           onClose={() => {
             setIsGateVisible(false);
-            setAwaitingAuth(false);
+            // Закрили — більше не показуємо в цій сесії, навіть якщо
+            // користувач повернеться до анкети й підбере ще раз.
+            dismissGate();
           }}
           onAuthenticated={handleAuthenticated}
         />

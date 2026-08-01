@@ -18,22 +18,11 @@ import type {
   повернувся.
 */
 
-/** Кроки, які реально перемикають вміст сторінки. */
 export const PIDBIR_STEPS = ["request", "results"] as const;
 export type PidbirStep = (typeof PIDBIR_STEPS)[number];
 
-/*
-  Прогрес показує три сегменти, хоча екранів два: анкета — одна сторінка, але
-  візуально вона ділиться на «що болить» і «як хочеться працювати», і смуга з
-  двох частин на таку довгу форму виглядала порожньо. Другий сегмент
-  підсвічується скролом до блоку стилю, а не окремим переходом.
-*/
-export const PIDBIR_PROGRESS_STEPS = ["request", "style", "results"] as const;
-export type PidbirProgressStep = (typeof PIDBIR_PROGRESS_STEPS)[number];
-
-export const PIDBIR_PROGRESS_LABELS: Record<PidbirProgressStep, string> = {
+export const PIDBIR_STEP_LABELS: Record<PidbirStep, string> = {
   request: "Запит",
-  style: "Стиль терапії",
   results: "Результат",
 };
 
@@ -63,6 +52,11 @@ type PidbirStore = {
    * тиснути «Підібрати фахівця» вдруге.
    */
   awaitingAuth: boolean;
+  /**
+   * Користувач закрив пропозицію зареєструватись. Не персиститься навмисно:
+   * «не показувати повторно» стосується поточної сесії, а не назавжди.
+   */
+  isGateDismissed: boolean;
 
   goTo: (step: PidbirStep) => void;
   setService: (service: RequestValues["service"]) => void;
@@ -74,6 +68,7 @@ type PidbirStore = {
   setAgeGroup: (ageGroup: PsychologistAgeGroup | null) => void;
   toggleMethod: (method: RequestValues["methods"][number]) => void;
   setAwaitingAuth: (awaitingAuth: boolean) => void;
+  dismissGate: () => void;
   reset: () => void;
 };
 
@@ -87,6 +82,7 @@ export const usePidbirStore = create<PidbirStore>()(
       request: EMPTY_REQUEST,
       withCriteria: false,
       awaitingAuth: false,
+      isGateDismissed: false,
 
       goTo: (step) => set({ step }),
 
@@ -121,6 +117,7 @@ export const usePidbirStore = create<PidbirStore>()(
         })),
 
       setAwaitingAuth: (awaitingAuth) => set({ awaitingAuth }),
+      dismissGate: () => set({ isGateDismissed: true }),
 
       reset: () =>
         set({

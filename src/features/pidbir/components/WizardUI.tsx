@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  PIDBIR_PROGRESS_LABELS,
-  PIDBIR_PROGRESS_STEPS,
-  type PidbirProgressStep,
-} from "@/stores/pidbir";
+import { PIDBIR_STEPS, PIDBIR_STEP_LABELS, type PidbirStep } from "@/stores/pidbir";
 
 /*
   Спільні примітиви анкети: прогрес, двоколонковий рядок секції, пігулки
@@ -12,7 +8,10 @@ import {
 */
 
 /**
- * Прогрес зверху сторінки: пройдені та активний крок — sage, майбутні — сірі.
+ * Прогрес зверху сторінки. Сегменти ділять усю ширину контенту порівну й
+ * навмисно масивні: на два кроки тонка смужка читалась як недомальований
+ * елемент. Пройдений і активний — sage, майбутній — світло-сірий.
+ *
  * Пройдені кроки клікабельні (повернення зі збереженням уже введених даних),
  * поточний і майбутні — ні: вперед стрибати не можна, бо крок попереду ще не
  * заповнений і його валідація не пройдена.
@@ -21,41 +20,55 @@ export function ProgressSteps({
   current,
   onNavigate,
 }: {
-  current: PidbirProgressStep;
-  onNavigate: (step: PidbirProgressStep) => void;
+  current: PidbirStep;
+  onNavigate: (step: PidbirStep) => void;
 }) {
-  const currentIndex = PIDBIR_PROGRESS_STEPS.indexOf(current);
+  const currentIndex = PIDBIR_STEPS.indexOf(current);
 
   return (
-    <nav aria-label="Прогрес анкети" className="grid grid-cols-3 gap-3 md:gap-6">
-      {PIDBIR_PROGRESS_STEPS.map((step, i) => {
+    <nav aria-label="Прогрес анкети" className="grid grid-cols-2 gap-3 md:gap-4">
+      {PIDBIR_STEPS.map((step, i) => {
         const isDone = i <= currentIndex;
         const isCurrent = i === currentIndex;
         const isClickable = i < currentIndex;
 
         return (
-          <div key={step} className="flex flex-col gap-2">
-            <button
-              type="button"
-              disabled={!isClickable}
-              onClick={() => onNavigate(step)}
-              aria-current={isCurrent ? "step" : undefined}
-              className={`text-center text-sm transition-colors ${
-                isCurrent ? "font-medium text-sage" : "text-ink-muted"
-              } ${
-                isClickable
-                  ? "cursor-pointer hover:text-sage"
-                  : "cursor-default disabled:opacity-100"
-              }`}
-            >
-              {PIDBIR_PROGRESS_LABELS[step]}
-            </button>
+          <button
+            key={step}
+            type="button"
+            disabled={!isClickable}
+            onClick={() => onNavigate(step)}
+            aria-current={isCurrent ? "step" : undefined}
+            className={`group flex flex-col gap-2.5 text-left ${
+              isClickable ? "cursor-pointer" : "cursor-default disabled:opacity-100"
+            }`}
+          >
+            <span className="flex items-baseline gap-2">
+              <span
+                className={`text-xs font-semibold tabular-nums transition-colors ${
+                  isDone ? "text-sage" : "text-ink-muted"
+                }`}
+              >
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span
+                className={`text-base font-semibold transition-colors md:text-lg ${
+                  isCurrent
+                    ? "text-ink"
+                    : isDone
+                      ? "text-sage group-hover:text-sage/80"
+                      : "text-ink-muted"
+                }`}
+              >
+                {PIDBIR_STEP_LABELS[step]}
+              </span>
+            </span>
             <span
-              className={`h-1 rounded-full transition-colors ${
+              className={`h-2.5 w-full rounded-full transition-colors ${
                 isDone ? "bg-sage" : "bg-sand-dark"
               }`}
             />
-          </div>
+          </button>
         );
       })}
     </nav>

@@ -265,22 +265,20 @@ export function AuthGateModal({
   }, [onClose]);
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Реєстрація для перегляду результату"
-      // Backdrop навмисно напівпрозорий і без блюру: підібрані психологи мають
-      // лишатись видимими — це не «спершу зареєструйся», а «результат уже є».
-      className={`fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/40 p-4 py-10 transition-opacity duration-500 ease-out ${
-        isShown ? "opacity-100" : "opacity-0"
-      }`}
-      onClick={onClose}
-    >
+    /*
+      Не модалка в строгому сенсі: жодного backdrop, який ловив би кліки й
+      блокував скрол. Обгортка прозора для миші (pointer-events-none), тож
+      сторінка під панеллю гортається й клікається як зазвичай — користувач
+      може спокійно передивитись усіх підібраних психологів.
+      Через це немає ні aria-modal, ні пастки фокуса: контент поруч лишається
+      доступним, і вдавати діалог, що перекриває все, було б неправдою.
+    */
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 p-4 md:p-6">
       <div
-        // Клік усередині картки не має закривати модалку.
-        onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-md rounded-card bg-white p-6 shadow-lg transition-all duration-500 ease-out md:p-8 ${
-          isShown ? "translate-y-0 scale-100" : "translate-y-3 scale-[0.98]"
+        role="dialog"
+        aria-label="Реєстрація для перегляду результату"
+        className={`pointer-events-auto relative mx-auto max-h-[78vh] w-full max-w-md overflow-y-auto rounded-card border-[1.5px] border-sand-dark bg-white p-6 shadow-xl transition-all duration-500 ease-out md:mr-0 md:ml-auto md:p-7 ${
+          isShown ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
         }`}
       >
         <button

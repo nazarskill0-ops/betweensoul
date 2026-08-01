@@ -8,11 +8,11 @@ import { TopicsMegaMenu } from "@/components/layout/topics-mega-menu";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Logo } from "@/components/layout/logo";
 import { AuthMenu } from "@/components/layout/auth-menu";
-import { isDashboardRoute } from "@/components/layout/dashboard-routes";
+import { isChromelessRoute } from "@/components/layout/chromeless-routes";
 
 export function AppHeader() {
   const pathname = usePathname();
-  if (isDashboardRoute(pathname)) return null;
+  if (isChromelessRoute(pathname)) return null;
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-sand-dark bg-sand/90 px-5 backdrop-blur-md md:px-12">
