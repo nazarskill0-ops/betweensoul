@@ -18,11 +18,22 @@ import type {
   повернувся.
 */
 
+/** Кроки, які реально перемикають вміст сторінки. */
 export const PIDBIR_STEPS = ["request", "results"] as const;
 export type PidbirStep = (typeof PIDBIR_STEPS)[number];
 
-export const PIDBIR_STEP_LABELS: Record<PidbirStep, string> = {
+/*
+  Прогрес показує три сегменти, хоча екранів два: анкета — одна сторінка, але
+  візуально вона ділиться на «що болить» і «як хочеться працювати», і смуга з
+  двох частин на таку довгу форму виглядала порожньо. Другий сегмент
+  підсвічується скролом до блоку стилю, а не окремим переходом.
+*/
+export const PIDBIR_PROGRESS_STEPS = ["request", "style", "results"] as const;
+export type PidbirProgressStep = (typeof PIDBIR_PROGRESS_STEPS)[number];
+
+export const PIDBIR_PROGRESS_LABELS: Record<PidbirProgressStep, string> = {
   request: "Запит",
+  style: "Стиль терапії",
   results: "Результат",
 };
 

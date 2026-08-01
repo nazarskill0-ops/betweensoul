@@ -1,6 +1,10 @@
 "use client";
 
-import { PIDBIR_STEPS, PIDBIR_STEP_LABELS, type PidbirStep } from "@/stores/pidbir";
+import {
+  PIDBIR_PROGRESS_LABELS,
+  PIDBIR_PROGRESS_STEPS,
+  type PidbirProgressStep,
+} from "@/stores/pidbir";
 
 /*
   Спільні примітиви анкети: прогрес, двоколонковий рядок секції, пігулки
@@ -17,14 +21,14 @@ export function ProgressSteps({
   current,
   onNavigate,
 }: {
-  current: PidbirStep;
-  onNavigate: (step: PidbirStep) => void;
+  current: PidbirProgressStep;
+  onNavigate: (step: PidbirProgressStep) => void;
 }) {
-  const currentIndex = PIDBIR_STEPS.indexOf(current);
+  const currentIndex = PIDBIR_PROGRESS_STEPS.indexOf(current);
 
   return (
     <nav aria-label="Прогрес анкети" className="grid grid-cols-3 gap-3 md:gap-6">
-      {PIDBIR_STEPS.map((step, i) => {
+      {PIDBIR_PROGRESS_STEPS.map((step, i) => {
         const isDone = i <= currentIndex;
         const isCurrent = i === currentIndex;
         const isClickable = i < currentIndex;
@@ -44,7 +48,7 @@ export function ProgressSteps({
                   : "cursor-default disabled:opacity-100"
               }`}
             >
-              {PIDBIR_STEP_LABELS[step]}
+              {PIDBIR_PROGRESS_LABELS[step]}
             </button>
             <span
               className={`h-1 rounded-full transition-colors ${

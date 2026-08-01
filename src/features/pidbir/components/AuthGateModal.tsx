@@ -237,6 +237,17 @@ export function AuthGateModal({
   const [mode, setMode] = useState<"register" | "login">("register");
   const queryClient = useQueryClient();
 
+  /*
+    М'яка поява замість різкого стрибка. Клас перемикається вже після
+    монтування (у rAF, тож ефект лишається асинхронним), інакше браузер
+    відрендерив би одразу кінцевий стан і переходу не було б видно.
+  */
+  const [isShown, setIsShown] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setIsShown(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   // Сесія змінилась — useUser() має перечитатись, інакше візард і далі
   // вважатиме користувача гостем.
   function handleAuthenticated() {
@@ -258,13 +269,19 @@ export function AuthGateModal({
       role="dialog"
       aria-modal="true"
       aria-label="Реєстрація для перегляду результату"
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/50 p-4 py-10 backdrop-blur-sm"
+      // Backdrop навмисно напівпрозорий і без блюру: підібрані психологи мають
+      // лишатись видимими — це не «спершу зареєструйся», а «результат уже є».
+      className={`fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/40 p-4 py-10 transition-opacity duration-500 ease-out ${
+        isShown ? "opacity-100" : "opacity-0"
+      }`}
       onClick={onClose}
     >
       <div
         // Клік усередині картки не має закривати модалку.
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md rounded-card bg-white p-6 shadow-lg md:p-8"
+        className={`relative w-full max-w-md rounded-card bg-white p-6 shadow-lg transition-all duration-500 ease-out md:p-8 ${
+          isShown ? "translate-y-0 scale-100" : "translate-y-3 scale-[0.98]"
+        }`}
       >
         <button
           type="button"

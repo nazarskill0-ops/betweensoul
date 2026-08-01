@@ -23,6 +23,13 @@ import {
   TopicCheckbox,
 } from "./WizardUI";
 
+/*
+  Якорі половин анкети. За ними прогрес-бар розуміє, у якій частині форми
+  зараз користувач, і за ними ж прокручує, коли на сегмент клікають.
+*/
+export const REQUEST_SECTION_ID = "pidbir-request";
+export const STYLE_SECTION_ID = "pidbir-style";
+
 /** Група тем: довгі списки згорнуті до перших шести. */
 function TopicGroup({
   group,
@@ -104,6 +111,8 @@ export function RequestStep({ onSubmitted }: { onSubmitted: () => void }) {
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-12">
+      <div id={REQUEST_SECTION_ID} className="scroll-mt-28" />
+
       <SectionRow title="Для кого шукаєте психолога">
         <ToggleGroup
           ariaLabel="Для кого шукаєте психолога"
@@ -129,6 +138,8 @@ export function RequestStep({ onSubmitted }: { onSubmitted: () => void }) {
           )}
         </div>
       </SectionRow>
+
+      <div id={STYLE_SECTION_ID} className="scroll-mt-28" />
 
       <SectionRow title="Який стиль терапії вам ближчий?">
         <div className="flex flex-col gap-6">
