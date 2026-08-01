@@ -15,8 +15,7 @@ import { AuthGateModal } from "./AuthGateModal";
 const AUTH_GATE_DELAY_MS = 2800;
 
 export function PidbirWizard() {
-  const { step, goTo, awaitingAuth, setAwaitingAuth, isGateDismissed, dismissGate } =
-    usePidbirStore();
+  const { step, goTo, awaitingAuth, setAwaitingAuth } = usePidbirStore();
   const { data: user, isLoading: isUserLoading } = useUser();
   const [isGateVisible, setIsGateVisible] = useState(false);
 
@@ -45,12 +44,10 @@ export function PidbirWizard() {
   // Панель приходить не одразу з результатом, а через паузу. setState всередині
   // таймера, тож ефект лишається асинхронним.
   useEffect(() => {
-    if (step !== "results" || !awaitingAuth || isUserLoading || user || isGateDismissed) {
-      return;
-    }
+    if (step !== "results" || !awaitingAuth || isUserLoading || user) return;
     const timer = setTimeout(() => setIsGateVisible(true), AUTH_GATE_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [step, awaitingAuth, isUserLoading, user, isGateDismissed]);
+  }, [step, awaitingAuth, isUserLoading, user]);
 
   /** Анкета заповнена: результат показуємо всім, пропозиція приходить пізніше. */
   function handleRequestSubmitted() {
@@ -81,16 +78,8 @@ export function PidbirWizard() {
       {step === "request" && <RequestStep onSubmitted={handleRequestSubmitted} />}
       {step === "results" && <ResultsStep />}
 
-      {isGateVisible && awaitingAuth && !user && !isGateDismissed && (
-        <AuthGateModal
-          onClose={() => {
-            setIsGateVisible(false);
-            // Закрили — більше не показуємо в цій сесії, навіть якщо
-            // користувач повернеться до анкети й підбере ще раз.
-            dismissGate();
-          }}
-          onAuthenticated={handleAuthenticated}
-        />
+      {isGateVisible && awaitingAuth && !user && (
+        <AuthGateModal onAuthenticated={handleAuthenticated} />
       )}
     </div>
   );

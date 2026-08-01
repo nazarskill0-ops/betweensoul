@@ -228,10 +228,8 @@ function LoginView({
 }
 
 export function AuthGateModal({
-  onClose,
   onAuthenticated,
 }: {
-  onClose: () => void;
   onAuthenticated: () => void;
 }) {
   const [mode, setMode] = useState<"register" | "login">("register");
@@ -255,48 +253,37 @@ export function AuthGateModal({
     onAuthenticated();
   }
 
-  // Escape закриває модалку, поки вона відкрита — очікувана поведінка діалогу.
+  /*
+    Поки ворота відкриті, сторінка під ними не гортається. Прибирати клас
+    треба саме в cleanup: інакше після реєстрації body лишився б замкненим.
+  */
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
     };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, []);
 
   return (
     /*
-      Не модалка в строгому сенсі: жодного backdrop, який ловив би кліки й
-      блокував скрол. Обгортка прозора для миші (pointer-events-none), тож
-      сторінка під панеллю гортається й клікається як зазвичай — користувач
-      може спокійно передивитись усіх підібраних психологів.
-      Через це немає ні aria-modal, ні пастки фокуса: контент поруч лишається
-      доступним, і вдавати діалог, що перекриває все, було б неправдою.
+      Блокуючі ворота: backdrop розмиває результат під собою, скрол сторінки
+      замкнено, закрити нічим — вийти можна лише реєстрацією чи входом.
+      Свідомо без хрестика й без Escape, тому і фокус звідси нікуди не веде.
     */
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 p-4 md:p-6">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Реєстрація для перегляду результату"
+      className={`fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-ink/30 p-4 py-10 backdrop-blur-md transition-opacity duration-500 ease-out ${
+        isShown ? "opacity-100" : "opacity-0"
+      }`}
+    >
       <div
-        role="dialog"
-        aria-label="Реєстрація для перегляду результату"
-        className={`pointer-events-auto relative mx-auto max-h-[78vh] w-full max-w-md overflow-y-auto rounded-card border-[1.5px] border-sand-dark bg-white p-6 shadow-xl transition-all duration-500 ease-out md:mr-0 md:ml-auto md:p-7 ${
-          isShown ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+        className={`relative my-auto w-full max-w-md rounded-card bg-white p-6 shadow-xl transition-all duration-500 ease-out md:p-8 ${
+          isShown ? "translate-y-0 scale-100" : "translate-y-3 scale-[0.98]"
         }`}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Закрити"
-          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-sand hover:text-ink"
-        >
-          <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
-            <path
-              d="M6 6l12 12M18 6L6 18"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-
         {mode === "register" ? (
           <RegisterView
             onAuthenticated={handleAuthenticated}

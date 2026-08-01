@@ -9,25 +9,6 @@ import { usePidbirStore } from "@/stores/pidbir";
 import { findMatches } from "../api";
 import { requestSchema } from "../schema";
 
-/** 1 фахівець · 2–4 фахівці · 5+ фахівців. */
-function formatSpecialistsCount(count: number): string {
-  const mod100 = count % 100;
-  const mod10 = count % 10;
-  if (mod10 === 1 && mod100 !== 11) return `${count} фахівець`;
-  if (mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14)) {
-    return `${count} фахівці`;
-  }
-  return `${count} фахівців`;
-}
-
-function formatReadyLabel(count: number): string {
-  const mod100 = count % 100;
-  const mod10 = count % 10;
-  const verb =
-    mod10 === 1 && mod100 !== 11 ? "готовий допомогти" : "готові допомогти";
-  return `${formatSpecialistsCount(count)} ${verb}`;
-}
-
 export function ResultsStep() {
   const { request, goTo, reset } = usePidbirStore();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -99,12 +80,8 @@ export function ResultsStep() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Стек аватарок: і показує, скільки знайшлось, і перемикає на картку. */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="font-display text-lg font-semibold text-ink">
-          {formatReadyLabel(matches.length)}
-        </p>
-
+      {/* Стек аватарок — швидке перемикання між підібраними психологами. */}
+      <div className="flex justify-end">
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
           {matches.map((match) => {
             const { profileId, avatarUrl, fullName } = match.psychologist;
@@ -151,23 +128,6 @@ export function ResultsStep() {
                 activeId === profileId ? "ring-2 ring-sage ring-offset-4" : ""
               }`}
             >
-              {(match.matchedMethod || match.matchedTopics.length > 0) && (
-                <div className="flex flex-wrap items-center gap-2 px-1">
-                  {match.matchedMethod && (
-                    <span className="rounded-full bg-sage-light px-3 py-1 text-xs font-medium text-sage">
-                      Підхід: {match.matchedMethod}
-                    </span>
-                  )}
-                  {match.matchedTopics.slice(0, 3).map((topic) => (
-                    <span
-                      key={topic}
-                      className="rounded-full bg-white px-3 py-1 text-xs text-ink-muted"
-                    >
-                      {topic}
-                    </span>
-                  ))}
-                </div>
-              )}
               <PsychologistCardItem
                 psychologist={match.psychologist}
                 isCoupleService={isCoupleService}

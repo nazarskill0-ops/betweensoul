@@ -159,6 +159,9 @@ export const requestSchema = z.object({
 });
 export type RequestValues = z.infer<typeof requestSchema>;
 
+/** Пошта підтримки — та сама, що у футері й кабінетах. */
+export const SUPPORT_EMAIL = "support@calmi.in.ua";
+
 /** Скільки тем показувати в групі до натискання «Ще N». */
 export const TOPICS_VISIBLE_LIMIT = 6;
 

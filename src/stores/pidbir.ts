@@ -52,11 +52,6 @@ type PidbirStore = {
    * тиснути «Підібрати фахівця» вдруге.
    */
   awaitingAuth: boolean;
-  /**
-   * Користувач закрив пропозицію зареєструватись. Не персиститься навмисно:
-   * «не показувати повторно» стосується поточної сесії, а не назавжди.
-   */
-  isGateDismissed: boolean;
 
   goTo: (step: PidbirStep) => void;
   setService: (service: RequestValues["service"]) => void;
@@ -68,7 +63,6 @@ type PidbirStore = {
   setAgeGroup: (ageGroup: PsychologistAgeGroup | null) => void;
   toggleMethod: (method: RequestValues["methods"][number]) => void;
   setAwaitingAuth: (awaitingAuth: boolean) => void;
-  dismissGate: () => void;
   reset: () => void;
 };
 
@@ -82,7 +76,6 @@ export const usePidbirStore = create<PidbirStore>()(
       request: EMPTY_REQUEST,
       withCriteria: false,
       awaitingAuth: false,
-      isGateDismissed: false,
 
       goTo: (step) => set({ step }),
 
@@ -117,7 +110,6 @@ export const usePidbirStore = create<PidbirStore>()(
         })),
 
       setAwaitingAuth: (awaitingAuth) => set({ awaitingAuth }),
-      dismissGate: () => set({ isGateDismissed: true }),
 
       reset: () =>
         set({
