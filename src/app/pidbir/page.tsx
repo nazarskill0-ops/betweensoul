@@ -10,7 +10,11 @@ export default function PidbirPage() {
       {/* Глобальні хедер і футер тут не рендеряться (chromeless-routes). */}
       <PidbirHeader />
 
-      <main className="mx-auto max-w-4xl px-5 py-8 md:py-12">
+      {/*
+        Ширину й відступи задає сам візард: анкета вужча за результат, а
+        результат починається липкою шапкою впритул до хедера.
+      */}
+      <main>
         <PidbirWizard />
       </main>
     </div>

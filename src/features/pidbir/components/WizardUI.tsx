@@ -8,9 +8,9 @@ import { PIDBIR_STEPS, PIDBIR_STEP_LABELS, type PidbirStep } from "@/stores/pidb
 */
 
 /**
- * Прогрес зверху сторінки. Сегменти ділять усю ширину контенту порівну й
- * навмисно масивні: на два кроки тонка смужка читалась як недомальований
- * елемент. Пройдений і активний — sage, майбутній — світло-сірий.
+ * Прогрес зверху сторінки. Сегменти ділять усю ширину контенту порівну, підпис
+ * стоїть по центру своєї смуги. Пройдений і активний — sage, майбутній —
+ * світло-сірий.
  *
  * Пройдені кроки клікабельні (повернення зі збереженням уже введених даних),
  * поточний і майбутні — ні: вперед стрибати не можна, бо крок попереду ще не
@@ -39,32 +39,23 @@ export function ProgressSteps({
             disabled={!isClickable}
             onClick={() => onNavigate(step)}
             aria-current={isCurrent ? "step" : undefined}
-            className={`group flex flex-col gap-2.5 text-left ${
+            className={`group flex flex-col items-center gap-2 ${
               isClickable ? "cursor-pointer" : "cursor-default disabled:opacity-100"
             }`}
           >
-            <span className="flex items-baseline gap-2">
-              <span
-                className={`text-xs font-semibold tabular-nums transition-colors ${
-                  isDone ? "text-sage" : "text-ink-muted"
-                }`}
-              >
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span
-                className={`text-base font-semibold transition-colors md:text-lg ${
-                  isCurrent
-                    ? "text-ink"
-                    : isDone
-                      ? "text-sage group-hover:text-sage/80"
-                      : "text-ink-muted"
-                }`}
-              >
-                {PIDBIR_STEP_LABELS[step]}
-              </span>
+            <span
+              className={`text-center text-xs font-semibold transition-colors md:text-sm ${
+                isCurrent
+                  ? "text-ink"
+                  : isDone
+                    ? "text-sage group-hover:text-sage/80"
+                    : "text-ink-muted"
+              }`}
+            >
+              {PIDBIR_STEP_LABELS[step]}
             </span>
             <span
-              className={`h-2.5 w-full rounded-full transition-colors ${
+              className={`h-1 w-full rounded-full transition-colors ${
                 isDone ? "bg-sage" : "bg-sand-dark"
               }`}
             />

@@ -5,7 +5,7 @@ import { useUser } from "@/features/auth/hooks/useUser";
 import { usePidbirStore, type PidbirStep } from "@/stores/pidbir";
 import { ProgressSteps } from "./WizardUI";
 import { RequestStep } from "./RequestStep";
-import { ResultsStep } from "./ResultsStep";
+import { PidbirResults } from "./PidbirResults";
 import { AuthGateModal } from "./AuthGateModal";
 
 /**
@@ -68,19 +68,38 @@ export function PidbirWizard() {
   }
 
   if (!isHydrated) {
-    return <div className="h-96 animate-pulse rounded-card bg-white" />;
+    return (
+      <div className="mx-auto max-w-4xl px-5 py-8 md:py-12">
+        <div className="h-96 animate-pulse rounded-card bg-white" />
+      </div>
+    );
+  }
+
+  const gate = isGateVisible && awaitingAuth && !user && (
+    <AuthGateModal onAuthenticated={handleAuthenticated} />
+  );
+
+  const progress = <ProgressSteps current={step} onNavigate={handleProgressNavigate} />;
+
+  /*
+    Кроки самі задають свою ширину й відступи. Результат ширший за анкету
+    (двоколонковий профіль психолога) і починається липкою шапкою впритул до
+    хедера, тож спільної обгортки з padding тут бути не може.
+  */
+  if (step === "results") {
+    return (
+      <>
+        <PidbirResults stepper={progress} />
+        {gate}
+      </>
+    );
   }
 
   return (
-    <div className="flex flex-col gap-10 md:gap-14">
-      <ProgressSteps current={step} onNavigate={handleProgressNavigate} />
-
-      {step === "request" && <RequestStep onSubmitted={handleRequestSubmitted} />}
-      {step === "results" && <ResultsStep />}
-
-      {isGateVisible && awaitingAuth && !user && (
-        <AuthGateModal onAuthenticated={handleAuthenticated} />
-      )}
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-5 py-8 md:gap-14 md:py-12">
+      {progress}
+      <RequestStep onSubmitted={handleRequestSubmitted} />
+      {gate}
     </div>
   );
 }
