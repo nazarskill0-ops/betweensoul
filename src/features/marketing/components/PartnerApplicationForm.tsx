@@ -96,7 +96,17 @@ export function PartnerApplicationForm() {
 
         <div>
           <label className={labelClass}>Стать (опційно)</label>
-          <select className={inputClass} {...register("gender")}>
+          {/*
+            "Не вказано" дає "", а gender у схемі — optional enum, який ""
+            не приймає. Без setValueAs форма мовчки не сабмітиться: помилка
+            є, але поля для неї не рендериться.
+          */}
+          <select
+            className={inputClass}
+            {...register("gender", {
+              setValueAs: (v) => (v === "" ? undefined : v),
+            })}
+          >
             <option value="">Не вказано</option>
             {GENDERS.map((g) => (
               <option key={g.value} value={g.value}>

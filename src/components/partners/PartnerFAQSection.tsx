@@ -30,13 +30,13 @@ const PARTNER_FAQ_ITEMS: FAQItem[] = [
 
 export function PartnerFAQSection() {
   return (
-    <section className="border-t border-sand-dark px-5 md:px-12">
-      <div className="mx-auto max-w-5xl py-20">
+    <section className="px-5 md:px-12">
+      <div className="mx-auto max-w-3xl pb-20 md:pb-24">
         <FAQAccordion
           items={PARTNER_FAQ_ITEMS}
           title="Часті запитання"
-          className=""
-          titleClassName="mb-8 font-bold text-2xl leading-snug md:text-3xl"
+          className="gap-8"
+          titleClassName="text-center font-display text-3xl leading-snug font-extrabold tracking-tight md:text-[34px]"
         />
       </div>
     </section>

@@ -103,7 +103,7 @@ export function MobileNav() {
           </AccordionSection>
 
           <Link
-            href="/partners"
+            href="/for-psychologists"
             onClick={closeAll}
             className="block border-b border-white/10 py-4 text-sm text-white/90"
           >

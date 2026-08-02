@@ -52,7 +52,7 @@ export default function VerificationPage() {
           Ви психолог і готові пройти верифікацію?
         </p>
         <Link
-          href="/partners"
+          href="/for-psychologists"
           className="mt-4 inline-block rounded-full bg-sage px-7 py-3 font-semibold text-white transition-colors hover:bg-sage/90"
         >
           Стати партнером

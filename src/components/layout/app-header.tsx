@@ -28,7 +28,7 @@ export function AppHeader() {
           columns={2}
         />
         <Link
-          href="/partners"
+          href="/for-psychologists"
           className="text-sm text-ink transition-colors hover:text-sage"
         >
           Для психологів

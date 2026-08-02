@@ -4,7 +4,7 @@ function CheckIcon({ className }: { className?: string }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={2.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
@@ -22,16 +22,26 @@ const REQUIREMENTS = [
 
 export function RequirementsSection() {
   return (
-    <section className="border-t border-sand-dark px-5 md:px-12">
-      <div className="mx-auto max-w-5xl py-20">
-        <h2 className="mb-10 font-bold text-2xl leading-snug md:text-3xl">
+    <section className="px-5 md:px-12">
+      <div className="mx-auto max-w-6xl py-24 md:pt-[110px] md:pb-[100px]">
+        <h2 className="font-display text-2xl leading-snug font-extrabold tracking-tight md:text-3xl">
           Вимоги до психологів
         </h2>
-        <ul className="flex max-w-2xl flex-col gap-4">
+        <p className="mt-4 max-w-2xl leading-relaxed text-ink-muted">
+          Ми публікуємо профіль лише після перевірки — це те, що робить каталог
+          вартим довіри для клієнтів.
+        </p>
+
+        <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {REQUIREMENTS.map((text) => (
-            <li key={text} className="flex items-start gap-3">
-              <CheckIcon className="mt-0.5 h-5 w-5 shrink-0 text-sage" />
-              <span className="text-ink">{text}</span>
+            <li
+              key={text}
+              className="flex gap-4 rounded-card border-[1.5px] border-sand-dark px-6 py-5"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-light text-sage">
+                <CheckIcon className="h-4 w-4" />
+              </span>
+              <span className="leading-relaxed text-ink">{text}</span>
             </li>
           ))}
         </ul>
