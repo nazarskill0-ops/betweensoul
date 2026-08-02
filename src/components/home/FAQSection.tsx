@@ -87,13 +87,13 @@ const HOME_FAQ_ITEMS: FAQItem[] = [
 
 export function FAQSection() {
   return (
-    <section className="border-t border-sand-dark px-5 md:px-12">
-      <div className="mx-auto max-w-5xl py-20">
+    <section className="px-5 md:px-12">
+      <div className="mx-auto max-w-3xl pb-24 md:pb-[130px]">
         <FAQAccordion
           items={HOME_FAQ_ITEMS}
           title="Часті запитання"
-          className=""
-          titleClassName="font-display text-2xl leading-snug md:text-3xl"
+          className="gap-8"
+          titleClassName="text-center font-display text-3xl leading-snug font-extrabold tracking-tight md:text-[34px]"
         />
       </div>
     </section>

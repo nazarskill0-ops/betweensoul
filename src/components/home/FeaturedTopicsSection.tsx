@@ -3,25 +3,9 @@
 import Link from "next/link";
 import { TOPIC_GROUPS } from "@/features/psychologists/schema";
 import { usePsychologists } from "@/features/psychologists/hooks/usePsychologists";
-import { MinimalPsychologistCard } from "./MinimalPsychologistCard";
+import { TopicPsychologistCard } from "./TopicPsychologistCard";
 
 const FEATURED_COUNT = 6;
-
-function TopicIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  );
-}
 
 function ArrowRightIcon({ className }: { className?: string }) {
   return (
@@ -65,27 +49,26 @@ export function FeaturedTopicsSection() {
     .slice(0, FEATURED_COUNT);
 
   return (
-    <section className="px-5 md:px-12">
-      <div className="mx-auto max-w-5xl py-20">
-        <h2 className="mb-8 text-center font-bold text-2xl leading-snug md:text-3xl">
+    <section className="bg-sand px-5 md:px-12">
+      <div className="mx-auto max-w-6xl py-20 md:py-[100px]">
+        <h2 className="mb-10 text-center font-display text-3xl leading-snug font-extrabold tracking-tight md:text-4xl">
           Фахівці за популярними темами
         </h2>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="mb-14 flex flex-wrap justify-center gap-2.5">
           {FEATURED_TOPICS.map((topic) => (
             <Link
               key={topic}
               href={`/catalog?topics=${encodeURIComponent(topic)}`}
-              className="flex items-center gap-2 rounded-full border-[1.5px] border-sand-dark px-4 py-2 text-sm text-ink transition-colors hover:border-sage hover:text-sage"
+              className="rounded-full border-[1.5px] border-sand-dark bg-white px-4.5 py-2.5 text-sm font-semibold text-ink-muted transition-colors hover:border-sage hover:text-sage"
             >
-              <TopicIcon className="h-4 w-4 shrink-0 text-sage" />
               {topic}
             </Link>
           ))}
 
           <Link
             href="/catalog?view=all"
-            className="rounded-full border-[1.5px] border-sage px-4 py-2 text-sm font-medium text-sage transition-colors hover:bg-sage-light"
+            className="rounded-full border-[1.5px] border-sage px-4.5 py-2.5 text-sm font-semibold text-sage transition-colors hover:bg-sage-light"
           >
             Дивитися всі
           </Link>
@@ -93,19 +76,19 @@ export function FeaturedTopicsSection() {
 
         {featured.length > 0 && (
           <>
-            <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-6">
               {featured.map((psychologist) => (
-                <MinimalPsychologistCard
+                <TopicPsychologistCard
                   key={psychologist.profileId}
                   psychologist={psychologist}
                 />
               ))}
             </div>
 
-            <div className="mt-8 flex justify-center">
+            <div className="mt-12 flex justify-center">
               <Link
                 href="/pidbir"
-                className="flex items-center gap-2 rounded-full bg-sage px-8 py-3.5 font-semibold text-white transition-colors hover:bg-sage/90"
+                className="flex items-center gap-2 rounded-full bg-sage px-8 py-4 font-semibold text-white transition-colors hover:bg-sage/90"
               >
                 Підібрати фахівця
                 <ArrowRightIcon className="h-4 w-4" />

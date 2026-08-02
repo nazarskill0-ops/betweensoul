@@ -4,7 +4,7 @@ function CheckIcon({ className }: { className?: string }) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2}
+      strokeWidth={2.5}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
@@ -35,19 +35,21 @@ const REASONS = [
 
 export function WhyCalmiSection() {
   return (
-    <section className="border-t border-sand-dark px-5 md:px-12">
-      <div className="mx-auto max-w-5xl py-20">
-        <h2 className="mb-12 text-center font-bold text-2xl leading-snug md:text-3xl">
+    <section className="px-5 md:px-12">
+      <div className="mx-auto max-w-6xl py-24 md:py-[120px]">
+        <h2 className="mb-12 text-center font-display text-3xl leading-snug font-extrabold tracking-tight md:mb-16 md:text-4xl">
           Чому обирають Calmi
         </h2>
-        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+        <div className="grid gap-x-12 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
           {REASONS.map((reason) => (
-            <div key={reason.title}>
-              <h3 className="flex items-center gap-2 font-semibold text-ink">
-                <CheckIcon className="h-4 w-4 shrink-0 text-sage" />
-                {reason.title}
-              </h3>
-              <p className="mt-1.5 text-sm text-ink-muted">{reason.text}</p>
+            <div key={reason.title} className="flex gap-5">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sage-light text-sage">
+                <CheckIcon className="h-5 w-5" />
+              </span>
+              <div>
+                <h3 className="text-lg font-bold text-ink">{reason.title}</h3>
+                <p className="mt-2 leading-relaxed text-ink-muted">{reason.text}</p>
+              </div>
             </div>
           ))}
         </div>
