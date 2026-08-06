@@ -1,0 +1,190 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTestStore } from "@/store/useTestStore";
+import { Gender, PartnerInfo } from "@/lib/types";
+
+const genderOptions: { value: Gender; label: string }[] = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "non-binary", label: "Non-binary" },
+  { value: "prefer-not-to-say", label: "Prefer not to say" },
+];
+
+const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+function PartnerFields({
+  label,
+  accent,
+  value,
+  onChange,
+}: {
+  label: string;
+  accent: "p1" | "p2";
+  value: PartnerInfo;
+  onChange: (data: Partial<PartnerInfo>) => void;
+}) {
+  const styles =
+    accent === "p1"
+      ? { chip: "bg-[var(--color-p1-soft)] text-[var(--color-p1)]" }
+      : { chip: "bg-[var(--color-p2-soft)] text-[var(--color-p2)]" };
+
+  return (
+    <div className="space-y-3">
+      <div className="text-center">
+        <span className={`pill ${styles.chip}`}>{label}</span>
+      </div>
+      <input
+        type="text"
+        placeholder="Name"
+        autoComplete="off"
+        value={value.name}
+        onChange={(e) => onChange({ name: e.target.value })}
+        className="field"
+      />
+      <label className="block">
+        <span className="mb-1 block text-xs font-semibold text-ink-500">
+          Birthday
+        </span>
+        <input
+          type="date"
+          value={value.birthday}
+          onChange={(e) => onChange({ birthday: e.target.value })}
+          className="field"
+        />
+      </label>
+      <select
+        value={value.gender}
+        onChange={(e) => onChange({ gender: e.target.value as Gender })}
+        className="field"
+      >
+        <option value="">Gender</option>
+        {genderOptions.map((g) => (
+          <option key={g.value} value={g.value}>
+            {g.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+export default function TestPage() {
+  const {
+    partner1,
+    partner2,
+    relationshipStart,
+    email,
+    setPartner1,
+    setPartner2,
+    setRelationshipStart,
+    setEmail,
+  } = useTestStore();
+  const router = useRouter();
+
+  const partnersReady = [partner1, partner2].every(
+    (p) => p.name.trim() && p.birthday && p.gender,
+  );
+  const isValid = partnersReady && Boolean(relationshipStart) && isEmail(email);
+
+  const handleSubmit = () => {
+    if (isValid) router.push("/questions");
+  };
+
+  return (
+    <main className="flex-1 px-5 py-10">
+      <div className="mx-auto w-full max-w-lg space-y-6">
+        <Link
+          href="/"
+          className="inline-block text-sm font-semibold text-ink-500 transition-colors hover:text-ink-700"
+        >
+          ← Back
+        </Link>
+
+        <header className="space-y-2 text-center">
+          <h1 className="text-3xl font-extrabold leading-tight text-ink-900">
+            Take the test{" "}
+            <span className="bg-gradient-to-r from-blush-500 to-lilac-400 bg-clip-text text-transparent">
+              together
+            </span>{" "}
+            from one device
+          </h1>
+          <p className="text-ink-700">
+            We compare your two sets of answers — that&rsquo;s where the
+            analysis comes from.
+          </p>
+        </header>
+
+        <section className="card space-y-5 p-6">
+          <h2 className="text-center font-bold text-ink-700">Who&rsquo;s taking it?</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <PartnerFields
+              label="Partner 1"
+              accent="p1"
+              value={partner1}
+              onChange={setPartner1}
+            />
+            <PartnerFields
+              label="Partner 2"
+              accent="p2"
+              value={partner2}
+              onChange={setPartner2}
+            />
+          </div>
+        </section>
+
+        <section className="card space-y-4 p-6">
+          <label className="block">
+            <span className="mb-1 block text-sm font-semibold text-ink-700">
+              When did your relationship start?
+            </span>
+            <input
+              type="month"
+              value={relationshipStart}
+              onChange={(e) => setRelationshipStart(e.target.value)}
+              className="field"
+            />
+            <span className="mt-1 block text-xs text-ink-300">
+              Roughly is fine.
+            </span>
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-sm font-semibold text-ink-700">
+              Your email
+            </span>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="field"
+            />
+            <span className="mt-1 block text-xs text-ink-300">
+              So we can send your results.
+            </span>
+          </label>
+        </section>
+
+        <button onClick={handleSubmit} disabled={!isValid} className="btn-primary">
+          Start Analysis ♥
+        </button>
+
+        <p className="text-center text-xs text-ink-300">
+          By continuing you agree to our{" "}
+          <a href="#" className="underline hover:text-ink-500">
+            Terms of Service
+          </a>{" "}
+          and{" "}
+          <a href="#" className="underline hover:text-ink-500">
+            Privacy Policy
+          </a>
+          .
+        </p>
+      </div>
+    </main>
+  );
+}
