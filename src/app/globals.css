@@ -1,26 +1,146 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand — playful pink/purple, deliberately light. */
+  --color-blush-50: #fff5f8;
+  --color-blush-100: #ffe9f0;
+  --color-blush-200: #ffd3e2;
+  --color-blush-300: #ffabc7;
+  --color-blush-400: #ff7ba8;
+  --color-blush-500: #f9548b;
+  --color-blush-600: #e63a72;
+
+  --color-lilac-50: #f8f4ff;
+  --color-lilac-100: #f0e8ff;
+  --color-lilac-200: #e2d3ff;
+  --color-lilac-300: #c9aeff;
+  --color-lilac-400: #ab84f5;
+  --color-lilac-500: #8f5fe8;
+
+  --color-ink-900: #2c1f38;
+  --color-ink-700: #574566;
+  --color-ink-500: #837292;
+  --color-ink-300: #b3a8bd;
+
+  /* Partner identity colours, used consistently across every screen. */
+  --color-p1: #f9548b;
+  --color-p1-soft: #ffe9f0;
+  --color-p2: #5b7cfa;
+  --color-p2-soft: #e6ecff;
+}
+
+/* The app is a fixed light theme — no dark-mode variant. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(60rem 40rem at 15% -10%, var(--color-blush-100), transparent 60%),
+    radial-gradient(50rem 35rem at 95% 5%, var(--color-lilac-100), transparent 60%),
+    linear-gradient(180deg, #fffbfd 0%, #faf7ff 100%);
+  background-attachment: fixed;
+  color: var(--color-ink-900);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .card {
+    @apply rounded-3xl bg-white/85 backdrop-blur-sm border border-white shadow-[0_10px_40px_-16px_rgba(140,90,160,0.35)];
+  }
+
+  .btn-primary {
+    @apply w-full rounded-full py-4 text-lg font-bold text-white transition-all;
+    background-image: linear-gradient(
+      100deg,
+      var(--color-blush-400),
+      var(--color-blush-500) 55%,
+      var(--color-lilac-400)
+    );
+    box-shadow: 0 12px 28px -10px rgba(249, 84, 139, 0.75);
+  }
+  .btn-primary:hover:not(:disabled) {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  .btn-primary:disabled {
+    background-image: none;
+    @apply bg-ink-300/40 text-white/70 shadow-none;
+  }
+
+  .field {
+    @apply w-full rounded-2xl border border-lilac-200 bg-white px-4 py-3 text-sm text-ink-900
+      placeholder:text-ink-300 outline-none transition-colors
+      focus:border-blush-300 focus:ring-4 focus:ring-blush-100;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold;
+  }
+}
+
+/* Paid sections render for real, then get blurred — the text is never in the
+   DOM until the report is unlocked, so this is presentation only. */
+.locked-preview {
+  filter: blur(8px);
+  user-select: none;
+  pointer-events: none;
+}
+
+@keyframes float-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in-up {
+  animation: float-up 0.45s ease-out both;
+}
+
+/* Score bars grow from zero on mount — CSS only, so there's no first-paint
+   flash and nothing to coordinate in JS. */
+@keyframes bar-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-bar {
+  transform-origin: left center;
+  animation: bar-fill 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes heart-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+.animate-heartbeat {
+  animation: heart-pulse 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in-up,
+  .animate-heartbeat,
+  .animate-bar {
+    animation: none;
+  }
 }
