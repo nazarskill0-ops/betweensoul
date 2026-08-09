@@ -1,60 +1,100 @@
+import { Redis } from "@upstash/redis";
 import { PaidReport, PaidStatus, StoredReport } from "@/lib/types";
 
 /**
- * Server-side store for generated reports.
+ * Server-side store for generated reports, backed by Upstash Redis.
  *
  * The free sections are generated on submit; the paid sections are generated
- * only after the order is confirmed paid and are never sent to the browser
- * before that. That's what makes the paywall real rather than a CSS blur over
- * data the user already has.
+ * only after the transaction is confirmed paid and are never sent to the
+ * browser before that. That's what makes the paywall real rather than a CSS
+ * blur over data the user already has.
  *
- * ⚠️ This is an in-memory implementation: it survives hot reloads in dev (via
- * globalThis) but NOT multiple serverless instances or a redeploy. Before going
- * live, swap the functions below for a real store — Vercel KV / Upstash Redis /
- * Postgres. Nothing outside this file needs to change.
+ * Redis rather than a Map because every request on Vercel can land on a
+ * different instance: the webhook that confirms payment and the poll that
+ * reads the result are almost never the same one, and a redeploy between the
+ * two used to lose a report that had already been paid for.
  */
 
-const REPORT_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+/** Reports expire 24h after the test — see the privacy policy. */
+const TTL_SECONDS = 60 * 60 * 24;
 
-type Store = Map<string, StoredReport>;
+/**
+ * How long one paid generation may hold its claim. Long enough for the ~70s
+ * Sonnet pass plus a retry; short enough that an instance killed mid-run
+ * doesn't wedge the report forever.
+ */
+const CLAIM_TTL_SECONDS = 60 * 10;
 
-const globalForReports = globalThis as unknown as { __reports?: Store };
+const key = (id: string) => `report:${id}`;
+/** Held for the duration of one paid generation. See claimForPaidGeneration. */
+const claimKey = (id: string) => `report:${id}:generating`;
 
-function db(): Store {
-  if (!globalForReports.__reports) {
-    globalForReports.__reports = new Map();
+let client: Redis | null = null;
+
+function db(): Redis {
+  if (client) return client;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  // Constructed lazily so a build without the variables still succeeds; the
+  // failure lands on the request that needed the store, naming what's missing.
+  if (!url || !token) {
+    throw new Error(
+      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set to store reports.",
+    );
   }
-  return globalForReports.__reports;
-}
 
-function prune() {
-  const cutoff = Date.now() - REPORT_TTL_MS;
-  for (const [id, report] of db()) {
-    if (report.createdAt < cutoff) db().delete(id);
-  }
-}
-
-export async function saveReport(report: StoredReport): Promise<void> {
-  prune();
-  db().set(report.id, report);
-}
-
-export async function getReport(id: string): Promise<StoredReport | null> {
-  return db().get(id) ?? null;
+  client = new Redis({ url, token });
+  return client;
 }
 
 /**
- * Moves a report to `processing` — but only from `unpaid`, and only once.
+ * Every write uses the same absolute expiry rather than a fresh 24h window, so
+ * unlocking a report — or retrying a generation — can't quietly extend how long
+ * the answers are kept.
+ */
+function expiresAt(report: StoredReport) {
+  return Math.floor(report.createdAt / 1000) + TTL_SECONDS;
+}
+
+async function write(report: StoredReport): Promise<void> {
+  await db().set(key(report.id), JSON.stringify(report), {
+    exat: expiresAt(report),
+  });
+}
+
+export async function saveReport(report: StoredReport): Promise<void> {
+  await write(report);
+}
+
+export async function getReport(id: string): Promise<StoredReport | null> {
+  // The client JSON-parses what `write` stringified.
+  return (await db().get<StoredReport>(key(id))) ?? null;
+}
+
+/**
+ * Moves a report to `processing` — but only once, across every instance.
  *
- * The check and the write happen together here so two concurrent callers (a
- * webhook retry, or a second browser tab polling with the dev bypass on) can't
- * both start a Sonnet run for the same report. The loser gets `false` and does
- * nothing.
+ * The guard is a separate key set with NX, which Redis only creates if it does
+ * not already exist. Two callers (a webhook retry, or a second tab polling with
+ * the dev bypass on) can both read `unpaid` and race here; only one can create
+ * the key, and the loser gets `false` and does nothing.
+ *
+ * The key expires on its own, so a run whose instance dies mid-generation stops
+ * blocking a later retry instead of leaving the report unclaimable forever.
  */
 export async function claimForPaidGeneration(id: string): Promise<boolean> {
-  const report = db().get(id);
-  if (!report || report.paidStatus !== "unpaid") return false;
-  db().set(id, { ...report, paidStatus: "processing" });
+  const report = await getReport(id);
+  if (!report || report.paidStatus === "ready") return false;
+
+  const claimed = await db().set(claimKey(id), "1", {
+    nx: true,
+    ex: CLAIM_TTL_SECONDS,
+  });
+  if (claimed !== "OK") return false;
+
+  await write({ ...report, paidStatus: "processing" });
   return true;
 }
 
@@ -63,9 +103,11 @@ export async function savePaidReport(
   id: string,
   paid: PaidReport,
 ): Promise<boolean> {
-  const report = db().get(id);
+  const report = await getReport(id);
   if (!report) return false;
-  db().set(id, { ...report, paid, paidStatus: "ready" });
+
+  await write({ ...report, paid, paidStatus: "ready" });
+  await db().del(claimKey(id));
   return true;
 }
 
@@ -74,11 +116,13 @@ export async function savePaidReport(
  * retry) can try again, rather than leaving the buyer stuck on a spinner.
  */
 export async function releasePaidGeneration(id: string): Promise<void> {
-  const report = db().get(id);
-  if (!report || report.paidStatus !== "processing") return;
-  db().set(id, { ...report, paidStatus: "unpaid" });
+  const report = await getReport(id);
+  if (report?.paidStatus === "processing") {
+    await write({ ...report, paidStatus: "unpaid" });
+  }
+  await db().del(claimKey(id));
 }
 
 export async function getPaidStatus(id: string): Promise<PaidStatus | null> {
-  return db().get(id)?.paidStatus ?? null;
+  return (await getReport(id))?.paidStatus ?? null;
 }

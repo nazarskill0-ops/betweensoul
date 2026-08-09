@@ -41,6 +41,8 @@ has been verified, so there is nothing in an unpaid response to dig out.
 | `NEXT_PUBLIC_PADDLE_ENVIRONMENT` | yes | `sandbox` or `production`. Anything else is treated as sandbox. |
 | `PADDLE_API_KEY` | yes | Server-side Paddle API key (`pdl_…`). Secret. |
 | `PADDLE_WEBHOOK_SECRET` | yes | Signing secret of the webhook destination. Secret. |
+| `UPSTASH_REDIS_REST_URL` | yes | Upstash Redis REST endpoint — where reports are stored. |
+| `UPSTASH_REDIS_REST_TOKEN` | yes | Upstash Redis REST token. Secret. |
 | `MOCK_ANALYSIS` | no | `1` serves canned reports. Dev only. |
 | `DEV_PAID_BYPASS` | no | `1` unlocks the paid report without paying. Dev only. |
 
@@ -61,9 +63,24 @@ needs a tunnel (e.g. `ngrok`) as the destination URL. The signature check also
 rejects anything more than 5 seconds old, so a replayed request body will not
 verify.
 
+## Report storage
+
+Reports live in Upstash Redis (`src/lib/reportStore.ts`) under `report:<id>` as
+a JSON string, and expire **24 hours** after the test. Every write re-uses the
+same absolute expiry, so unlocking a report does not extend how long the answers
+are kept. The privacy policy states that window — change one and change the
+other.
+
+A second key, `report:<id>:generating`, is set with `NX` for the duration of a
+paid generation. That is what stops two concurrent webhook deliveries from both
+billing a Sonnet run; it expires by itself after 10 minutes so a killed instance
+doesn't wedge the report.
+
+Local dev needs its own Upstash database — the free tier is enough, and the REST
+credentials work from localhost.
+
 ## Known gaps
 
-- **Reports are in-memory** (`src/lib/reportStore.ts`) — they do not survive a
-  redeploy or a second serverless instance. Swap it for KV/Postgres before
-  taking real money; nothing outside that file needs to change.
+- **A buyer's report is gone 24 hours after the test**, paid or not. If people
+  start asking for their report back, that TTL is the thing to raise.
 - **No analytics.** The privacy policy says so; update it if that changes.

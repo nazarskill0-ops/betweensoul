@@ -75,11 +75,11 @@ Your answers are sent to an AI service (Anthropic Claude) to generate your repor
 
 ## 4. Data Storage
 
-Your report and answers are stored on our servers so you can come back to your report from its link. They are deleted automatically after 30 days. There are no user accounts — a report is reachable only by its unique link, so keep that link if you want to return to it. Reports may also be cleared earlier when we deploy updates to the site, so save anything you want to keep.
+Your report and answers are stored on our servers so you can come back to your report from its link. They are deleted automatically 24 hours after you take the test. There are no user accounts — a report is reachable only by its unique link, and after those 24 hours the link stops working, so save anything you want to keep.
 
 ## 5. Data Deletion
 
-Your answers and report are deleted automatically 30 days after the test. If you want them removed sooner, email [support@couplescan.com](mailto:support@couplescan.com) with your report link and we will delete them within 30 days of your request.
+Your answers and report are deleted automatically 24 hours after the test, so in most cases there is nothing left to delete. If you want them removed sooner, email [support@couplescan.com](mailto:support@couplescan.com) with your report link.
 
 ## 6. Cookies
 
