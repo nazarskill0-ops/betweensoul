@@ -1,23 +1,18 @@
 import {
-  Analysis,
-  AfraidToLose,
-  BLITZ_VERDICTS,
-  BlitzSplit,
-  ConflictDNA,
-  GAP_SIZES,
-  GapMap,
-  SeeEachOther,
-  TitledItem,
-  UncomfortableTruth,
+  BiggestQuestion,
+  CATEGORY_IDS,
+  CATEGORY_LABELS,
+  CategoryId,
+  FreeReport,
+  PaidReport,
 } from "@/lib/types";
 
 /**
  * Turns Claude's raw text into validated data.
  *
- * The report is generated as five parallel requests (see analysis.ts), so this
- * module exposes a validator per part plus `validateAnalysis` for the merged
- * result. Each part is checked on its own so a bad response can be retried
- * without re-running the other four.
+ * Two validators, one per pass: `validateFreeReport` for the Haiku overview
+ * generated on submit, `validatePaidReport` for the Sonnet deep dive generated
+ * after payment.
  *
  * We ask for bare JSON in the prompt, but a prompt is a request, not a
  * guarantee — unlike `output_config.format`, nothing at the API level enforces
@@ -28,8 +23,6 @@ import {
  * Throws with a specific reason; the route turns that into a 500.
  */
 
-const CATEGORY_COUNT = 5;
-const GETTING_RIGHT_COUNT = 3;
 
 function stripToJson(raw: string): string {
   let text = raw.trim();
@@ -182,31 +175,6 @@ function fail(reason: string): never {
   throw new Error(`Malformed analysis: ${reason}`);
 }
 
-/**
- * Matches a model-supplied value against a fixed set, ignoring case and
- * surrounding whitespace — "Dealbreaker" and "dealbreaker" mean the same
- * thing, and only one of them is worth failing a whole report over.
- * Returns the canonical member, or undefined if it isn't one.
- */
-function coerceEnum<T extends string>(value: unknown, allowed: readonly T[]): T | undefined {
-  if (typeof value !== "string") return undefined;
-  const normalized = value.trim().toLowerCase();
-  return allowed.find((option) => option === normalized);
-}
-
-/** Checks `{ title, detail }` entries, used by gettingRight and actionPlan. */
-function checkTitledItems(value: unknown, field: string, exact?: number): void {
-  if (!Array.isArray(value) || value.length === 0) fail(`${field} is empty`);
-  if (exact !== undefined && value.length !== exact) {
-    fail(`${field} must have exactly ${exact} entries`);
-  }
-  for (const [i, entry] of value.entries()) {
-    const item = entry as Record<string, unknown>;
-    if (!isNonEmptyString(item.title)) fail(`${field}[${i}].title is empty`);
-    if (!isNonEmptyString(item.detail)) fail(`${field}[${i}].detail is empty`);
-  }
-}
-
 /** Raw model text -> a JSON object, with the usual deviations tolerated. */
 export function parseJsonObject(raw: string): Record<string, unknown> {
   if (!isNonEmptyString(raw)) fail("model returned no text");
@@ -250,237 +218,177 @@ export function parseJsonObject(raw: string): Record<string, unknown> {
   return data as Record<string, unknown>;
 }
 
+
 /* -------------------------------------------------------------------------
- * Part validators — one per request in analysis.ts.
- *
- * Category `id` is validated as a non-empty string rather than against
- * CATEGORY_IDS: the merge step canonicalises ids (by name, then by position),
- * so a model that renames a category still produces a usable report.
+ * Free tier — Haiku, generated on submit.
  * ----------------------------------------------------------------------- */
 
-export interface OverviewPart {
-  overallScore: number;
-  verdict: string;
-  coupleLine: string;
-  categories: { id: string; score: number; headline: string }[];
-  blindSpots: string[];
-  flagSummary: string;
+/** Loose match so "Trust & Boundaries" or "trust_safety" still lands on "trust". */
+function normalizeId(id: string): string {
+  return id.toLowerCase().replace(/[^a-z]/g, "");
 }
 
-export interface ConflictPerceptionPart {
-  seeEachOther: SeeEachOther;
-  conflictDNA: ConflictDNA;
+const ID_ALIASES: Record<string, CategoryId> = {
+  trustboundaries: "trust",
+  trustsafety: "trust",
+  boundaries: "trust",
+  conflictresolution: "conflict",
+  conflictrepair: "conflict",
+  emotionalintimacy: "intimacy",
+  sharedvaluesgoals: "values",
+  sharedvalues: "values",
+  sharedfuture: "values",
+  futuregoals: "values",
+  future: "values",
+};
+
+/**
+ * Lines the model's category list up with CATEGORY_IDS: by id first, then by
+ * position for whatever is left. A run where Haiku renamed a category still
+ * produces a usable report instead of failing outright.
+ */
+function alignCategories(
+  items: { id?: unknown; score?: unknown; headline?: unknown }[],
+): FreeReport["categories"] {
+  const aligned: (typeof items[number] | undefined)[] = CATEGORY_IDS.map(() => undefined);
+  const unmatched: typeof items = [];
+
+  for (const item of items) {
+    const key = typeof item.id === "string" ? normalizeId(item.id) : "";
+    const canonical = (CATEGORY_IDS as readonly string[]).includes(key)
+      ? (key as CategoryId)
+      : ID_ALIASES[key];
+    const index = canonical ? CATEGORY_IDS.indexOf(canonical) : -1;
+
+    if (index !== -1 && !aligned[index]) aligned[index] = item;
+    else unmatched.push(item);
+  }
+
+  for (let i = 0; i < aligned.length && unmatched.length; i++) {
+    if (!aligned[i]) aligned[i] = unmatched.shift();
+  }
+
+  // The label comes from CATEGORY_LABELS, never the model, so the UI can't
+  // show a category renamed mid-run.
+  return CATEGORY_IDS.map((id, i) => {
+    const entry = aligned[i];
+    return {
+      id,
+      name: CATEGORY_LABELS[id],
+      score: isScore(entry?.score) ? (entry!.score as number) : 0,
+      headline: isNonEmptyString(entry?.headline) ? (entry!.headline as string) : "",
+    };
+  });
 }
 
-/** Returned flat, like the other parts; analysis.ts wraps it into `gapMap`. */
-export type GapAnalysisPart = GapMap;
-
-export interface EmotionalCorePart {
-  afraidToLose: AfraidToLose;
-  uncomfortableTruth: UncomfortableTruth;
-  gettingRight: TitledItem[];
-}
-
-export interface ActionItemsPart {
-  actionPlan: TitledItem[];
-  conversationStarters: string[];
-}
-
-export function validateOverview(raw: string): OverviewPart {
+export function validateFreeReport(raw: string): FreeReport {
   const data = parseJsonObject(raw);
 
   if (!isScore(data.overallScore)) fail("overallScore is not 0-100");
   if (!isNonEmptyString(data.verdict)) fail("verdict is empty");
-  if (!isNonEmptyString(data.coupleLine)) fail("coupleLine is empty");
-
-  if (!isStringArray(data.blindSpots) || data.blindSpots.length === 0) {
-    fail("blindSpots is empty");
-  }
   if (!isNonEmptyString(data.flagSummary)) fail("flagSummary is empty");
 
-  if (!Array.isArray(data.categories) || data.categories.length !== CATEGORY_COUNT) {
-    fail(`categories must have ${CATEGORY_COUNT} entries`);
+  const dynamic = data.hiddenDynamic as Record<string, unknown> | undefined;
+  if (!dynamic || typeof dynamic !== "object") fail("hiddenDynamic is missing");
+  if (!isNonEmptyString(dynamic.type)) fail("hiddenDynamic.type is empty");
+  if (!isNonEmptyString(dynamic.description)) fail("hiddenDynamic.description is empty");
+
+  if (!Array.isArray(data.categories) || data.categories.length !== CATEGORY_IDS.length) {
+    fail(`categories must have ${CATEGORY_IDS.length} entries`);
   }
   for (const [i, entry] of data.categories.entries()) {
     const c = entry as Record<string, unknown>;
-    if (!isNonEmptyString(c.id)) fail(`categories[${i}].id is empty`);
     if (!isScore(c.score)) fail(`categories[${i}].score is not 0-100`);
     if (!isNonEmptyString(c.headline)) fail(`categories[${i}].headline is empty`);
   }
 
-  return data as unknown as OverviewPart;
+  return {
+    overallScore: data.overallScore,
+    verdict: data.verdict,
+    hiddenDynamic: {
+      type: (dynamic.type as string).trim(),
+      description: (dynamic.description as string).trim(),
+    },
+    categories: alignCategories(data.categories as Record<string, unknown>[]),
+    flagSummary: data.flagSummary,
+  };
 }
 
-export function validateConflictPerception(raw: string): ConflictPerceptionPart {
-  const data = parseJsonObject(raw);
+/* -------------------------------------------------------------------------
+ * Paid tier — Sonnet, generated after payment.
+ * ----------------------------------------------------------------------- */
 
-  const see = data.seeEachOther as Record<string, unknown> | undefined;
-  if (!see || typeof see !== "object") fail("seeEachOther is missing");
-  if (!isNonEmptyString(see.partner1View)) fail("seeEachOther.partner1View is empty");
-  if (!isNonEmptyString(see.partner2View)) fail("seeEachOther.partner2View is empty");
-  if (!isNonEmptyString(see.mismatch)) fail("seeEachOther.mismatch is empty");
-
-  const dna = data.conflictDNA as Record<string, unknown> | undefined;
-  if (!dna || typeof dna !== "object") fail("conflictDNA is missing");
-  if (!isNonEmptyString(dna.pattern)) fail("conflictDNA.pattern is empty");
-  if (!isNonEmptyString(dna.description)) fail("conflictDNA.description is empty");
-  if (!isNonEmptyString(dna.howItPlaysOut)) fail("conflictDNA.howItPlaysOut is empty");
-  if (!isNonEmptyString(dna.advice)) fail("conflictDNA.advice is empty");
-
-  return data as unknown as ConflictPerceptionPart;
+/** Reads a required object field, failing with the field's own name. */
+function requireObject(data: Record<string, unknown>, field: string): Record<string, unknown> {
+  const value = data[field];
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    fail(`${field} is missing`);
+  }
+  return value as Record<string, unknown>;
 }
 
-export function validateGapAnalysis(raw: string): GapAnalysisPart {
-  // Tolerate the model wrapping the object in `gapMap` even though the prompt
-  // asks for it flat — the fields are what matter.
-  const parsed = parseJsonObject(raw);
-  const data = (
-    parsed.gapMap && typeof parsed.gapMap === "object" ? parsed.gapMap : parsed
-  ) as Record<string, unknown>;
-
-  if (!Array.isArray(data.scaleGaps) || data.scaleGaps.length === 0) {
-    fail("scaleGaps is empty");
+/** Reads required non-empty strings off an object, failing on the first gap. */
+function requireStrings<K extends string>(
+  source: Record<string, unknown>,
+  field: string,
+  keys: readonly K[],
+): Record<K, string> {
+  const out = {} as Record<K, string>;
+  for (const key of keys) {
+    if (!isNonEmptyString(source[key])) fail(`${field}.${key} is empty`);
+    out[key] = (source[key] as string).trim();
   }
-  for (const [i, entry] of data.scaleGaps.entries()) {
-    const gap = entry as Record<string, unknown>;
-    if (!isNonEmptyString(gap.topic)) fail(`scaleGaps[${i}].topic is empty`);
-    if (!isNonEmptyString(gap.partner1Position)) {
-      fail(`scaleGaps[${i}].partner1Position is empty`);
-    }
-    if (!isNonEmptyString(gap.partner2Position)) {
-      fail(`scaleGaps[${i}].partner2Position is empty`);
-    }
-    const size = coerceEnum(gap.gapSize, GAP_SIZES);
-    if (!size) fail(`scaleGaps[${i}].gapSize is not one of ${GAP_SIZES.join("/")}`);
-    gap.gapSize = size;
-    if (!isNonEmptyString(gap.comment)) fail(`scaleGaps[${i}].comment is empty`);
-  }
-
-  // Legitimately empty when the couple agreed on every blitz statement.
-  if (!Array.isArray(data.blitzSplits)) fail("blitzSplits is not an array");
-  for (const [i, entry] of data.blitzSplits.entries()) {
-    const split = entry as Record<string, unknown>;
-    if (!isNonEmptyString(split.statement)) fail(`blitzSplits[${i}].statement is empty`);
-    for (const slot of ["partner1", "partner2"] as const) {
-      const verdict = coerceEnum(split[slot], BLITZ_VERDICTS);
-      if (!verdict) {
-        fail(
-          `blitzSplits[${i}].${slot} is not fine/dealbreaker (got ${JSON.stringify(
-            split[slot],
-          )})`,
-        );
-      }
-      split[slot] = verdict;
-    }
-    if (!isNonEmptyString(split.insight)) fail(`blitzSplits[${i}].insight is empty`);
-  }
-
-  if (!isNonEmptyString(data.overallInsight)) fail("overallInsight is empty");
-
-  return data as unknown as GapAnalysisPart;
-}
-
-export function validateEmotionalCore(raw: string): EmotionalCorePart {
-  const data = parseJsonObject(raw);
-
-  const afraid = data.afraidToLose as Record<string, unknown> | undefined;
-  if (!afraid || typeof afraid !== "object") fail("afraidToLose is missing");
-  if (!isNonEmptyString(afraid.partner1)) fail("afraidToLose.partner1 is empty");
-  if (!isNonEmptyString(afraid.partner2)) fail("afraidToLose.partner2 is empty");
-  if (!isNonEmptyString(afraid.alignment)) fail("afraidToLose.alignment is empty");
-
-  const truth = data.uncomfortableTruth as Record<string, unknown> | undefined;
-  if (!truth || typeof truth !== "object") fail("uncomfortableTruth is missing");
-  if (!isNonEmptyString(truth.headline)) fail("uncomfortableTruth.headline is empty");
-  if (!isNonEmptyString(truth.explanation)) {
-    fail("uncomfortableTruth.explanation is empty");
-  }
-
-  checkTitledItems(data.gettingRight, "gettingRight", GETTING_RIGHT_COUNT);
-
-  return data as unknown as EmotionalCorePart;
-}
-
-export function validateActionItems(raw: string): ActionItemsPart {
-  const data = parseJsonObject(raw);
-
-  checkTitledItems(data.actionPlan, "actionPlan");
-
-  if (!isStringArray(data.conversationStarters) || data.conversationStarters.length === 0) {
-    fail("conversationStarters is empty");
-  }
-
-  return data as unknown as ActionItemsPart;
+  return out;
 }
 
 /**
- * Final check on the merged report, so a merge bug can't put a half-built
- * object in front of a paying reader.
+ * Every paid section but one is a fixed set of required prose fields, so the
+ * schema is a table rather than eight near-identical blocks.
+ *
+ * The `satisfies` keeps the table honest: a misspelled field or a section
+ * missing from PaidReport is a compile error here, not a runtime surprise.
  */
-export function validateAnalysis(data: unknown): Analysis {
-  if (typeof data !== "object" || data === null) fail("top level was not an object");
-  const root = data as Record<string, unknown>;
+type SectionFields = {
+  [K in keyof Omit<PaidReport, "biggestQuestion">]: readonly (keyof PaidReport[K])[];
+};
 
-  const teaser = root.teaser as Record<string, unknown> | undefined;
-  const full = root.full as Record<string, unknown> | undefined;
-  if (!teaser || typeof teaser !== "object") fail("missing `teaser`");
-  if (!full || typeof full !== "object") fail("missing `full`");
+const PAID_SECTIONS = {
+  biggestSurprise: ["insight"],
+  seeEachOther: ["partner1View", "partner2View", "dynamic"],
+  biggestMisunderstanding: ["partner1Thinks", "partner2Experiences"],
+  conflictDNA: ["pattern", "trigger", "escalation", "aftermath", "insight"],
+  howYouLove: ["partner1", "partner2", "friction"],
+  ifNothingChanges: ["prediction", "why"],
+  whatKeepsYouTogether: ["core", "evidence"],
+} as const satisfies SectionFields;
 
-  if (!isScore(teaser.overallScore)) fail("teaser.overallScore is not 0-100");
-  if (!isNonEmptyString(teaser.verdict)) fail("teaser.verdict is empty");
-  if (!isNonEmptyString(teaser.coupleLine)) fail("teaser.coupleLine is empty");
-  if (!isStringArray(teaser.blindSpots)) fail("teaser.blindSpots is not string[]");
-  if (!isNonEmptyString(teaser.flagSummary)) fail("teaser.flagSummary is empty");
+export function validatePaidReport(raw: string): PaidReport {
+  const data = parseJsonObject(raw);
 
-  if (!Array.isArray(teaser.categories) || teaser.categories.length !== CATEGORY_COUNT) {
-    fail(`teaser.categories must have ${CATEGORY_COUNT} entries`);
+  const sections = Object.fromEntries(
+    Object.entries(PAID_SECTIONS).map(([field, keys]) => [
+      field,
+      requireStrings(requireObject(data, field), field, keys),
+    ]),
+    // Safe: the table above is checked against PaidReport, and requireStrings
+    // has just proved every listed field is a non-empty string.
+  ) as unknown as Omit<PaidReport, "biggestQuestion">;
+
+  // The odd one out: prose plus a list of starters.
+  const rawQuestion = requireObject(data, "biggestQuestion");
+  const { question } = requireStrings(rawQuestion, "biggestQuestion", [
+    "question",
+  ] as const);
+  if (
+    !isStringArray(rawQuestion.conversationStarters) ||
+    rawQuestion.conversationStarters.length === 0
+  ) {
+    fail("biggestQuestion.conversationStarters is empty");
   }
-  for (const [i, entry] of teaser.categories.entries()) {
-    const c = entry as Record<string, unknown>;
-    if (!isNonEmptyString(c.id)) fail(`teaser.categories[${i}].id is empty`);
-    if (!isNonEmptyString(c.name)) fail(`teaser.categories[${i}].name is empty`);
-    if (!isScore(c.score)) fail(`teaser.categories[${i}].score is not 0-100`);
-    if (!isNonEmptyString(c.headline)) fail(`teaser.categories[${i}].headline is empty`);
-  }
+  const biggestQuestion: BiggestQuestion = {
+    question,
+    conversationStarters: rawQuestion.conversationStarters,
+  };
 
-  const see = full.seeEachOther as SeeEachOther | undefined;
-  if (!see?.partner1View || !see.partner2View || !see.mismatch) {
-    fail("full.seeEachOther is incomplete");
-  }
-
-  const dna = full.conflictDNA as ConflictDNA | undefined;
-  if (!dna?.pattern || !dna.description || !dna.howItPlaysOut || !dna.advice) {
-    fail("full.conflictDNA is incomplete");
-  }
-
-  const map = full.gapMap as GapMap | undefined;
-  if (!map || !Array.isArray(map.scaleGaps) || !Array.isArray(map.blitzSplits)) {
-    fail("full.gapMap is incomplete");
-  }
-  if (!isNonEmptyString(map.overallInsight)) fail("full.gapMap.overallInsight is empty");
-  for (const [i, split] of (map.blitzSplits as BlitzSplit[]).entries()) {
-    if (split.partner1 !== "fine" && split.partner1 !== "dealbreaker") {
-      fail(`full.gapMap.blitzSplits[${i}].partner1 is invalid`);
-    }
-    if (split.partner2 !== "fine" && split.partner2 !== "dealbreaker") {
-      fail(`full.gapMap.blitzSplits[${i}].partner2 is invalid`);
-    }
-  }
-
-  const afraid = full.afraidToLose as AfraidToLose | undefined;
-  if (!afraid?.partner1 || !afraid.partner2 || !afraid.alignment) {
-    fail("full.afraidToLose is incomplete");
-  }
-
-  const truth = full.uncomfortableTruth as UncomfortableTruth | undefined;
-  if (!truth?.headline || !truth.explanation) fail("full.uncomfortableTruth is incomplete");
-
-  checkTitledItems(full.gettingRight, "full.gettingRight", GETTING_RIGHT_COUNT);
-  checkTitledItems(full.actionPlan, "full.actionPlan");
-
-  if (!isStringArray(full.conversationStarters) || full.conversationStarters.length === 0) {
-    fail("full.conversationStarters is empty");
-  }
-
-  return data as Analysis;
+  return { ...sections, biggestQuestion };
 }

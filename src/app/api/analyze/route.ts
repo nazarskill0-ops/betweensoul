@@ -1,13 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
-import { generateAnalysis } from "@/lib/analysis";
+import { generateFreeReport } from "@/lib/analysis";
 import { MOCK_MODE } from "@/lib/devMode";
-import { buildMockAnalysis } from "@/lib/mockAnalysis";
+import { buildMockFreeReport } from "@/lib/mockAnalysis";
 import { saveReport } from "@/lib/reportStore";
 import { AnswerValue, PartnerInfo } from "@/lib/types";
 
-// Four parallel Haiku calls finish well inside this; the headroom is for a
-// retried part on a slow day.
+// One Haiku request; the deep dive happens later, after payment.
 export const maxDuration = 60;
 
 interface AnalyzeBody {
@@ -44,30 +43,29 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const transcript = { partner1, partner2, relationshipStart, answers };
+
   try {
-    const analysis = MOCK_MODE
-      ? buildMockAnalysis(partner1.name, partner2.name)
-      : await generateAnalysis({
-          partner1,
-          partner2,
-          relationshipStart,
-          answers,
-        });
+    const free = MOCK_MODE
+      ? buildMockFreeReport(partner1.name, partner2.name)
+      : await generateFreeReport(transcript);
 
     const id = randomUUID();
     await saveReport({
       id,
       createdAt: Date.now(),
-      paid: false,
       email,
       partner1Name: partner1.name,
       partner2Name: partner2.name,
-      analysis,
+      // Stored so the paid pass can replay the test without the client.
+      answers: transcript,
+      free,
+      paid: null,
+      paidStatus: "unpaid",
     });
 
-    // Only the teaser crosses the wire — the full report stays server-side
-    // until the order is confirmed paid.
-    return Response.json({ reportId: id, teaser: analysis.teaser });
+    // Only the free sections cross the wire. The paid ones don't exist yet.
+    return Response.json({ reportId: id, teaser: free });
   } catch (error) {
     // The specific reason (bad JSON, refusal, truncation, transport) goes to
     // the server log; the client gets a message it can show a user.

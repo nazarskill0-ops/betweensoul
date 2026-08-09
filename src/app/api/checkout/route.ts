@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { MOCK_MODE } from "@/lib/devMode";
-import { getReport, markPaid } from "@/lib/reportStore";
+import { buildMockPaidReport } from "@/lib/mockAnalysis";
+import { getReport, savePaidReport } from "@/lib/reportStore";
 
 const LEMON_SQUEEZY_API = "https://api.lemonsqueezy.com/v1/checkouts";
 
@@ -27,14 +28,18 @@ export async function POST(request: NextRequest) {
   if (!report) {
     return Response.json({ error: "Report not found." }, { status: 404 });
   }
-  if (report.paid) {
+  if (report.paidStatus === "ready") {
     return Response.json({ error: "This report is already unlocked." }, { status: 409 });
   }
 
-  // Fixture mode: unlock straight away so the paid report can be reviewed
-  // without a Lemon Squeezy store. Dev-only — see src/lib/devMode.ts.
+  // Fixture mode: drop the canned deep dive straight in so the paid report can
+  // be reviewed without a Lemon Squeezy store or a Sonnet call. Dev-only — see
+  // src/lib/devMode.ts.
   if (MOCK_MODE) {
-    await markPaid(reportId);
+    await savePaidReport(
+      reportId,
+      buildMockPaidReport(report.partner1Name, report.partner2Name),
+    );
     return Response.json({ url: `/result?report=${reportId}&paid=1` });
   }
 

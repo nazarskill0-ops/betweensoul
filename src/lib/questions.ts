@@ -78,11 +78,13 @@ export const questions: Question[] = [
   // --- How you fight ---
   {
     id: "q3",
-    type: "choice",
+    type: "multi-select",
     text: "You're in the middle of a heated argument. What's your go-to move?",
+    subtitle: "Pick up to 3 — most people do more than one",
     answeredBy: "each",
+    maxSelections: 3,
     choices: [
-      { id: "a", text: "Raise my voice — I can't help it" },
+      { id: "a", text: "Become more emotional — I can't help it" },
       { id: "b", text: "Stay calm but I won't back down" },
       { id: "c", text: "Go completely silent" },
       { id: "d", text: "Try to crack a joke or change the subject" },
@@ -102,6 +104,7 @@ export const questions: Question[] = [
       { id: "d", text: "Waits for ME to apologize first", emoji: "⏳" },
       { id: "e", text: "Pretends nothing happened", emoji: "😶" },
       { id: "f", text: "Actually apologizes and means it", emoji: "💛" },
+      { id: "g", text: "Needs space first, then talks", emoji: "🚪" },
     ],
   },
   {
@@ -134,6 +137,10 @@ export const questions: Question[] = [
       { id: "b6", statement: "Sharing your live location with each other" },
       { id: "b7", statement: 'Having a "work husband" or "work wife"' },
       { id: "b8", statement: "Keeping a savings account your partner doesn't know about" },
+      { id: "b9", statement: "Sleeping in separate beds" },
+      { id: "b10", statement: "Keeping an opposite-sex best friend" },
+      { id: "b11", statement: "Watching porn" },
+      { id: "b12", statement: "Moving abroad for work" },
     ],
   },
 
@@ -151,7 +158,7 @@ export const questions: Question[] = [
       { id: "s4", left: "Total independence", right: "Do everything together" },
       { id: "s5", left: "Brutally honest", right: "Keep the peace" },
       { id: "s6", left: "Big city energy", right: "Quiet countryside life" },
-      { id: "s7", left: "Kids soon", right: "No kids" },
+      { id: "s7", left: "Want kids", right: "Don't want kids" },
       { id: "s8", left: "Passionate & intense", right: "Calm & stable" },
     ],
   },
@@ -167,6 +174,7 @@ export const questions: Question[] = [
       { id: "b", text: "Most things — I keep a few things private" },
       { id: "c", text: "The basics — I don't do deep emotional sharing" },
       { id: "d", text: "They know the version I want them to see" },
+      { id: "e", text: "I don't even know myself that well" },
     ],
   },
   {
@@ -192,6 +200,7 @@ export const questions: Question[] = [
       { id: "b", text: "Once, during a rough patch" },
       { id: "c", text: "More than once" },
       { id: "d", text: "More often than I'd admit" },
+      { id: "e", text: "I don't know" },
     ],
   },
 
@@ -207,6 +216,7 @@ export const questions: Question[] = [
       { id: "c", text: "Thriller — never a dull moment", emoji: "🔥" },
       { id: "d", text: "Documentary — real and raw", emoji: "📹" },
       { id: "e", text: "Horror — love it but it scares me sometimes", emoji: "😅" },
+      { id: "f", text: "Adventure — we're building something together", emoji: "🧭" },
     ],
   },
   {
@@ -225,7 +235,8 @@ export const questions: Question[] = [
       { id: "f", text: "More romance & dates", emoji: "💐" },
       { id: "g", text: "Better communication", emoji: "💬" },
       { id: "h", text: "More personal space", emoji: "🧘" },
-      { id: "i", text: "Nothing — wouldn't change a thing", emoji: "✅" },
+      { id: "i", text: "Feeling understood", emoji: "🫂" },
+      { id: "j", text: "Nothing — wouldn't change a thing", emoji: "✅" },
     ],
   },
   {

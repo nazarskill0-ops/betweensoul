@@ -1,41 +1,46 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTestStore } from "@/store/useTestStore";
 import { useStoreHydrated } from "@/store/useHydrated";
 import {
-  AfraidToLose,
+  BiggestMisunderstanding,
+  BiggestQuestion,
+  BiggestSurprise,
   ConflictDNA,
-  GapMap,
-  GapSize,
+  FreeReport,
+  HowYouLove,
+  IfNothingChanges,
+  PaidStatus,
   SeeEachOther,
-  Teaser,
-  TitledItem,
-  UncomfortableTruth,
+  WhatKeepsYouTogether,
 } from "@/lib/types";
 
 const PRICE = "$9.99";
+const POLL_INTERVAL_MS = 2000;
+/** ~4 minutes. The Sonnet pass measures ~70s; this leaves room for a retry. */
+const MAX_POLLS = 120;
 
 /**
- * What /api/report/[id] returns. Every paid field arrives as `null` until the
- * order is confirmed paid, so a locked section has nothing real to reveal —
- * the blur below sits over fixed placeholder copy, not over withheld text.
+ * What /api/report/[id] returns. The paid fields are simply absent until
+ * `paidStatus` is "ready" — they don't exist server-side before then, so there
+ * is nothing withheld in the payload for a determined reader to dig out.
  */
 interface ReportResponse {
-  paid: boolean;
+  paidStatus: PaidStatus;
   partner1Name: string;
   partner2Name: string;
-  teaser: Teaser;
-  seeEachOther: SeeEachOther | null;
-  conflictDNA: ConflictDNA | null;
-  gapMap: GapMap | null;
-  afraidToLose: AfraidToLose | null;
-  uncomfortableTruth: UncomfortableTruth | null;
-  gettingRight: TitledItem[] | null;
-  actionPlan: TitledItem[] | null;
-  conversationStarters: string[] | null;
+  free: FreeReport;
+  biggestSurprise?: BiggestSurprise;
+  seeEachOther?: SeeEachOther;
+  biggestMisunderstanding?: BiggestMisunderstanding;
+  conflictDNA?: ConflictDNA;
+  howYouLove?: HowYouLove;
+  ifNothingChanges?: IfNothingChanges;
+  whatKeepsYouTogether?: WhatKeepsYouTogether;
+  biggestQuestion?: BiggestQuestion;
 }
 
 function scoreTone(score: number) {
@@ -44,13 +49,6 @@ function scoreTone(score: number) {
   if (score >= 55) return { text: "text-amber-600", bar: "bg-amber-400" };
   return { text: "text-rose-600", bar: "bg-rose-400" };
 }
-
-const GAP_TONE: Record<GapSize, { label: string; className: string }> = {
-  aligned: { label: "Aligned", className: "bg-emerald-100 text-emerald-700" },
-  minor: { label: "Minor gap", className: "bg-lilac-100 text-lilac-500" },
-  significant: { label: "Significant gap", className: "bg-amber-100 text-amber-700" },
-  major: { label: "Major gap", className: "bg-rose-100 text-rose-600" },
-};
 
 /** Eases 0 → target over `duration`, honouring prefers-reduced-motion. */
 function useCountUp(target: number, duration = 1300) {
@@ -191,12 +189,40 @@ function PartnerColumns({
   );
 }
 
+/** A labelled block of prose — the shape most paid sections take. */
+function Panel({
+  label,
+  tone,
+  children,
+}: {
+  label: string;
+  tone: "lilac" | "blush" | "emerald" | "amber";
+  children: React.ReactNode;
+}) {
+  const styles = {
+    lilac: "bg-lilac-50 text-lilac-500",
+    blush: "bg-blush-50 text-blush-600",
+    emerald: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700",
+  }[tone];
+  const [bg, text] = styles.split(" ");
+
+  return (
+    <div className={`rounded-2xl ${bg} p-4`}>
+      <p className={`mb-1.5 text-xs font-extrabold uppercase tracking-wide ${text}`}>
+        {label}
+      </p>
+      {children}
+    </div>
+  );
+}
+
 /* --------------------------------- paywall -------------------------------- */
 
 /**
  * Filler for locked sections. Identical for every section and deliberately
- * says nothing: the real analysis is never sent to the browser before payment,
- * so there is nothing here to un-blur.
+ * says nothing: the real analysis has not been generated yet, so there is
+ * nothing here to un-blur.
  */
 const PLACEHOLDER_LINES = [
   "Analysis reveals a consistent pattern in how each of you described the other, and the places where those two accounts stop agreeing.",
@@ -241,25 +267,50 @@ function LockedSection({
   );
 }
 
+/** Shown while Sonnet is writing the deep dive. */
+function GeneratingSection({ title, emoji }: { title: string; emoji: string }) {
+  return (
+    <section className="card overflow-hidden p-6">
+      <h2 className="flex items-center gap-2 text-lg font-extrabold text-ink-900">
+        <span>{emoji}</span>
+        <span className="flex-1">{title}</span>
+        <span className="animate-heartbeat text-base">✨</span>
+      </h2>
+      <div className="mt-4 space-y-2.5" aria-hidden>
+        <div className="h-3 w-full animate-pulse rounded-full bg-blush-50" />
+        <div className="h-3 w-11/12 animate-pulse rounded-full bg-blush-50" />
+        <div className="h-3 w-9/12 animate-pulse rounded-full bg-blush-50" />
+      </div>
+    </section>
+  );
+}
+
 /**
- * One paid section. `data` is null whenever the report is locked, so `render`
- * — the only thing that can produce real content — is never called.
+ * One paid section. `data` only exists once the deep dive is stored, so
+ * `render` — the only thing that can produce real content — is never called
+ * before then.
  */
 function PaidSlot<T>({
   title,
   emoji,
   data,
+  status,
   onUnlock,
   render,
 }: {
   title: string;
   emoji: string;
-  data: T | null;
+  data: T | undefined;
+  status: PaidStatus;
   onUnlock: () => void;
   render: (data: T) => React.ReactNode;
 }) {
-  if (data === null) {
-    return <LockedSection title={title} emoji={emoji} onUnlock={onUnlock} />;
+  if (data === undefined) {
+    return status === "processing" ? (
+      <GeneratingSection title={title} emoji={emoji} />
+    ) : (
+      <LockedSection title={title} emoji={emoji} onUnlock={onUnlock} />
+    );
   }
   return (
     <SectionCard title={title} emoji={emoji}>
@@ -282,7 +333,7 @@ function UnlockCallout({
       <div className="space-y-2">
         <span className="pill bg-lilac-100 text-lilac-500">🔒 Locked</span>
         <h2 className="text-2xl font-extrabold text-ink-900">
-          Your full report is ready
+          Your full report is ready to write
         </h2>
       </div>
       <div className="space-y-2">
@@ -321,9 +372,9 @@ function ResultContent() {
   const [loadState, setLoadState] = useState<"loading" | "ready" | "notfound">(
     "loading",
   );
-  const [settling, setSettling] = useState(justPaid);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const pollsRef = useRef(0);
 
   const fetchReport = useCallback(async (id: string) => {
     const response = await fetch(`/api/report/${id}`);
@@ -336,7 +387,7 @@ function ResultContent() {
     if (!hydrated || !reportId) return;
 
     let cancelled = false;
-    let attempts = 0;
+    let timer: ReturnType<typeof setTimeout>;
 
     const load = async () => {
       const data = await fetchReport(reportId);
@@ -350,18 +401,22 @@ function ResultContent() {
       setReport(data);
       setLoadState("ready");
 
-      // Coming back from checkout, the webhook may not have landed yet.
-      if (justPaid && !data.paid && attempts < 16) {
-        attempts += 1;
-        setTimeout(load, 2500);
-      } else {
-        setSettling(false);
+      // Keep polling while the deep dive is being written, and — coming back
+      // from checkout — while the webhook that starts it hasn't landed yet.
+      const waiting =
+        data.paidStatus === "processing" ||
+        (justPaid && data.paidStatus === "unpaid");
+
+      if (waiting && pollsRef.current < MAX_POLLS) {
+        pollsRef.current += 1;
+        timer = setTimeout(load, POLL_INTERVAL_MS);
       }
     };
 
     void load();
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
   }, [fetchReport, hydrated, justPaid, reportId]);
 
@@ -392,9 +447,9 @@ function ResultContent() {
     return <CenteredNote emoji="💗" title="Loading your results…" />;
   }
 
-  const teaser = report?.teaser ?? storedTeaser;
+  const free = report?.free ?? storedTeaser;
 
-  if (!reportId || loadState === "notfound" || !teaser) {
+  if (!reportId || loadState === "notfound" || !free) {
     return (
       <main className="flex flex-1 items-center justify-center px-5 py-12">
         <div className="card w-full max-w-md space-y-4 p-8 text-center">
@@ -416,6 +471,7 @@ function ResultContent() {
 
   const p1Name = report?.partner1Name || partner1.name || "Partner 1";
   const p2Name = report?.partner2Name || partner2.name || "Partner 2";
+  const status: PaidStatus = report?.paidStatus ?? "unpaid";
 
   return (
     <main className="flex-1 px-5 py-10">
@@ -425,48 +481,37 @@ function ResultContent() {
           <p className="text-sm font-semibold text-ink-500">
             {p1Name} &amp; {p2Name}
           </p>
-          <ScoreRing score={teaser.overallScore} />
-          <span className="pill bg-blush-100 text-blush-600">{teaser.verdict}</span>
+          <ScoreRing score={free.overallScore} />
+          <span className="pill bg-blush-100 text-blush-600">{free.verdict}</span>
         </section>
 
-        {/* 2 — FREE: your couple in one line */}
+        {/* 2 — FREE: the archetype */}
         <section className="card p-6 text-center sm:p-8">
           <p className="mb-3 text-xs font-extrabold uppercase tracking-wide text-ink-500">
-            Your Couple in One Line
+            Your Hidden Dynamic
           </p>
-          <p className="text-xl font-extrabold leading-snug text-ink-900 sm:text-2xl">
-            {teaser.coupleLine}
+          <p className="mb-3 text-2xl font-extrabold leading-snug text-ink-900 sm:text-3xl">
+            {free.hiddenDynamic.type}
+          </p>
+          <p className="text-sm leading-relaxed text-ink-700">
+            {free.hiddenDynamic.description}
           </p>
         </section>
 
         {/* 3 — PAID */}
         <PaidSlot
-          title="How You See Each Other"
-          emoji="👀"
-          data={report?.seeEachOther ?? null}
+          title="The Thing We Didn't Expect"
+          emoji="🤯"
+          data={report?.biggestSurprise}
+          status={status}
           onUnlock={unlock}
-          render={(see) => (
-            <>
-              <PartnerColumns
-                p1Name={p1Name}
-                p2Name={p2Name}
-                p1Text={see.partner1View}
-                p2Text={see.partner2View}
-              />
-              <div className="rounded-2xl bg-lilac-50 p-4">
-                <p className="mb-1.5 text-xs font-extrabold uppercase tracking-wide text-lilac-500">
-                  Where it doesn&rsquo;t line up
-                </p>
-                <Paragraphs text={see.mismatch} />
-              </div>
-            </>
-          )}
+          render={(surprise) => <Paragraphs text={surprise.insight} />}
         />
 
         {/* 4 — FREE: the five scores */}
         <section className="card space-y-4 p-6">
           <h2 className="text-lg font-extrabold text-ink-900">Your five scores</h2>
-          {teaser.categories.map((category) => (
+          {free.categories.map((category) => (
             <div key={category.id} className="space-y-1.5">
               <div className="flex items-baseline justify-between gap-3">
                 <span className="font-bold text-ink-900">{category.name}</span>
@@ -484,235 +529,194 @@ function ResultContent() {
           ))}
         </section>
 
-        {/* 5 — PAID */}
-        <PaidSlot
-          title="Your Conflict DNA"
-          emoji="🧬"
-          data={report?.conflictDNA ?? null}
-          onUnlock={unlock}
-          render={(dna) => (
-            <>
-              <span className="pill bg-blush-100 text-blush-600">{dna.pattern}</span>
-              <Paragraphs text={dna.description} />
-              <div className="rounded-2xl bg-blush-50 p-4">
-                <p className="mb-1.5 text-xs font-extrabold uppercase tracking-wide text-blush-600">
-                  How it plays out for you
-                </p>
-                <Paragraphs text={dna.howItPlaysOut} />
-              </div>
-              <div className="rounded-2xl bg-emerald-50 p-4">
-                <p className="mb-1.5 text-xs font-extrabold uppercase tracking-wide text-emerald-700">
-                  What to do about it
-                </p>
-                <Paragraphs text={dna.advice} />
-              </div>
-            </>
-          )}
-        />
-
-        {/* 6 — FREE: blind spots */}
-        {teaser.blindSpots.length > 0 && (
-          <SectionCard title="Your Blind Spots" emoji="🫥">
-            <p className="text-sm text-ink-700">
-              Places your answers pulled in different directions.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {teaser.blindSpots.map((spot) => (
-                <span key={spot} className="pill bg-amber-100 text-amber-700">
-                  {spot}
-                </span>
-              ))}
-            </div>
-          </SectionCard>
-        )}
-
-        {settling && !report?.paid && (
-          <div className="card p-5 text-center text-sm font-semibold text-ink-700">
-            💳 Payment received — unlocking your report…
-          </div>
-        )}
-
-        {/* The main CTA sits after the last free section that precedes the
-            longest run of locked ones. */}
-        {report && !report.paid && (
+        {/* The main CTA, or the post-payment status. */}
+        {status === "unpaid" && (
           <UnlockCallout
             onUnlock={unlock}
             loading={checkoutLoading}
             error={checkoutError}
           />
         )}
+        {status === "processing" && (
+          <section className="card space-y-2 p-6 text-center">
+            <div className="animate-heartbeat text-3xl">💗</div>
+            <h2 className="text-lg font-extrabold text-ink-900">
+              Generating your deep analysis…
+            </h2>
+            <p className="text-sm text-ink-700">
+              This one takes a little longer — it&rsquo;s reading all 15 answers
+              at once, in one pass. Usually about a minute.
+            </p>
+          </section>
+        )}
 
-        {/* 7 — PAID */}
+        {/* 5 — PAID */}
         <PaidSlot
-          title="The Gap Map"
-          emoji="🗺️"
-          data={report?.gapMap ?? null}
+          title="How You See Each Other"
+          emoji="👀"
+          data={report?.seeEachOther}
+          status={status}
           onUnlock={unlock}
-          render={(gapMap) => (
-            <>
-              <div className="space-y-3">
-                {gapMap.scaleGaps.map((gap) => {
-                  const tone = GAP_TONE[gap.gapSize] ?? GAP_TONE.minor;
-                  return (
-                    <div key={gap.topic} className="rounded-2xl bg-lilac-50 p-4">
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <p className="font-bold text-ink-900">{gap.topic}</p>
-                        <span className={`pill ${tone.className}`}>{tone.label}</span>
-                      </div>
-                      <PartnerColumns
-                        p1Name={p1Name}
-                        p2Name={p2Name}
-                        p1Text={gap.partner1Position}
-                        p2Text={gap.partner2Position}
-                      />
-                      <p className="mt-3 text-sm leading-relaxed text-ink-700">
-                        {gap.comment}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {gapMap.blitzSplits.length > 0 && (
-                <div className="space-y-2 pt-1">
-                  <p className="text-xs font-extrabold uppercase tracking-wide text-ink-500">
-                    Where you split on the quick round
-                  </p>
-                  {gapMap.blitzSplits.map((split) => (
-                    <div key={split.statement} className="rounded-2xl bg-blush-50 p-4">
-                      <p className="font-semibold text-ink-900">{split.statement}</p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <span className="pill bg-[var(--color-p1-soft)] text-[var(--color-p1)]">
-                          {p1Name}:{" "}
-                          {split.partner1 === "fine" ? "👍 Fine" : "👎 Dealbreaker"}
-                        </span>
-                        <span className="pill bg-[var(--color-p2-soft)] text-[var(--color-p2)]">
-                          {p2Name}:{" "}
-                          {split.partner2 === "fine" ? "👍 Fine" : "👎 Dealbreaker"}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm leading-relaxed text-ink-700">
-                        {split.insight}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="rounded-2xl bg-lilac-50 p-4">
-                <Paragraphs text={gapMap.overallInsight} />
-              </div>
-            </>
-          )}
-        />
-
-        {/* 8 — PAID */}
-        <PaidSlot
-          title="What You're Really Afraid to Lose"
-          emoji="💗"
-          data={report?.afraidToLose ?? null}
-          onUnlock={unlock}
-          render={(afraid) => (
+          render={(see) => (
             <>
               <PartnerColumns
                 p1Name={p1Name}
                 p2Name={p2Name}
-                p1Text={afraid.partner1}
-                p2Text={afraid.partner2}
+                p1Text={see.partner1View}
+                p2Text={see.partner2View}
               />
-              <Paragraphs text={afraid.alignment} />
+              <Panel label="What that says about you" tone="lilac">
+                <Paragraphs text={see.dynamic} />
+              </Panel>
             </>
           )}
         />
 
-        {/* 9 — FREE: the blitz round in one line */}
+        {/* 6 — PAID */}
+        <PaidSlot
+          title="The Biggest Misunderstanding"
+          emoji="🔀"
+          data={report?.biggestMisunderstanding}
+          status={status}
+          onUnlock={unlock}
+          render={(gap) => (
+            <div className="space-y-2">
+              <div className="rounded-2xl bg-[var(--color-p1-soft)] p-4">
+                <p className="text-sm leading-relaxed text-ink-900">
+                  {gap.partner1Thinks}
+                </p>
+              </div>
+              <div className="rounded-2xl bg-[var(--color-p2-soft)] p-4">
+                <p className="text-sm leading-relaxed text-ink-900">
+                  {gap.partner2Experiences}
+                </p>
+              </div>
+            </div>
+          )}
+        />
+
+        {/* 7 — PAID */}
+        <PaidSlot
+          title="Your Conflict DNA"
+          emoji="🧬"
+          data={report?.conflictDNA}
+          status={status}
+          onUnlock={unlock}
+          render={(dna) => (
+            <>
+              <span className="pill bg-blush-100 text-blush-600">{dna.pattern}</span>
+              <Panel label="What starts it" tone="blush">
+                <Paragraphs text={dna.trigger} />
+              </Panel>
+              <Panel label="How it escalates" tone="amber">
+                <Paragraphs text={dna.escalation} />
+              </Panel>
+              <Panel label="What happens after" tone="lilac">
+                <Paragraphs text={dna.aftermath} />
+              </Panel>
+              <Panel label="The real issue underneath" tone="emerald">
+                <Paragraphs text={dna.insight} />
+              </Panel>
+            </>
+          )}
+        />
+
+        {/* 8 — FREE: the blitz round in one line */}
         <section className="card p-6 text-center">
           <p className="mb-2 text-xs font-extrabold uppercase tracking-wide text-ink-500">
             Your Boundaries
           </p>
           <p className="text-base font-bold leading-snug text-ink-900">
-            {teaser.flagSummary}
+            {free.flagSummary}
           </p>
         </section>
 
+        {/* 9 — PAID */}
+        <PaidSlot
+          title="How Each of You Loves"
+          emoji="💞"
+          data={report?.howYouLove}
+          status={status}
+          onUnlock={unlock}
+          render={(love) => (
+            <>
+              <PartnerColumns
+                p1Name={p1Name}
+                p2Name={p2Name}
+                p1Text={love.partner1}
+                p2Text={love.partner2}
+              />
+              <Panel label="Where that rubs" tone="amber">
+                <Paragraphs text={love.friction} />
+              </Panel>
+            </>
+          )}
+        />
+
         {/* 10 — PAID */}
         <PaidSlot
-          title="The Uncomfortable Truth"
-          emoji="🪞"
-          data={report?.uncomfortableTruth ?? null}
+          title="If Nothing Changes…"
+          emoji="⚠️"
+          data={report?.ifNothingChanges}
+          status={status}
           onUnlock={unlock}
-          render={(truth) => (
+          render={(forecast) => (
             <>
               <p className="text-lg font-extrabold leading-snug text-ink-900">
-                {truth.headline}
+                {forecast.prediction}
               </p>
-              <Paragraphs text={truth.explanation} />
+              <Panel label="Why we think so" tone="lilac">
+                <Paragraphs text={forecast.why} />
+              </Panel>
             </>
           )}
         />
 
         {/* 11 — PAID */}
         <PaidSlot
-          title="3 Things You're Getting Right"
-          emoji="✅"
-          data={report?.gettingRight ?? null}
+          title="What's Secretly Keeping This Alive"
+          emoji="💚"
+          data={report?.whatKeepsYouTogether}
+          status={status}
           onUnlock={unlock}
-          render={(items) => (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.title} className="rounded-2xl bg-emerald-50 p-4">
-                  <p className="font-bold text-ink-900">{item.title}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-ink-700">
-                    {item.detail}
-                  </p>
-                </div>
-              ))}
-            </div>
+          render={(keep) => (
+            <>
+              <p className="text-lg font-extrabold leading-snug text-ink-900">
+                {keep.core}
+              </p>
+              <Panel label="The evidence" tone="emerald">
+                <Paragraphs text={keep.evidence} />
+              </Panel>
+            </>
           )}
         />
 
         {/* 12 — PAID */}
         <PaidSlot
-          title="Your Action Plan"
-          emoji="🗓️"
-          data={report?.actionPlan ?? null}
+          title="The One Question"
+          emoji="❓"
+          data={report?.biggestQuestion}
+          status={status}
           onUnlock={unlock}
-          render={(steps) => (
-            <ol className="space-y-3">
-              {steps.map((step, index) => (
-                <li key={step.title} className="flex gap-3">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blush-100 text-sm font-extrabold text-blush-600">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <p className="font-bold text-ink-900">{step.title}</p>
-                    <p className="text-sm leading-relaxed text-ink-700">
-                      {step.detail}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-        />
-
-        {/* 13 — PAID */}
-        <PaidSlot
-          title="Talk About This Tonight"
-          emoji="💬"
-          data={report?.conversationStarters ?? null}
-          onUnlock={unlock}
-          render={(questions) => (
-            <ul className="space-y-2">
-              {questions.map((question) => (
-                <li
-                  key={question}
-                  className="rounded-2xl bg-blush-50 px-4 py-3 text-sm text-ink-700"
-                >
-                  &ldquo;{question}&rdquo;
-                </li>
-              ))}
-            </ul>
+          render={(one) => (
+            <>
+              <p className="text-xl font-extrabold leading-snug text-ink-900">
+                &ldquo;{one.question}&rdquo;
+              </p>
+              <p className="text-xs font-extrabold uppercase tracking-wide text-ink-500">
+                Talk about this tonight
+              </p>
+              <ul className="space-y-2">
+                {one.conversationStarters.map((question) => (
+                  <li
+                    key={question}
+                    className="rounded-2xl bg-blush-50 px-4 py-3 text-sm text-ink-700"
+                  >
+                    &ldquo;{question}&rdquo;
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         />
 

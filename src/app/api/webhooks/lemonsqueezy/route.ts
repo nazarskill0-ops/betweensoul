@@ -1,9 +1,17 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { NextRequest } from "next/server";
-import { markPaid } from "@/lib/reportStore";
+import { NextRequest, after } from "next/server";
+import { runPaidGeneration } from "@/lib/paidAnalysis";
+import { getReport } from "@/lib/reportStore";
 
 /** Events that mean "this report is now paid for". */
 const UNLOCK_EVENTS = new Set(["order_created"]);
+
+/**
+ * The Sonnet pass runs inside `after()`, which is billed against this route's
+ * budget — and it measures ~70s, so 60 would kill it just before it stored the
+ * report. Assumes Fluid compute is on for the project.
+ */
+export const maxDuration = 300;
 
 function signatureIsValid(rawBody: string, header: string | null, secret: string) {
   if (!header) return false;
@@ -57,13 +65,17 @@ export async function POST(request: NextRequest) {
     return new Response("Missing report_id", { status: 200 });
   }
 
-  const unlocked = await markPaid(reportId);
-  if (!unlocked) {
+  if (!(await getReport(reportId))) {
     // 200 on purpose: retrying won't conjure a report that isn't in the store.
     console.error("[webhook] Paid order for unknown report %s.", reportId);
     return new Response("Unknown report", { status: 200 });
   }
 
-  console.log("[webhook] Unlocked report %s.", reportId);
+  // The deep analysis takes 10-20s — far too long to hold the webhook open,
+  // and Lemon Squeezy would retry on the timeout. `after()` runs it once the
+  // 200 is already on the wire; the result page polls until it lands.
+  after(() => runPaidGeneration(reportId));
+
+  console.log("[webhook] Unlocked report %s; deep analysis queued.", reportId);
   return new Response("OK", { status: 200 });
 }

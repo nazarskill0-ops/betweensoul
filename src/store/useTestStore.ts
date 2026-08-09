@@ -36,6 +36,18 @@ export const useTestStore = create<TestStore>()(
     }),
     {
       name: "betweensoul-test",
+      /**
+       * Bump this whenever the persisted shape changes — `answers` keys or the
+       * `teaser` fields.
+       *
+       * Without it, a returning visitor rehydrates a report written by an older
+       * build and the page reads a field that no longer exists on it, which
+       * throws during render rather than degrading. There is nothing here worth
+       * migrating (a half-finished test, at most), so a version mismatch drops
+       * the state and starts clean.
+       */
+      version: 2,
+      migrate: () => undefined,
       // The full report never touches the client until it's paid for, so the
       // only thing worth persisting is enough to survive a refresh mid-test.
       partialize: (state) => ({
