@@ -1,4 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { MOCK_MODE } from "@/lib/devMode";
+import { buildMockPaidReport } from "@/lib/mockAnalysis";
 import { validatePaidReport } from "@/lib/parseAnalysis";
 import { paidPrompt } from "@/lib/prompts";
 import {
@@ -109,7 +111,12 @@ export async function runPaidGeneration(reportId: string): Promise<boolean> {
     const report = await getReport(reportId);
     if (!report) throw new Error(`report ${reportId} vanished mid-generation`);
 
-    const paid = await generatePaidReport(report.answers, report.free);
+    // Fixture mode: the canned deep dive, so the paid half of the result page
+    // can be reviewed with no Sonnet call and no Paddle checkout. Pair it with
+    // DEV_PAID_BYPASS=1 to unlock on the first poll. Dev-only — see devMode.ts.
+    const paid = MOCK_MODE
+      ? buildMockPaidReport(report.partner1Name, report.partner2Name)
+      : await generatePaidReport(report.answers, report.free);
     await savePaidReport(reportId, paid);
     console.log("[paid] report %s is ready.", reportId);
     return true;

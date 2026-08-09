@@ -1,6 +1,6 @@
 # Terms of Service
 
-**Last updated: August 7, 2026**
+**Last updated: August 9, 2026**
 
 ## 1. What This Is
 
@@ -11,7 +11,7 @@ CouplesScan ("we," "us," "our") provides an AI-powered relationship compatibilit
 CouplesScan is an entertainment and self-reflection tool — not therapy, counseling, or professional advice. Our test uses AI to analyze answers provided by you and your partner and generate a compatibility report.
 
 - **Free report:** A basic overview is provided at no cost after completing the test.
-- **Paid report:** A detailed deep-dive analysis is available as a one-time purchase for $10 USD.
+- **Paid report:** A detailed deep-dive analysis is available as a one-time purchase for $9.99 USD.
 
 ## 3. Not Professional Advice
 
@@ -49,14 +49,14 @@ Questions? Email us at [support@couplescan.com](mailto:support@couplescan.com).
 
 # Privacy Policy
 
-**Last updated: August 7, 2026**
+**Last updated: August 9, 2026**
 
 ## 1. What We Collect
 
 When you take the CouplesScan test, we collect:
 
 - **Names (or nicknames) of both partners** — used only to personalize your report.
-- **Email address** — used to identify your account and deliver your report.
+- **Email address** — stored with your report and used to pre-fill the checkout form, and to identify your report if you contact support. We do not currently email reports to you, and there are no user accounts.
 - **Test answers** — used to generate your compatibility report.
 - **Payment information** — processed entirely by Paddle ([paddle.com](https://paddle.com)). We never see or store your credit card details.
 
@@ -67,23 +67,23 @@ When you take the CouplesScan test, we collect:
 - To process your payment (via Paddle).
 - We do NOT use your answers to train AI models.
 - We do NOT sell your personal data to third parties.
-- We do NOT send marketing emails unless you explicitly opt in.
+- We do NOT send marketing emails.
 
 ## 3. AI Processing
 
-Your answers are sent to an AI service (Anthropic Claude) to generate your report. The answers are sent as anonymous text without your email or full names attached. Anthropic does not store or train on this data per their data usage policy.
+Your answers are sent to an AI service (Anthropic Claude) to generate your report. The names (or nicknames) you enter are sent along with them, because the report addresses you both by name. Your email address is not sent. Anthropic does not store or train on this data per their data usage policy.
 
 ## 4. Data Storage
 
-Your report and answers are stored on our servers to allow you to access your report. We retain this data for as long as your account exists.
+Your report and answers are stored on our servers so you can come back to your report from its link. They are deleted automatically after 30 days. There are no user accounts — a report is reachable only by its unique link, so keep that link if you want to return to it. Reports may also be cleared earlier when we deploy updates to the site, so save anything you want to keep.
 
 ## 5. Data Deletion
 
-You can request deletion of all your data (answers, reports, account) by emailing [support@couplescan.com](mailto:support@couplescan.com). We will process your request within 30 days.
+Your answers and report are deleted automatically 30 days after the test. If you want them removed sooner, email [support@couplescan.com](mailto:support@couplescan.com) with your report link and we will delete them within 30 days of your request.
 
 ## 6. Cookies
 
-We use essential cookies for site functionality. We may use analytics cookies (such as Google Analytics) to understand how visitors use our site. No advertising cookies are used.
+We use only what the site needs to work: your answers are kept in your own browser's local storage while you take the test, and Paddle sets its own cookies when you open the checkout. We do not currently use analytics or advertising cookies. If we add analytics later, we will update this page first.
 
 ## 7. Third-Party Services
 

@@ -2,9 +2,9 @@ import Link from "next/link";
 import { LEGAL_LINKS } from "@/lib/legal";
 
 /**
- * Sits in the root layout, so every route carries the legal links — Lemon
- * Squeezy expects them reachable from anywhere a purchase can start, which
- * includes the result page.
+ * Sits in the root layout, so every route carries the legal links — Paddle
+ * expects them reachable from anywhere a purchase can start, which includes
+ * the result page.
  */
 export function SiteFooter() {
   return (
@@ -22,7 +22,7 @@ export function SiteFooter() {
           ))}
         </nav>
         <p className="text-xs text-ink-300">
-          © {new Date().getFullYear()} BetweenSoul · Not therapy or clinical
+          © {new Date().getFullYear()} CouplesScan · Not therapy or clinical
           advice.
         </p>
       </div>

@@ -4,7 +4,7 @@ import { getReport } from "@/lib/reportStore";
 
 /**
  * Returns the free sections always, and the paid ones only once they exist —
- * which happens after the Lemon Squeezy webhook confirms the order.
+ * which happens after the Paddle webhook confirms the transaction.
  *
  * `paidStatus` drives the client: `unpaid` shows the paywall, `processing`
  * keeps it polling behind a spinner, `ready` renders the deep dive. The paid

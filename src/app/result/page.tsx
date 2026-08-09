@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { openCheckout } from "@/lib/paddle";
 import { useTestStore } from "@/store/useTestStore";
 import { useStoreHydrated } from "@/store/useHydrated";
 import {
@@ -345,7 +346,7 @@ function UnlockCallout({
         </p>
         {error && <p className="text-sm font-semibold text-rose-600">{error}</p>}
         <p className="text-xs text-ink-300">
-          One-time payment. No subscription. Secure checkout by Lemon Squeezy.
+          One-time payment. No subscription. Secure checkout by Paddle.
         </p>
       </div>
     </section>
@@ -359,14 +360,18 @@ function ResultContent() {
   const searchParams = useSearchParams();
   const hydrated = useStoreHydrated();
 
-  const { partner1, partner2, reportId: storedReportId, teaser: storedTeaser } =
-    useTestStore();
+  const {
+    partner1,
+    partner2,
+    email,
+    reportId: storedReportId,
+    teaser: storedTeaser,
+  } = useTestStore();
 
-  // `id` is what /analyzing pushes; `report` is what the Lemon Squeezy
-  // redirect still uses. Fall back to the store for an in-session visit.
+  // `id` is what /analyzing pushes; `report` is what a Paddle receipt link
+  // carries. Fall back to the store for an in-session visit.
   const reportId =
     searchParams.get("id") ?? searchParams.get("report") ?? storedReportId;
-  const justPaid = searchParams.get("paid") === "1";
 
   const [report, setReport] = useState<ReportResponse | null>(null);
   const [loadState, setLoadState] = useState<"loading" | "ready" | "notfound">(
@@ -374,6 +379,12 @@ function ResultContent() {
   );
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  // True once Paddle confirms payment in the browser — or on arrival from a
+  // receipt link. Either way it only means "the webhook is on its way", so the
+  // page keeps polling instead of rendering anything as unlocked.
+  const [justPaid, setJustPaid] = useState(
+    () => searchParams.get("paid") === "1",
+  );
   const pollsRef = useRef(0);
 
   const fetchReport = useCallback(async (id: string) => {
@@ -425,20 +436,23 @@ function ResultContent() {
     setCheckoutLoading(true);
     setCheckoutError(null);
     try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reportId }),
+      await openCheckout({
+        reportId,
+        email: email || undefined,
+        // Payment confirmed in the overlay. The webhook does the unlocking, so
+        // all this does is restart the poll and reset its budget.
+        onCompleted: () => {
+          pollsRef.current = 0;
+          setJustPaid(true);
+        },
       });
-      const data = await response.json();
-      if (!response.ok || !data.url) {
-        throw new Error(data?.error ?? "Could not start checkout.");
-      }
-      window.location.href = data.url;
     } catch (err) {
       setCheckoutError(
         err instanceof Error ? err.message : "Could not start checkout.",
       );
+    } finally {
+      // The overlay is Paddle's from here; the button goes back to normal
+      // behind it so closing the overlay doesn't leave it stuck on "Opening…".
       setCheckoutLoading(false);
     }
   };

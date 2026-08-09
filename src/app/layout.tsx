@@ -10,7 +10,7 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "BetweenSoul — How Strong Is Your Love?",
+  title: "CouplesScan — How Strong Is Your Love?",
   description:
     "Take the relationship test together with your partner from one device. Our AI reads both sets of answers and tells you the truth about where you stand.",
 };

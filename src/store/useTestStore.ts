@@ -35,7 +35,7 @@ export const useTestStore = create<TestStore>()(
         }),
     }),
     {
-      name: "betweensoul-test",
+      name: "couplescan-test",
       /**
        * Bump this whenever the persisted shape changes — `answers` keys or the
        * `teaser` fields.
