@@ -1,128 +1,157 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { HAIKU, SONNET, generateJson } from "@/lib/claude";
 import { MOCK_MODE } from "@/lib/devMode";
-import { buildMockPaidReport } from "@/lib/mockAnalysis";
-import { validatePaidReport } from "@/lib/parseAnalysis";
-import { paidPrompt } from "@/lib/prompts";
+import { buildMockPaidSections } from "@/lib/mockAnalysis";
 import {
-  claimForPaidGeneration,
+  validateConflictFuture,
+  validateGapsView,
+  validateLoveAnchors,
+  validateScenarioResetAnswer,
+  validateXRay,
+} from "@/lib/parseAnalysis";
+import {
+  baseSystemPrompt,
+  paidConflictFuturePrompt,
+  paidGapsViewPrompt,
+  paidLoveAnchorsPrompt,
+  paidScenarioResetAnswerPrompt,
+  paidXRayPrompt,
+} from "@/lib/prompts";
+import {
+  claimPaidGeneration,
   getReport,
   releasePaidGeneration,
-  savePaidReport,
+  savePaidSections,
 } from "@/lib/reportStore";
-import { FreeReport, PaidReport, TranscriptData } from "@/lib/types";
+import {
+  DimensionId,
+  FreeSections,
+  PaidSections,
+  TranscriptData,
+} from "@/lib/types";
 
 /**
- * The paid deep dive — one Sonnet request, fired after the order is confirmed
- * paid (or by the dev bypass).
+ * The paid report — ten sections from five parallel Sonnet requests, run once
+ * the transaction is confirmed.
  *
  * Sonnet rather than Haiku because this is the part that has to reason instead
  * of pattern-match: two partners describing each other in different registers
  * is a difference in how they express affection, not evidence of a problem,
- * and Haiku reads that kind of contrast as pathology. One request rather than
- * several because every section is then written with the whole picture in
- * view — which is what stops the same vivid answer being quoted four times.
+ * and Haiku reads that kind of contrast as pathology. Haiku is still the
+ * fallback — for someone who has already paid, a shallower section beats an
+ * error page.
  *
- * The free sections go into the prompt as context so the deep dive can't
- * contradict scores the reader has already seen.
+ * The free sections go into the prompts as context so the deep dive can't
+ * contradict scores and teasers the reader has already seen.
  */
-const MODEL = "claude-sonnet-4-6";
 
 /**
- * Seven sections plus adaptive thinking, which shares this budget — at 8000 the
- * thinking ate most of it and the JSON came back truncated. 16K is the ceiling
- * a non-streaming request can carry without risking an SDK HTTP timeout.
+ * Token budgets, measured rather than guessed.
+ *
+ * Four of the five requests land between 950 and 2000 output tokens. The X-ray
+ * is a different size of job — eight dimensions times four paragraphs each —
+ * and truncated at 3000 on every attempt, taking the whole unlock down with it
+ * after someone had already paid. It gets the room the section actually needs.
  */
-const MAX_TOKENS = 16000;
+const MAX_TOKENS = 3000;
+const XRAY_MAX_TOKENS = 8000;
+/** Five scenarios plus the reset plus the finale; measured at 2006. */
+const SCENARIO_MAX_TOKENS = 4000;
 
-export async function generatePaidReport(
+export async function generatePaidSections(
   input: TranscriptData,
-  free: FreeReport,
-): Promise<PaidReport> {
-  const client = new Anthropic();
-  const prompt = paidPrompt(input, free);
-  let lastError: unknown;
-
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    const startedAt = Date.now();
-    try {
-      const message = await client.messages.create({
-        model: MODEL,
-        max_tokens: MAX_TOKENS,
-        // Measured on this prompt: effort `low` spends ~2,970 output tokens in
-        // ~70s, `medium` ~5,400 in ~115s. The extra is nearly all thinking, and
-        // it isn't worth 45 seconds of a buyer staring at a spinner — raise it
-        // if the analysis ever reads shallow.
-        thinking: { type: "adaptive" },
-        output_config: { effort: "low" },
-        messages: [{ role: "user", content: prompt }],
-      });
-
-      if (message.stop_reason === "refusal") {
-        throw new Error("The deep analysis was declined by the safety system.");
-      }
-      if (message.stop_reason === "max_tokens") {
-        throw new Error(
-          `The deep analysis was cut off at the ${MAX_TOKENS}-token limit.`,
-        );
-      }
-
-      // Thinking blocks come first when adaptive thinking runs; the JSON is in
-      // the text block.
-      const text = message.content.find((block) => block.type === "text");
-      if (!text || text.type !== "text") {
-        throw new Error("The deep analysis came back with no text content.");
-      }
-
-      const report = validatePaidReport(text.text);
-      console.log(
-        `[paid] ${Date.now() - startedAt}ms, ${message.usage.output_tokens} output tokens`,
-      );
-      return report;
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("declined by the safety system")) {
-        throw error;
-      }
-      lastError = error;
-      console.warn(`[paid] attempt ${attempt} failed:`, error);
-    }
-  }
-
-  throw new Error(
-    `The deep analysis failed twice: ${
-      lastError instanceof Error ? lastError.message : "unknown error"
-    }`,
+  free: FreeSections,
+): Promise<PaidSections> {
+  const system = baseSystemPrompt(
+    input.partner1.name || "Partner 1",
+    input.partner2.name || "Partner 2",
   );
+  const startedAt = Date.now();
+
+  // The X-ray reuses the radar's scores rather than scoring again, so the two
+  // halves of the report can't disagree about the same dimension.
+  const radarScores = Object.fromEntries(
+    free.radar.dimensions.map((d) => [d.id, d.score]),
+  ) as Record<DimensionId, number>;
+
+  const request = <T>(
+    label: string,
+    prompt: string,
+    validate: (text: string) => T,
+    maxTokens = MAX_TOKENS,
+  ) =>
+    generateJson({
+      label: `paid/${label}`,
+      model: SONNET,
+      fallbackModel: HAIKU,
+      system,
+      prompt,
+      maxTokens,
+      validate,
+    });
+
+  const [fullXRay, gapsView, conflictFuture, loveAnchors, scenarioResetAnswer] =
+    await Promise.all([
+      request(
+        "xray",
+        paidXRayPrompt(input, free),
+        (text) => validateXRay(text, radarScores),
+        XRAY_MAX_TOKENS,
+      ),
+      request("gaps", paidGapsViewPrompt(input, free), validateGapsView),
+      request("conflict", paidConflictFuturePrompt(input), validateConflictFuture),
+      request("love", paidLoveAnchorsPrompt(input, free), validateLoveAnchors),
+      request(
+        "scenarios",
+        paidScenarioResetAnswerPrompt(input, free),
+        validateScenarioResetAnswer,
+        SCENARIO_MAX_TOKENS,
+      ),
+    ]);
+
+  console.log(`[paid] all five requests done in ${Date.now() - startedAt}ms`);
+
+  return {
+    fullXRay,
+    ...gapsView,
+    ...conflictFuture,
+    ...loveAnchors,
+    ...scenarioResetAnswer,
+  };
 }
 
 /**
- * Claim → generate → store, shared by the webhook and the dev bypass.
+ * Claim → generate → store, shared by the unlock route and the webhook.
  *
- * The claim is atomic (see reportStore.claimForPaidGeneration), so a webhook
- * retry landing while the first run is still going is a no-op rather than a
- * second Sonnet bill. A failed run is released back to `unpaid` so the next
- * poll retries instead of leaving the buyer on a permanent spinner.
+ * The claim is atomic (see reportStore.claimPaidGeneration), so a webhook
+ * landing while the buyer's own unlock call is still running is a no-op rather
+ * than a second Sonnet bill. A failed run is released so the next call retries
+ * instead of leaving the buyer on a permanent spinner.
  *
- * Returns true when this call did the work.
+ * Returns the sections when this call did the work, and null when it didn't —
+ * either because someone else holds the claim or because the run failed.
  */
-export async function runPaidGeneration(reportId: string): Promise<boolean> {
-  if (!(await claimForPaidGeneration(reportId))) return false;
+export async function runPaidGeneration(
+  reportId: string,
+): Promise<PaidSections | null> {
+  if (!(await claimPaidGeneration(reportId))) return null;
 
   try {
     const report = await getReport(reportId);
     if (!report) throw new Error(`report ${reportId} vanished mid-generation`);
+    if (!report.paid) throw new Error(`report ${reportId} is not paid for`);
 
-    // Fixture mode: the canned deep dive, so the paid half of the result page
-    // can be reviewed with no Sonnet call and no Paddle checkout. Pair it with
-    // DEV_PAID_BYPASS=1 to unlock on the first poll. Dev-only — see devMode.ts.
-    const paid = MOCK_MODE
-      ? buildMockPaidReport(report.partner1Name, report.partner2Name)
-      : await generatePaidReport(report.answers, report.free);
-    await savePaidReport(reportId, paid);
+    // Fixture mode: the canned deep dive, so the paid half can be reviewed
+    // with no Sonnet call and no Paddle checkout. Dev-only — see devMode.ts.
+    const sections = MOCK_MODE
+      ? buildMockPaidSections(report.partner1Name, report.partner2Name)
+      : await generatePaidSections(report.answers, report.free);
+
+    await savePaidSections(reportId, sections);
     console.log("[paid] report %s is ready.", reportId);
-    return true;
+    return sections;
   } catch (error) {
     console.error("[paid] generation failed for %s:", reportId, error);
     await releasePaidGeneration(reportId);
-    return false;
+    return null;
   }
 }

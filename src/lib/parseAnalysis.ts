@@ -1,28 +1,51 @@
 import {
-  BiggestQuestion,
-  CATEGORY_IDS,
-  CATEGORY_LABELS,
-  CategoryId,
-  FreeReport,
-  PaidReport,
+  BiggestStrength,
+  BiggestTension,
+  ConflictFingerprint,
+  CoupleDynamic,
+  CoupleScore,
+  DIMENSION_IDS,
+  DIMENSION_LABELS,
+  DimensionId,
+  Flags,
+  FullPerceptionGap,
+  HowYouSeeEachOther,
+  IfNothingChanges,
+  LoveStyles,
+  PerceptionGap,
+  Radar,
+  SCENARIO_IDS,
+  SCENARIO_LABELS,
+  SLIDER_QUESTIONS,
+  ScenarioAnalysis,
+  ScenarioId,
+  ScenarioPreview,
+  SevenDayReset,
+  Slider,
+  TheAnswer,
+  TheQuestion,
+  UnsaidThings,
+  WhatKeepsYouTogether,
+  XRayDimension,
 } from "@/lib/types";
 
 /**
- * Turns Claude's raw text into validated data.
- *
- * Two validators, one per pass: `validateFreeReport` for the Haiku overview
- * generated on submit, `validatePaidReport` for the Sonnet deep dive generated
- * after payment.
+ * Turns Claude's raw text into validated data — one validator per request.
  *
  * We ask for bare JSON in the prompt, but a prompt is a request, not a
- * guarantee — unlike `output_config.format`, nothing at the API level enforces
- * the shape. So this both tolerates the usual deviations (markdown fences,
- * a sentence of preamble) and validates the result, rather than letting a
- * malformed report reach the result page as `undefined` everywhere.
+ * guarantee: nothing at the API level enforces the shape. So this tolerates the
+ * usual deviations (markdown fences, a sentence of preamble, an unescaped quote
+ * inside a value) and then checks the result, rather than letting a malformed
+ * report reach the page as `undefined` everywhere.
  *
- * Throws with a specific reason; the route turns that into a 500.
+ * Anything with a fixed vocabulary — dimension ids, scenario ids, slider
+ * wording, section labels — is taken from types.ts and not from the model, so a
+ * run that renames or reorders them still lands in the right slot.
+ *
+ * Throws with a specific reason; the caller retries, then gives up.
  */
 
+/* ------------------------------ json recovery ----------------------------- */
 
 function stripToJson(raw: string): string {
   let text = raw.trim();
@@ -159,37 +182,22 @@ function escapeStrayQuotes(json: string): string {
   return out;
 }
 
-function isNonEmptyString(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
-function isStringArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((v) => typeof v === "string");
-}
-
-function isScore(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
-}
-
 function fail(reason: string): never {
   throw new Error(`Malformed analysis: ${reason}`);
 }
 
 /** Raw model text -> a JSON object, with the usual deviations tolerated. */
 export function parseJsonObject(raw: string): Record<string, unknown> {
-  if (!isNonEmptyString(raw)) fail("model returned no text");
+  if (typeof raw !== "string" || !raw.trim()) fail("model returned no text");
 
   const cleaned = stripToJson(raw);
 
-  // Parse as-is first, so a well-formed response never goes through the
-  // repair pass. Only if that fails do we try escaping stray control
-  // characters inside string values and parse again.
+  // Each pass repairs one more class of defect. Order matters: a well-formed
+  // response never goes through any of them.
   let data: unknown;
   let parsed = false;
   let firstError: unknown;
 
-  // Each pass repairs one more class of defect. Order matters: a well-formed
-  // response never goes through any of them.
   for (const repair of [
     (text: string) => text,
     escapeControlCharsInStrings,
@@ -205,8 +213,8 @@ export function parseJsonObject(raw: string): Record<string, unknown> {
   }
 
   if (!parsed) {
-    // Report the original failure — it describes the actual defect, whereas
-    // a repaired pass's error is about text we rewrote.
+    // Report the original failure — it describes the actual defect, whereas a
+    // repaired pass's error is about text we rewrote.
     fail(
       `response was not valid JSON (${
         firstError instanceof Error ? firstError.message : "unknown parse error"
@@ -218,47 +226,83 @@ export function parseJsonObject(raw: string): Record<string, unknown> {
   return data as Record<string, unknown>;
 }
 
+/* -------------------------------- helpers --------------------------------- */
 
-/* -------------------------------------------------------------------------
- * Free tier — Haiku, generated on submit.
- * ----------------------------------------------------------------------- */
+type Obj = Record<string, unknown>;
 
-/** Loose match so "Trust & Boundaries" or "trust_safety" still lands on "trust". */
-function normalizeId(id: string): string {
-  return id.toLowerCase().replace(/[^a-z]/g, "");
+function isText(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
 }
 
-const ID_ALIASES: Record<string, CategoryId> = {
-  trustboundaries: "trust",
-  trustsafety: "trust",
-  boundaries: "trust",
-  conflictresolution: "conflict",
-  conflictrepair: "conflict",
-  emotionalintimacy: "intimacy",
-  sharedvaluesgoals: "values",
-  sharedvalues: "values",
-  sharedfuture: "values",
-  futuregoals: "values",
-  future: "values",
-};
+function isScore(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
+}
+
+/** Reads a required object field, failing with the field's own name. */
+function requireObject(data: Obj, field: string): Obj {
+  const value = data[field];
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    fail(`${field} is missing`);
+  }
+  return value as Obj;
+}
+
+function requireArray(data: Obj, field: string): unknown[] {
+  const value = data[field];
+  if (!Array.isArray(value) || value.length === 0) fail(`${field} is empty`);
+  return value;
+}
+
+/** Reads required non-empty strings off an object, failing on the first gap. */
+function requireStrings<K extends string>(
+  source: Obj,
+  field: string,
+  keys: readonly K[],
+): Record<K, string> {
+  const out = {} as Record<K, string>;
+  for (const key of keys) {
+    if (!isText(source[key])) fail(`${field}.${key} is empty`);
+    out[key] = (source[key] as string).trim();
+  }
+  return out;
+}
+
+function requireScore(source: Obj, field: string, key: string): number {
+  if (!isScore(source[key])) fail(`${field}.${key} is not 0-100`);
+  return Math.round(source[key] as number);
+}
+
+/** Short list of short strings — green flags, anchors, starters. */
+function requireTextList(source: Obj, field: string, min: number): string[] {
+  const raw = requireArray(source, field);
+  const items = raw.filter(isText).map((item) => item.trim());
+  if (items.length < min) fail(`${field} needs at least ${min} items`);
+  return items;
+}
+
+/** Loose match so "Emotional Connection" or "emotional-connection" still lands. */
+function normalizeId(id: unknown): string {
+  return typeof id === "string" ? id.toLowerCase().replace(/[^a-z]/g, "") : "";
+}
 
 /**
- * Lines the model's category list up with CATEGORY_IDS: by id first, then by
- * position for whatever is left. A run where Haiku renamed a category still
- * produces a usable report instead of failing outright.
+ * Lines a returned list up with a fixed id list: by id first, then by position
+ * for whatever is left over. A run where the model renamed one entry still
+ * produces a usable section instead of failing outright.
  */
-function alignCategories(
-  items: { id?: unknown; score?: unknown; headline?: unknown }[],
-): FreeReport["categories"] {
-  const aligned: (typeof items[number] | undefined)[] = CATEGORY_IDS.map(() => undefined);
-  const unmatched: typeof items = [];
+function alignToIds<Id extends string>(
+  items: unknown[],
+  ids: readonly Id[],
+  field: string,
+): Obj[] {
+  const aligned: (Obj | undefined)[] = ids.map(() => undefined);
+  const unmatched: Obj[] = [];
 
-  for (const item of items) {
-    const key = typeof item.id === "string" ? normalizeId(item.id) : "";
-    const canonical = (CATEGORY_IDS as readonly string[]).includes(key)
-      ? (key as CategoryId)
-      : ID_ALIASES[key];
-    const index = canonical ? CATEGORY_IDS.indexOf(canonical) : -1;
+  for (const raw of items) {
+    if (typeof raw !== "object" || raw === null) continue;
+    const item = raw as Obj;
+    const key = normalizeId(item.id ?? item.dimensionId);
+    const index = ids.findIndex((id) => normalizeId(id) === key);
 
     if (index !== -1 && !aligned[index]) aligned[index] = item;
     else unmatched.push(item);
@@ -268,127 +312,374 @@ function alignCategories(
     if (!aligned[i]) aligned[i] = unmatched.shift();
   }
 
-  // The label comes from CATEGORY_LABELS, never the model, so the UI can't
-  // show a category renamed mid-run.
-  return CATEGORY_IDS.map((id, i) => {
-    const entry = aligned[i];
-    return {
-      id,
-      name: CATEGORY_LABELS[id],
-      score: isScore(entry?.score) ? (entry!.score as number) : 0,
-      headline: isNonEmptyString(entry?.headline) ? (entry!.headline as string) : "",
-    };
-  });
+  const missing = ids.filter((_, i) => !aligned[i]);
+  if (missing.length) fail(`${field} is missing ${missing.join(", ")}`);
+  return aligned as Obj[];
 }
 
-export function validateFreeReport(raw: string): FreeReport {
+/* --------------------------- free 1: score + dynamic ---------------------- */
+
+export interface ScoreDynamicResult {
+  coupleScore: CoupleScore;
+  coupleDynamic: CoupleDynamic;
+}
+
+export function validateScoreDynamic(raw: string): ScoreDynamicResult {
   const data = parseJsonObject(raw);
 
-  if (!isScore(data.overallScore)) fail("overallScore is not 0-100");
-  if (!isNonEmptyString(data.verdict)) fail("verdict is empty");
-  if (!isNonEmptyString(data.flagSummary)) fail("flagSummary is empty");
-
-  const dynamic = data.hiddenDynamic as Record<string, unknown> | undefined;
-  if (!dynamic || typeof dynamic !== "object") fail("hiddenDynamic is missing");
-  if (!isNonEmptyString(dynamic.type)) fail("hiddenDynamic.type is empty");
-  if (!isNonEmptyString(dynamic.description)) fail("hiddenDynamic.description is empty");
-
-  if (!Array.isArray(data.categories) || data.categories.length !== CATEGORY_IDS.length) {
-    fail(`categories must have ${CATEGORY_IDS.length} entries`);
-  }
-  for (const [i, entry] of data.categories.entries()) {
-    const c = entry as Record<string, unknown>;
-    if (!isScore(c.score)) fail(`categories[${i}].score is not 0-100`);
-    if (!isNonEmptyString(c.headline)) fail(`categories[${i}].headline is empty`);
-  }
+  const score = requireObject(data, "coupleScore");
+  const dynamic = requireObject(data, "coupleDynamic");
 
   return {
-    overallScore: data.overallScore,
-    verdict: data.verdict,
-    hiddenDynamic: {
-      type: (dynamic.type as string).trim(),
-      description: (dynamic.description as string).trim(),
+    coupleScore: {
+      overall: requireScore(score, "coupleScore", "overall"),
+      connection: requireScore(score, "coupleScore", "connection"),
+      stability: requireScore(score, "coupleScore", "stability"),
+      chemistry: requireScore(score, "coupleScore", "chemistry"),
+      ...requireStrings(score, "coupleScore", ["insight"] as const),
     },
-    categories: alignCategories(data.categories as Record<string, unknown>[]),
-    flagSummary: data.flagSummary,
+    coupleDynamic: requireStrings(dynamic, "coupleDynamic", [
+      "name",
+      "description",
+      "whatWorks",
+      "whereItGetsDifficult",
+    ] as const),
   };
 }
 
-/* -------------------------------------------------------------------------
- * Paid tier — Sonnet, generated after payment.
- * ----------------------------------------------------------------------- */
+/* ------------------- free 2: radar + strength + tension ------------------- */
 
-/** Reads a required object field, failing with the field's own name. */
-function requireObject(data: Record<string, unknown>, field: string): Record<string, unknown> {
-  const value = data[field];
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    fail(`${field} is missing`);
-  }
-  return value as Record<string, unknown>;
+export interface RadarResult {
+  radar: Radar;
+  biggestStrength: BiggestStrength;
+  biggestTension: BiggestTension;
 }
 
-/** Reads required non-empty strings off an object, failing on the first gap. */
-function requireStrings<K extends string>(
-  source: Record<string, unknown>,
-  field: string,
-  keys: readonly K[],
-): Record<K, string> {
-  const out = {} as Record<K, string>;
-  for (const key of keys) {
-    if (!isNonEmptyString(source[key])) fail(`${field}.${key} is empty`);
-    out[key] = (source[key] as string).trim();
-  }
-  return out;
-}
-
-/**
- * Every paid section but one is a fixed set of required prose fields, so the
- * schema is a table rather than eight near-identical blocks.
- *
- * The `satisfies` keeps the table honest: a misspelled field or a section
- * missing from PaidReport is a compile error here, not a runtime surprise.
- */
-type SectionFields = {
-  [K in keyof Omit<PaidReport, "biggestQuestion">]: readonly (keyof PaidReport[K])[];
-};
-
-const PAID_SECTIONS = {
-  biggestSurprise: ["insight"],
-  seeEachOther: ["partner1View", "partner2View", "dynamic"],
-  biggestMisunderstanding: ["partner1Thinks", "partner2Experiences"],
-  conflictDNA: ["pattern", "trigger", "escalation", "aftermath", "insight"],
-  howYouLove: ["partner1", "partner2", "friction"],
-  ifNothingChanges: ["prediction", "why"],
-  whatKeepsYouTogether: ["core", "evidence"],
-} as const satisfies SectionFields;
-
-export function validatePaidReport(raw: string): PaidReport {
+export function validateRadar(raw: string): RadarResult {
   const data = parseJsonObject(raw);
 
-  const sections = Object.fromEntries(
-    Object.entries(PAID_SECTIONS).map(([field, keys]) => [
-      field,
-      requireStrings(requireObject(data, field), field, keys),
-    ]),
-    // Safe: the table above is checked against PaidReport, and requireStrings
-    // has just proved every listed field is a non-empty string.
-  ) as unknown as Omit<PaidReport, "biggestQuestion">;
+  const radarRaw = requireObject(data, "radar");
+  const aligned = alignToIds(
+    requireArray(radarRaw, "dimensions"),
+    DIMENSION_IDS,
+    "radar.dimensions",
+  );
 
-  // The odd one out: prose plus a list of starters.
-  const rawQuestion = requireObject(data, "biggestQuestion");
-  const { question } = requireStrings(rawQuestion, "biggestQuestion", [
-    "question",
+  const dimensions = DIMENSION_IDS.map((id, i) => ({
+    id,
+    // The label is ours, so the UI can't show a dimension renamed mid-run.
+    name: DIMENSION_LABELS[id],
+    score: requireScore(aligned[i], `radar.dimensions.${id}`, "score"),
+    ...requireStrings(aligned[i], `radar.dimensions.${id}`, ["insight"] as const),
+  }));
+
+  const { interconnection } = requireStrings(radarRaw, "radar", [
+    "interconnection",
   ] as const);
-  if (
-    !isStringArray(rawQuestion.conversationStarters) ||
-    rawQuestion.conversationStarters.length === 0
-  ) {
-    fail("biggestQuestion.conversationStarters is empty");
-  }
-  const biggestQuestion: BiggestQuestion = {
-    question,
-    conversationStarters: rawQuestion.conversationStarters,
-  };
 
-  return { ...sections, biggestQuestion };
+  // The model is asked to point strength and tension at its own highest and
+  // lowest dimension and does not reliably do it, so the extremes are taken
+  // from the scores themselves. The prose stays; only the target is corrected.
+  const ranked = [...dimensions].sort((a, b) => b.score - a.score);
+  const highest = ranked[0];
+  const lowest = ranked[ranked.length - 1];
+
+  const strengthRaw = requireObject(data, "biggestStrength");
+  const tensionRaw = requireObject(data, "biggestTension");
+
+  return {
+    radar: { dimensions, interconnection },
+    biggestStrength: {
+      dimensionId: highest.id,
+      dimensionName: highest.name,
+      score: highest.score,
+      ...requireStrings(strengthRaw, "biggestStrength", [
+        "explanation",
+        "whyItMatters",
+      ] as const),
+    },
+    biggestTension: {
+      dimensionId: lowest.id,
+      dimensionName: lowest.name,
+      score: lowest.score,
+      ...requireStrings(tensionRaw, "biggestTension", ["explanation"] as const),
+    },
+  };
+}
+
+/* --------------------- free 3: sliders + perception gap ------------------- */
+
+export interface SlidersGapsResult {
+  sliders: Slider[];
+  perceptionGap: PerceptionGap;
+}
+
+export function validateSlidersGaps(raw: string): SlidersGapsResult {
+  const data = parseJsonObject(raw);
+
+  const rawSliders = requireArray(data, "sliders");
+  if (rawSliders.length < SLIDER_QUESTIONS.length) {
+    fail(`sliders needs ${SLIDER_QUESTIONS.length} entries`);
+  }
+
+  // Wording comes from SLIDER_QUESTIONS; only the position is the model's.
+  const sliders = SLIDER_QUESTIONS.map((question, i) => {
+    const item = rawSliders[i] as Obj;
+    if (typeof item !== "object" || item === null) fail(`sliders[${i}] is not an object`);
+    return {
+      question,
+      partner1Position: requireScore(item, `sliders[${i}]`, "partner1Position"),
+    };
+  });
+
+  const gapRaw = requireObject(data, "perceptionGap");
+  const shown = requireArray(gapRaw, "shown").map((entry, i) => {
+    const item = entry as Obj;
+    if (typeof item !== "object" || item === null) {
+      fail(`perceptionGap.shown[${i}] is not an object`);
+    }
+    return requireStrings(item, `perceptionGap.shown[${i}]`, [
+      "topic",
+      "partner1Said",
+      "partner2Said",
+      "aiComment",
+    ] as const);
+  });
+
+  // The teaser must not promise fewer gaps than are already on screen.
+  const claimed = typeof gapRaw.totalGapsFound === "number" ? gapRaw.totalGapsFound : 0;
+  const totalGapsFound = Math.min(5, Math.max(shown.length, Math.round(claimed)));
+
+  return { sliders, perceptionGap: { shown, totalGapsFound } };
+}
+
+/* ---------------------- free 4: unsaid things + flags --------------------- */
+
+export interface UnsaidFlagsResult {
+  unsaidThings: UnsaidThings;
+  flags: Flags;
+}
+
+function unsaidSide(source: Obj, field: string) {
+  const side = requireObject(source, field);
+  const shown = requireTextList(side, "shown", 1).slice(0, 2);
+  return { shown, hasLocked: true };
+}
+
+export function validateUnsaidFlags(raw: string): UnsaidFlagsResult {
+  const data = parseJsonObject(raw);
+
+  const unsaidRaw = requireObject(data, "unsaidThings");
+  const flagsRaw = requireObject(data, "flags");
+
+  return {
+    unsaidThings: {
+      partner1: unsaidSide(unsaidRaw, "partner1"),
+      partner2: unsaidSide(unsaidRaw, "partner2"),
+    },
+    flags: {
+      greenFlags: requireTextList(flagsRaw, "greenFlags", 3).slice(0, 5),
+      watchOuts: requireTextList(flagsRaw, "watchOuts", 1).slice(0, 3),
+    },
+  };
+}
+
+/* --------------------- free 5: scenarios + the question ------------------- */
+
+export interface ScenariosQuestionResult {
+  scenarios: ScenarioPreview[];
+  theQuestion: TheQuestion;
+}
+
+export function validateScenariosQuestion(raw: string): ScenariosQuestionResult {
+  const data = parseJsonObject(raw);
+
+  const aligned = alignToIds(requireArray(data, "scenarios"), SCENARIO_IDS, "scenarios");
+  const scenarios = SCENARIO_IDS.map((id, i) => ({
+    id,
+    name: SCENARIO_LABELS[id],
+    ...requireStrings(aligned[i], `scenarios.${id}`, ["teaser"] as const),
+  }));
+
+  return {
+    scenarios,
+    theQuestion: requireStrings(requireObject(data, "theQuestion"), "theQuestion", [
+      "question",
+      "hook",
+    ] as const),
+  };
+}
+
+/* ---------------------------- paid 1: full x-ray -------------------------- */
+
+const XRAY_FIELDS = [
+  "whatWeSee",
+  "whatAnswersSuggest",
+  "whereYouDiffer",
+  "whatCouldHelp",
+] as const;
+
+/** Scores come from the radar the free report already showed, never re-read. */
+export function validateXRay(
+  raw: string,
+  radarScores: Record<DimensionId, number>,
+): XRayDimension[] {
+  const data = parseJsonObject(raw);
+  const aligned = alignToIds(requireArray(data, "fullXRay"), DIMENSION_IDS, "fullXRay");
+
+  return DIMENSION_IDS.map((id, i) => ({
+    dimensionId: id,
+    dimensionName: DIMENSION_LABELS[id],
+    score: radarScores[id],
+    ...requireStrings(aligned[i], `fullXRay.${id}`, XRAY_FIELDS),
+  }));
+}
+
+/* ------------------ paid 2: all gaps + how you see each other ------------- */
+
+export interface GapsViewResult {
+  allPerceptionGaps: FullPerceptionGap[];
+  howYouSeeEachOther: HowYouSeeEachOther;
+}
+
+export function validateGapsView(raw: string): GapsViewResult {
+  const data = parseJsonObject(raw);
+
+  const allPerceptionGaps = requireArray(data, "allPerceptionGaps").map((entry, i) => {
+    const item = entry as Obj;
+    if (typeof item !== "object" || item === null) {
+      fail(`allPerceptionGaps[${i}] is not an object`);
+    }
+    return requireStrings(item, `allPerceptionGaps[${i}]`, [
+      "topic",
+      "partner1Said",
+      "partner2Said",
+      "whatThisMayMean",
+      "whyItMatters",
+      "conversationToHave",
+    ] as const);
+  });
+
+  return {
+    allPerceptionGaps,
+    howYouSeeEachOther: requireStrings(
+      requireObject(data, "howYouSeeEachOther"),
+      "howYouSeeEachOther",
+      ["herViewOfHim", "hisViewOfHer", "whatBothMiss"] as const,
+    ),
+  };
+}
+
+/* ----------------- paid 3: conflict fingerprint + projection -------------- */
+
+export interface ConflictFutureResult {
+  conflictFingerprint: ConflictFingerprint;
+  ifNothingChanges: IfNothingChanges;
+}
+
+export function validateConflictFuture(raw: string): ConflictFutureResult {
+  const data = parseJsonObject(raw);
+
+  return {
+    conflictFingerprint: requireStrings(
+      requireObject(data, "conflictFingerprint"),
+      "conflictFingerprint",
+      [
+        "trigger",
+        "reaction",
+        "escalation",
+        "withdrawal",
+        "aftermath",
+        "pattern",
+        "insight",
+      ] as const,
+    ),
+    ifNothingChanges: requireStrings(
+      requireObject(data, "ifNothingChanges"),
+      "ifNothingChanges",
+      ["likelyStrengths", "pressurePoints", "whatBecomesMoreImportant"] as const,
+    ),
+  };
+}
+
+/* ------------------- paid 4: love styles + what keeps you ----------------- */
+
+export interface LoveAnchorsResult {
+  loveStyles: LoveStyles;
+  whatKeepsYouTogether: WhatKeepsYouTogether;
+  unsaidThingsUnlocked: { partner1: string; partner2: string };
+}
+
+export function validateLoveAnchors(raw: string): LoveAnchorsResult {
+  const data = parseJsonObject(raw);
+
+  const keepsRaw = requireObject(data, "whatKeepsYouTogether");
+
+  return {
+    loveStyles: requireStrings(requireObject(data, "loveStyles"), "loveStyles", [
+      "partner1Shows",
+      "partner1FeelsLovedBy",
+      "partner2Shows",
+      "partner2FeelsLovedBy",
+      "mismatch",
+    ] as const),
+    whatKeepsYouTogether: {
+      anchors: requireTextList(keepsRaw, "anchors", 3).slice(0, 5),
+      ...requireStrings(keepsRaw, "whatKeepsYouTogether", [
+        "evidence",
+        "isItEnough",
+      ] as const),
+    },
+    unsaidThingsUnlocked: requireStrings(
+      requireObject(data, "unsaidThingsUnlocked"),
+      "unsaidThingsUnlocked",
+      ["partner1", "partner2"] as const,
+    ),
+  };
+}
+
+/* ---------------- paid 5: scenario lab + reset + the answer --------------- */
+
+export interface ScenarioResetAnswerResult {
+  scenarioLab: ScenarioAnalysis[];
+  sevenDayReset: SevenDayReset;
+  theAnswer: TheAnswer;
+}
+
+export function validateScenarioResetAnswer(raw: string): ScenarioResetAnswerResult {
+  const data = parseJsonObject(raw);
+
+  const aligned = alignToIds(requireArray(data, "scenarioLab"), SCENARIO_IDS, "scenarioLab");
+  const scenarioLab = SCENARIO_IDS.map((id: ScenarioId, i) => ({
+    id,
+    name: SCENARIO_LABELS[id],
+    compatibility: requireScore(aligned[i], `scenarioLab.${id}`, "compatibility"),
+    ...requireStrings(aligned[i], `scenarioLab.${id}`, [
+      "strength",
+      "risk",
+      "whatYoudStruggleWith",
+      "whatWouldHelp",
+    ] as const),
+  }));
+
+  const answerRaw = requireObject(data, "theAnswer");
+
+  return {
+    scenarioLab,
+    sevenDayReset: requireStrings(
+      requireObject(data, "sevenDayReset"),
+      "sevenDayReset",
+      ["day1Question", "day2Action", "day3Date", "whyThisWorks"] as const,
+    ),
+    theAnswer: {
+      ...requireStrings(answerRaw, "theAnswer", [
+        "synthesis",
+        "questionToDiscussTonight",
+      ] as const),
+      conversationStarters: requireTextList(answerRaw, "conversationStarters", 1).slice(
+        0,
+        3,
+      ),
+    },
+  };
 }
