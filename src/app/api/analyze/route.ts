@@ -1,12 +1,12 @@
-import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
 import { generateFreeReport } from "@/lib/analysis";
 import { MOCK_MODE } from "@/lib/devMode";
 import { buildMockFreeReport } from "@/lib/mockAnalysis";
-import { saveReport } from "@/lib/reportStore";
+import { getReport, saveReport } from "@/lib/reportStore";
 import { AnswerValue, PartnerInfo } from "@/lib/types";
 
-// One Haiku request; the deep dive happens later, after payment.
+/** Five parallel Haiku requests; they finish together, not in sequence. */
 export const maxDuration = 60;
 
 interface AnalyzeBody {
@@ -15,6 +15,46 @@ interface AnalyzeBody {
   relationshipStart?: string;
   email?: string;
   answers?: Record<string, AnswerValue>;
+}
+
+/**
+ * A report id derived from the submission itself, so the same test submitted
+ * twice lands on the same report.
+ *
+ * The client retries — a double-tap, a flaky connection, React re-running an
+ * effect — and each retry used to mint a fresh UUID and bill another five
+ * requests. Hashing the answers makes the second attempt a lookup instead.
+ *
+ * The email is part of the hash: without it two different couples who happened
+ * to pick identical options and identical names would collide onto one report,
+ * and the second couple would inherit the first one's paid sections.
+ */
+function reportIdFor(body: AnalyzeBody): string {
+  const answers = body.answers ?? {};
+  const canonical = JSON.stringify({
+    email: (body.email ?? "").trim().toLowerCase(),
+    p1: body.partner1?.name ?? "",
+    p2: body.partner2?.name ?? "",
+    start: body.relationshipStart ?? "",
+    // Key order in the store's answer map isn't stable; sorting makes it so.
+    answers: Object.keys(answers)
+      .sort()
+      .map((k) => [k, answers[k]]),
+  });
+
+  const hex = createHash("sha256").update(canonical).digest("hex").slice(0, 32);
+  const chars = hex.split("");
+  chars[12] = "5"; // version 5: name-based, which is what this is
+  chars[16] = ((parseInt(chars[16], 16) & 0x3) | 0x8).toString(16); // RFC variant
+  const uuid = chars.join("");
+
+  return [
+    uuid.slice(0, 8),
+    uuid.slice(8, 12),
+    uuid.slice(12, 16),
+    uuid.slice(16, 20),
+    uuid.slice(20),
+  ].join("-");
 }
 
 export async function POST(request: NextRequest) {
@@ -43,6 +83,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const id = reportIdFor(body);
+
+  const existing = await getReport(id);
+  if (existing) {
+    console.log("[analyze] %s already exists — returning it unchanged.", id);
+    return Response.json({ reportId: id, teaser: existing.free });
+  }
+
   const transcript = { partner1, partner2, relationshipStart, answers };
 
   try {
@@ -50,18 +98,18 @@ export async function POST(request: NextRequest) {
       ? buildMockFreeReport(partner1.name, partner2.name)
       : await generateFreeReport(transcript);
 
-    const id = randomUUID();
     await saveReport({
       id,
-      createdAt: Date.now(),
-      email,
+      paid: false,
+      paidStatus: "pending",
       partner1Name: partner1.name,
       partner2Name: partner2.name,
+      createdAt: new Date().toISOString(),
+      email,
       // Stored so the paid pass can replay the test without the client.
       answers: transcript,
       free,
-      paid: null,
-      paidStatus: "unpaid",
+      paidSections: null,
     });
 
     // Only the free sections cross the wire. The paid ones don't exist yet.

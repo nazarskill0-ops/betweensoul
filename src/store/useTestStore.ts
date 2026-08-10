@@ -46,7 +46,7 @@ export const useTestStore = create<TestStore>()(
        * migrating (a half-finished test, at most), so a version mismatch drops
        * the state and starts clean.
        */
-      version: 2,
+      version: 3,
       migrate: () => undefined,
       // The full report never touches the client until it's paid for, so the
       // only thing worth persisting is enough to survive a refresh mid-test.

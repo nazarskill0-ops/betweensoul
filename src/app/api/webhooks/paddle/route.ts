@@ -1,7 +1,7 @@
-import { Environment, EventName, Paddle } from "@paddle/paddle-node-sdk";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextRequest, after } from "next/server";
 import { runPaidGeneration } from "@/lib/paidAnalysis";
-import { getReport } from "@/lib/reportStore";
+import { getReport, markPaid } from "@/lib/reportStore";
 
 /**
  * The only thing that unlocks a paid report.
@@ -10,6 +10,20 @@ import { getReport } from "@/lib/reportStore";
  * `checkout.completed` event does not, which is why the result page only polls
  * on it rather than being trusted to flip the status itself.
  */
+
+const TRANSACTION_COMPLETED = "transaction.completed";
+
+/**
+ * How old a signed request may be.
+ *
+ * Paddle's Node SDK enforces 5 seconds, which is too tight to survive a cold
+ * start on a serverless instance: a perfectly valid delivery that spends six
+ * seconds waiting for a container was rejected as an invalid signature, and
+ * Paddle retried into the same wall. Five minutes is the usual window for this
+ * kind of check (Stripe's default) and still leaves a captured request useless
+ * within minutes.
+ */
+const MAX_AGE_SECONDS = 300;
 
 /**
  * The Sonnet pass runs inside `after()`, which is billed against this route's
@@ -29,47 +43,102 @@ function readReportId(payload: PaddleNotification): string | null {
   return typeof value === "string" && value ? value : null;
 }
 
-export async function POST(request: NextRequest) {
-  const apiKey = process.env.PADDLE_API_KEY;
-  const secret = process.env.PADDLE_WEBHOOK_SECRET;
+/**
+ * `Paddle-Signature: ts=1234567890;h1=<hex>`
+ *
+ * More than one `h1` can appear while a signing secret is being rotated — both
+ * the old and the new digest ride along — so every one is collected and any
+ * match counts.
+ */
+function parseSignature(header: string) {
+  let ts: number | null = null;
+  const digests: string[] = [];
 
-  if (!apiKey || !secret) {
-    console.error("[webhook] PADDLE_API_KEY / PADDLE_WEBHOOK_SECRET are not set.");
+  for (const part of header.split(";")) {
+    const separator = part.indexOf("=");
+    if (separator === -1) continue;
+    const name = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+
+    if (name === "ts" && /^\d+$/.test(value)) ts = Number(value);
+    else if (name === "h1" && value) digests.push(value);
+  }
+
+  return { ts, digests };
+}
+
+/** Constant-time compare of two hex digests of the same length. */
+function digestsMatch(expected: string, received: string) {
+  if (received.length !== expected.length) return false;
+  try {
+    return timingSafeEqual(
+      Buffer.from(expected, "hex"),
+      Buffer.from(received, "hex"),
+    );
+  } catch {
+    return false;
+  }
+}
+
+type Verdict = "ok" | "malformed" | "expired" | "mismatch";
+
+/**
+ * Paddle signs `<ts>:<raw body>` with HMAC-SHA256 and sends the digest as hex,
+ * so the body has to be the untouched bytes off the wire — re-serialising a
+ * parsed object changes key order and whitespace and the digest no longer
+ * matches.
+ */
+function verify(rawBody: string, header: string, secret: string): Verdict {
+  const { ts, digests } = parseSignature(header);
+  if (ts === null || digests.length === 0) return "malformed";
+
+  // Guards a clock that has drifted in either direction, not just a replay.
+  if (Math.abs(Math.floor(Date.now() / 1000) - ts) > MAX_AGE_SECONDS) {
+    return "expired";
+  }
+
+  const expected = createHmac("sha256", secret)
+    .update(`${ts}:${rawBody}`)
+    .digest("hex");
+
+  return digests.some((digest) => digestsMatch(expected, digest))
+    ? "ok"
+    : "mismatch";
+}
+
+export async function POST(request: NextRequest) {
+  const secret = process.env.PADDLE_WEBHOOK_SECRET;
+  if (!secret) {
+    console.error("[webhook] PADDLE_WEBHOOK_SECRET is not set.");
     return new Response("Webhook not configured", { status: 500 });
   }
 
+  // Header names are case-insensitive, so this matches `Paddle-Signature`.
   const signature = request.headers.get("paddle-signature");
   if (!signature) {
     return new Response("Missing signature", { status: 401 });
   }
 
-  // The signature covers the raw bytes — read as text before parsing.
+  // Raw text, never `request.json()` — see verify().
   const rawBody = await request.text();
 
-  const paddle = new Paddle(apiKey, {
-    environment:
-      process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT === "production"
-        ? Environment.production
-        : Environment.sandbox,
-  });
-
-  let valid = false;
-  try {
-    // Checks the HMAC over `<ts>:<body>` and rejects anything older than 5s.
-    valid = await paddle.webhooks.isSignatureValid(rawBody, secret, signature);
-  } catch (error) {
-    // A malformed `paddle-signature` header throws rather than returning false.
-    console.error("[webhook] Could not read the signature header:", error);
-  }
-  if (!valid) {
-    return new Response("Invalid signature", { status: 401 });
+  const verdict = verify(rawBody, signature, secret);
+  if (verdict !== "ok") {
+    // Which check failed is the difference between "the clock is off" and "the
+    // wrong value is in PADDLE_WEBHOOK_SECRET" — worth a line in the log, since
+    // all three look identical from Paddle's side.
+    console.error("[webhook] Rejected a delivery: signature %s.", verdict);
+    return new Response(
+      verdict === "expired" ? "Signature expired" : "Invalid signature",
+      { status: 401 },
+    );
   }
 
-  // Signature checked, so the body is Paddle's. It is parsed here rather than
-  // through `webhooks.unmarshal`, whose entity mapping throws on any payload
-  // shape it doesn't fully recognise — and a parse failure returned as a 401
-  // would look like a signing problem while Paddle quietly retried. Two fields
-  // are all this route needs.
+  // Signature checked, so the body is Paddle's. Two fields are all this route
+  // needs, so it is parsed here rather than through the SDK's `unmarshal`,
+  // whose entity mapping throws on any payload shape it doesn't fully
+  // recognise — and a parse failure returned as a 401 would look like a signing
+  // problem while Paddle quietly retried.
   let payload: PaddleNotification;
   try {
     payload = JSON.parse(rawBody);
@@ -77,7 +146,7 @@ export async function POST(request: NextRequest) {
     return new Response("Invalid JSON", { status: 400 });
   }
 
-  if (payload.event_type !== EventName.TransactionCompleted) {
+  if (payload.event_type !== TRANSACTION_COMPLETED) {
     return new Response("Ignored", { status: 200 });
   }
 
@@ -93,12 +162,18 @@ export async function POST(request: NextRequest) {
     return new Response("Unknown report", { status: 200 });
   }
 
-  // The deep analysis takes ~70s — far too long to hold the webhook open, and
-  // Paddle would retry on the timeout. `after()` runs it once the 200 is
-  // already on the wire; the result page polls until it lands. The claim inside
-  // runPaidGeneration is atomic, so a retry mid-run costs nothing.
+  // This is the only place `paid` is set, and it is what authorises the paid
+  // generation — in this request and in any later call to /unlock.
+  await markPaid(reportId);
+
+  // The deep analysis takes over a minute — far too long to hold the webhook
+  // open, and Paddle would retry on the timeout. `after()` runs it once the 200
+  // is already on the wire, so a buyer who closes the tab still gets a report
+  // rather than depending on their browser to ask for one. The claim inside
+  // runPaidGeneration is atomic, so racing the buyer's own unlock call costs
+  // nothing.
   after(() => runPaidGeneration(reportId));
 
-  console.log("[webhook] Unlocked report %s; deep analysis queued.", reportId);
+  console.log("[webhook] Marked report %s paid; deep analysis queued.", reportId);
   return new Response("OK", { status: 200 });
 }
