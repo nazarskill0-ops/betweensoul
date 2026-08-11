@@ -23,6 +23,42 @@ const ENVIRONMENT =
     ? "production"
     : "sandbox";
 
+/**
+ * Names a misconfiguration Paddle will reject, before it does.
+ *
+ * Paddle answers a bad token or a bad id with one modal reading "Something went
+ * wrong", which is indistinguishable from a network problem or an outage. The
+ * two mistakes below are easy to make — every id in their dashboard looks like
+ * every other one — so they get named here instead.
+ *
+ * This warns rather than blocks: these prefixes are Paddle's documented format,
+ * not a contract, and a checkout that might work should never be stopped by our
+ * guess about an identifier we don't own.
+ */
+function warnAboutConfig(token: string, priceId: string) {
+  if (ENVIRONMENT === "sandbox" && token.startsWith("live_")) {
+    console.error(
+      "[paddle] NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is a live token (live_…) but " +
+        "NEXT_PUBLIC_PADDLE_ENVIRONMENT is sandbox. Paddle will reject this as " +
+        "invalid_client_token. Sandbox tokens start with test_.",
+    );
+  }
+  if (ENVIRONMENT === "production" && token.startsWith("test_")) {
+    console.error(
+      "[paddle] NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is a sandbox token (test_…) but " +
+        "NEXT_PUBLIC_PADDLE_ENVIRONMENT is production.",
+    );
+  }
+  if (!priceId.startsWith("pri_")) {
+    console.error(
+      "[paddle] NEXT_PUBLIC_PADDLE_PRICE_ID is %s. Checkout needs the PRICE id " +
+        "(pri_…), not the product id (pro_…) — open the product in the catalog " +
+        "and copy the id from the price underneath it.",
+      priceId,
+    );
+  }
+}
+
 /** Paddle.js is loaded once per page and reused for every checkout. */
 let paddlePromise: Promise<Paddle | undefined> | null = null;
 
@@ -67,6 +103,8 @@ export async function openCheckout({
   if (!TOKEN || !PRICE_ID) {
     throw new Error("Checkout isn't set up yet. Please try again later.");
   }
+
+  warnAboutConfig(TOKEN, PRICE_ID);
 
   const paddle = await loadPaddle(TOKEN);
   if (!paddle) {

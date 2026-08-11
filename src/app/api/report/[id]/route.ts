@@ -17,7 +17,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const report = await getReport(id);
+
+  // A store that can't be reached is a 500 with a reason, not an error escaping
+  // the handler as a bodyless 500 that the client can only read as "missing".
+  let report;
+  try {
+    report = await getReport(id);
+  } catch (error) {
+    console.error("[report] could not read %s:", id, error);
+    return Response.json({ error: "Could not load that report." }, { status: 500 });
+  }
 
   if (!report) {
     return Response.json({ error: "Report not found." }, { status: 404 });

@@ -4,112 +4,98 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTestStore } from "@/store/useTestStore";
 import { useStoreHydrated } from "@/store/useHydrated";
+import { FreeSections } from "@/lib/types";
 
-/** How long the theatrical part runs before we hand over to /result. */
-const TOTAL_MS = 9000;
-
-interface Model {
-  name: string;
-  mark: string;
-  color: string;
-  background: string;
-  /** `{p1}` / `{p2}` are swapped for the partners' names. */
-  comment: string;
-}
-
-const MODELS: Model[] = [
-  {
-    name: "ChatGPT",
-    mark: "✳",
-    color: "#0f9d76",
-    background: "#e6f6f1",
-    comment:
-      "Cross-referencing all 28 answers. One of you is being suspiciously diplomatic.",
-  },
-  {
-    name: "Claude",
-    mark: "✻",
-    color: "#d97757",
-    background: "#fdeee8",
-    comment:
-      "Found the question where {p1} and {p2} quietly disagreed. Bookmarking that one.",
-  },
-  {
-    name: "Gemini",
-    mark: "✦",
-    color: "#4285f4",
-    background: "#e8f0fe",
-    comment:
-      "Ran the numbers twice. The second time was mostly for emotional support.",
-  },
-  {
-    name: "DeepSeek",
-    mark: "🐋",
-    color: "#4d6bfe",
-    background: "#eaeeff",
-    comment:
-      "Detected one “we're fine” doing an enormous amount of heavy lifting.",
-  },
-  {
-    name: "Grok",
-    mark: "⚡",
-    color: "#2c1f38",
-    background: "#efecf2",
-    comment:
-      "The gut-check round got spicy. Noted, filed, and gently judged.",
-  },
+/**
+ * The wait is part of the product.
+ *
+ * The five parallel Haiku requests take 15-20s, so a nine-second animation left
+ * the reader staring at a finished progress ring wondering if it had hung. The
+ * timeline now runs the length of the real work and narrates it: eight steps,
+ * each naming something the analysis is actually doing.
+ *
+ * If the report arrives early the animation still finishes — cutting to the
+ * result the instant the API returns makes the analysis feel cheap. If it
+ * arrives late, the last step holds at 95% rather than sitting at 100% while
+ * nothing happens.
+ */
+const STEPS = [
+  "Reading your answers",
+  "Comparing your perspectives",
+  "Analyzing communication patterns",
+  "Measuring emotional alignment",
+  "Cross-referencing your responses",
+  "Identifying perception gaps",
+  "Building your relationship profile",
+  "Finalizing your CouplesScan report",
 ];
+
+const STEP_MS = 3000;
+/** The last step runs long — it's the one that absorbs a slow response. */
+const TOTAL_MS = STEPS.length * STEP_MS + 1000;
+
+/** Past this, something is wrong rather than slow. */
+const TIMEOUT_MS = 60000;
+
+/** Where the ring parks while the report is still being written. */
+const HOLD_AT = 95;
 
 const RING_CIRCUMFERENCE = 2 * Math.PI * 54;
 
-function ModelRow({
-  model,
+/**
+ * Reads a response that is *supposed* to be JSON.
+ *
+ * `response.json()` on an empty body throws "Unexpected end of JSON input",
+ * which is what the reader then sees in place of an explanation — the failure
+ * of the error path rather than the failure itself. A route that dies without
+ * writing a body, a proxy timeout and a gateway error page all land here, so
+ * the parse is allowed to fail and the caller decides what to say.
+ */
+async function readJson(
+  response: Response,
+): Promise<Record<string, unknown> | null> {
+  const text = await response.text();
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function StepRow({
+  label,
   state,
-  comment,
 }: {
-  model: Model;
+  label: string;
   state: "pending" | "active" | "done";
-  comment: string;
 }) {
   return (
     <div
-      className={`rounded-2xl px-3 py-2.5 transition-all ${
-        state === "active" ? "bg-blush-50" : "bg-transparent"
+      className={`flex items-center gap-3 rounded-xl px-3 py-2 transition-colors ${
+        state === "active" ? "bg-white" : "bg-transparent"
       }`}
     >
-      <div className="flex items-center gap-3">
-        <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-base"
-          style={{
-            color: model.color,
-            backgroundColor: model.background,
-            opacity: state === "pending" ? 0.4 : 1,
-          }}
-        >
-          {model.mark}
-        </span>
-        <span
-          className={`flex-1 text-sm font-bold ${
-            state === "pending" ? "text-ink-300" : "text-ink-900"
-          }`}
-        >
-          {model.name}
-        </span>
-        <span className="text-sm">
-          {state === "done" ? (
-            "✅"
-          ) : state === "active" ? (
-            <span className="inline-block h-2 w-2 animate-heartbeat rounded-full bg-blush-400" />
-          ) : (
-            <span className="text-ink-300">○</span>
-          )}
-        </span>
-      </div>
-      {state !== "pending" && (
-        <p className="animate-in-up mt-1.5 pl-11 text-sm leading-snug text-ink-700">
-          {comment}
-        </p>
-      )}
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-sm">
+        {state === "done" ? (
+          <span className="text-green-600">✓</span>
+        ) : state === "active" ? (
+          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-coral-500" />
+        ) : (
+          <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+        )}
+      </span>
+      <span
+        className={`text-sm ${
+          state === "pending"
+            ? "text-slate-400"
+            : state === "active"
+              ? "font-semibold text-slate-900"
+              : "text-slate-500"
+        }`}
+      >
+        {label}
+      </span>
     </div>
   );
 }
@@ -121,24 +107,27 @@ export default function AnalyzingPage() {
     useTestStore();
 
   const [elapsed, setElapsed] = useState(0);
-  const [timelineDone, setTimelineDone] = useState(false);
   const [reportId, setReportId] = useState<string | null>(null);
-  const reportReady = reportId !== null;
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
 
   const p1Name = partner1.name || "Partner 1";
   const p2Name = partner2.name || "Partner 2";
 
-  const timeline = timelineDone ? 1 : Math.min(1, elapsed / TOTAL_MS);
-  // Park just short of 100 if the report somehow isn't back yet, so the ring
-  // never claims to be finished while we're still waiting.
+  const reportReady = reportId !== null;
+  const timelineDone = elapsed >= TOTAL_MS;
+
+  // Linear, so the ring and the step list tell the same story: an ease-out
+  // curve put the ring at 77% while step 5 of 8 was still running, which reads
+  // as the progress bar and the narration disagreeing about how far along it is.
+  const fraction = Math.min(1, elapsed / TOTAL_MS);
   const progress = reportReady
-    ? timeline * 100
-    : Math.min(timeline * 100, 99);
-  const activeIndex = Math.min(
-    MODELS.length - 1,
-    Math.floor(timeline * MODELS.length),
+    ? fraction * 100
+    : Math.min(fraction * 100, HOLD_AT);
+
+  const activeStep = Math.min(
+    STEPS.length - 1,
+    Math.floor(elapsed / STEP_MS),
   );
 
   const runAnalysis = useCallback(async () => {
@@ -155,10 +144,20 @@ export default function AnalyzingPage() {
         }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.error ?? "Analysis failed.");
+      const data = await readJson(response);
 
-      setReport(data.reportId, data.teaser);
+      if (!response.ok) {
+        throw new Error(
+          typeof data?.error === "string"
+            ? data.error
+            : `Something went wrong on our side (error ${response.status}).`,
+        );
+      }
+      if (typeof data?.reportId !== "string") {
+        throw new Error("The analysis came back incomplete. Please try again.");
+      }
+
+      setReport(data.reportId, data.teaser as FreeSections);
       setReportId(data.reportId);
     } catch (err) {
       console.error(err);
@@ -171,7 +170,6 @@ export default function AnalyzingPage() {
   const retry = () => {
     setError(null);
     setElapsed(0);
-    setTimelineDone(false);
     setReportId(null);
     void runAnalysis();
   };
@@ -192,24 +190,28 @@ export default function AnalyzingPage() {
     void runAnalysis();
   }, [answers, hydrated, partner1.name, router, runAnalysis]);
 
-  // The interval only samples the clock for the ring and the model hand-off.
-  // A background tab throttles it to ~1s, so the redirect hangs off its own
-  // one-shot timer rather than waiting for a sample to cross the finish line.
+  // One clock for the whole page. A background tab throttles the interval, so
+  // every derived value reads from `elapsed` rather than from a step counter
+  // that could miss a tick.
   useEffect(() => {
     if (error) return;
     const start = performance.now();
     const ticker = setInterval(() => setElapsed(performance.now() - start), 50);
-    const finish = setTimeout(() => setTimelineDone(true), TOTAL_MS);
-    return () => {
-      clearInterval(ticker);
-      clearTimeout(finish);
-    };
+    return () => clearInterval(ticker);
   }, [error]);
 
-  // Leave once the show has run its course and the report actually exists.
+  // Slow is one thing; never is another.
   useEffect(() => {
-    // The id also rides in the URL so the report survives a refresh or a
-    // cleared store, not just this tab's session.
+    if (error || reportReady) return;
+    const bail = setTimeout(() => {
+      setError("This is taking longer than it should.");
+    }, TIMEOUT_MS);
+    return () => clearTimeout(bail);
+  }, [error, reportReady]);
+
+  // Leave once the animation has run its course and the report exists. The id
+  // also rides in the URL so the report survives a refresh or a cleared store.
+  useEffect(() => {
     if (timelineDone && reportId) router.replace(`/result?id=${reportId}`);
   }, [reportId, router, timelineDone]);
 
@@ -271,27 +273,22 @@ export default function AnalyzingPage() {
             Analyzing {p1Name} &amp; {p2Name}
           </h1>
           <p className="text-sm text-ink-500">
-            {timelineDone && !reportReady
-              ? "Almost there — putting the report together…"
-              : "Five models are reading your answers. Don't close the page."}
+            Reading all 15 answers from both of you. Don&rsquo;t close the page.
           </p>
         </div>
 
-        <div className="card space-y-1 p-4 text-left">
-          {MODELS.map((model, index) => (
-            <ModelRow
-              key={model.name}
-              model={model}
+        <div className="card space-y-0.5 p-4 text-left">
+          {STEPS.map((step, index) => (
+            <StepRow
+              key={step}
+              label={step}
               state={
-                index < activeIndex
+                index < activeStep
                   ? "done"
-                  : index === activeIndex
+                  : index === activeStep
                     ? "active"
                     : "pending"
               }
-              comment={model.comment
-                .replace("{p1}", p1Name)
-                .replace("{p2}", p2Name)}
             />
           ))}
         </div>

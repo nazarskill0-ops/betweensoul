@@ -32,6 +32,22 @@ validators, so a run that renames or reorders them still lands in the right
 slot. Biggest strength and tension are pointed at the actual highest and lowest
 radar scores rather than at whichever the model nominated.
 
+### The result page
+
+Free and paid sections are interleaved rather than stacked (`src/app/result/`):
+each locked section sits directly after the free one that raises the question it
+answers — the X-ray follows the biggest tension, the conflict fingerprint
+follows the things each partner doesn't say. The order is fixed in
+`page.tsx`; each section is its own component under `components/free` and
+`components/paid`.
+
+A locked section shows a real heading and a real teaser over a blurred
+structural stand-in — boxes and lines in the shape of the section, never the
+analysis, which does not exist in the browser or on the server until the report
+is unlocked. Every unlock button on the page opens the same checkout for the
+same purchase; the handler rides on context rather than through ten sets of
+props.
+
 ### Scores
 
 Every prompt carries a calibration block mapping bands to descriptions, because

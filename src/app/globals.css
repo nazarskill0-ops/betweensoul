@@ -3,6 +3,20 @@
 @theme {
   --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
 
+  /**
+   * The report reads as an analysis tool rather than a quiz, so it runs on its
+   * own face and its own surface — Inter on light grey, kept separate from the
+   * playful brand styling the funnel uses.
+   */
+  --font-report: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --color-surface: #f5f6f8;
+
+  /* CTA colour for the report. Deliberately not the brand pink. */
+  --color-coral-50: #fff2ef;
+  --color-coral-100: #ffe1db;
+  --color-coral-500: #e2513a;
+  --color-coral-600: #c53f2c;
+
   /* Brand — playful pink/purple, deliberately light. */
   --color-blush-50: #fff5f8;
   --color-blush-100: #ffe9f0;
@@ -84,12 +98,36 @@ body {
   }
 }
 
-/* Paid sections render for real, then get blurred — the text is never in the
-   DOM until the report is unlocked, so this is presentation only. */
+/**
+ * Locked previews.
+ *
+ * The blurred text is filler, not the real analysis — the paid sections do not
+ * exist server-side until the report is unlocked, so there is nothing here to
+ * recover by removing the filter. The `user-select` and `pointer-events` rules
+ * are there so it behaves like an image of content rather than content.
+ *
+ * Plain `filter: blur()` rather than `backdrop-filter`, which needs a
+ * `-webkit-` prefix and is unreliable on older mobile Safari.
+ */
 .locked-preview {
-  filter: blur(8px);
+  filter: blur(6px);
   user-select: none;
+  -webkit-user-select: none;
   pointer-events: none;
+}
+
+/* The report's own card: flat white on grey, no brand gradient behind it. */
+@layer components {
+  .report-card {
+    @apply rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(16,24,40,0.12)] ring-1 ring-slate-900/5 sm:p-7;
+  }
+
+  .btn-unlock {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-coral-500 px-5 py-2.5
+      text-sm font-semibold text-white transition-colors hover:bg-coral-600
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+      focus-visible:outline-coral-500 disabled:bg-slate-300;
+  }
 }
 
 @keyframes float-up {
