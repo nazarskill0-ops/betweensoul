@@ -101,7 +101,11 @@ export async function generatePaidSections(
         XRAY_MAX_TOKENS,
       ),
       request("gaps", paidGapsViewPrompt(input, free), validateGapsView),
-      request("conflict", paidConflictFuturePrompt(input), validateConflictFuture),
+      request(
+        "conflict",
+        paidConflictFuturePrompt(input, free),
+        validateConflictFuture,
+      ),
       request("love", paidLoveAnchorsPrompt(input, free), validateLoveAnchors),
       request(
         "scenarios",
