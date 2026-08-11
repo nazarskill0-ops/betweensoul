@@ -39,9 +39,14 @@ export async function GET(
     paid,
     paidStatus: report.paidStatus,
     // Names come from the server so the report reads correctly when it's
-    // opened from a receipt link on a device that never took the test.
+    // opened from a receipt link on a device that never took the test — and
+    // the genders for the same reason: they pick which pair of colours stands
+    // for the two partners, and the browser that opens the link may never have
+    // seen the quiz.
     partner1Name: report.partner1Name,
     partner2Name: report.partner2Name,
+    partner1Gender: report.answers.partner1.gender,
+    partner2Gender: report.answers.partner2.gender,
     createdAt: report.createdAt,
     free: report.free,
     paidSections: report.paidStatus === "ready" ? report.paidSections : null,
