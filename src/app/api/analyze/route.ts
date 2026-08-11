@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { generateFreeReport } from "@/lib/analysis";
 import { MOCK_MODE } from "@/lib/devMode";
 import { buildMockFreeReport } from "@/lib/mockAnalysis";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 import { getReport, saveReport } from "@/lib/reportStore";
 import { AnswerValue, PartnerInfo } from "@/lib/types";
 
@@ -58,6 +59,26 @@ function reportIdFor(body: AnalyzeBody): string {
 }
 
 export async function POST(request: NextRequest) {
+  // First thing in the handler, before the body is even read: this is the
+  // expensive endpoint, and the point of the limit is to stop the work from
+  // starting.
+  const ip = clientIp(request);
+  try {
+    const limit = await checkRateLimit(ip);
+    if (!limit.allowed) {
+      console.warn("[analyze] rate limit hit by %s (%d requests).", ip, limit.count);
+      return Response.json(
+        { error: "Too many requests. Try again later." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+      );
+    }
+  } catch (error) {
+    // A limiter that can't reach Redis must not take the whole endpoint down
+    // with it — failing open costs money in the worst case, failing closed
+    // costs every customer.
+    console.error("[analyze] rate limit check failed; allowing the request:", error);
+  }
+
   let body: AnalyzeBody;
   try {
     body = await request.json();
@@ -84,19 +105,22 @@ export async function POST(request: NextRequest) {
   }
 
   const id = reportIdFor(body);
-
-  const existing = await getReport(id);
-  if (existing) {
-    console.log("[analyze] %s already exists — returning it unchanged.", id);
-    return Response.json({ reportId: id, teaser: existing.free });
-  }
-
   const transcript = { partner1, partner2, relationshipStart, answers };
 
+  // Everything that can throw lives inside the try, the store lookup included.
+  // An error escaping a route handler is answered with a bodyless 500, and a
+  // client calling `.json()` on that gets "Unexpected end of JSON input" — a
+  // parse error standing in for whatever actually went wrong.
   try {
+    const existing = await getReport(id);
+    if (existing) {
+      console.log("[analyze] %s already exists — returning it unchanged.", id);
+      return Response.json({ reportId: id, teaser: existing.free });
+    }
+
     const free = MOCK_MODE
       ? buildMockFreeReport(partner1.name, partner2.name)
-      : await generateFreeReport(transcript);
+      : await generateFreeReport(transcript, id);
 
     await saveReport({
       id,
@@ -115,11 +139,22 @@ export async function POST(request: NextRequest) {
     // Only the free sections cross the wire. The paid ones don't exist yet.
     return Response.json({ reportId: id, teaser: free });
   } catch (error) {
-    // The specific reason (bad JSON, refusal, truncation, transport) goes to
-    // the server log; the client gets a message it can show a user.
+    // The specific reason (bad JSON, refusal, truncation, transport, a store
+    // that isn't reachable) goes to the server log; the client gets a message
+    // it can show a user.
     console.error("[analyze] failed:", error);
+
+    // Worth separating: an unreachable store is an operational problem the
+    // reader can wait out, not a bad set of answers they should re-submit.
+    const storageDown =
+      error instanceof Error && error.message.includes("UPSTASH_REDIS_REST");
+
     return Response.json(
-      { error: "Analysis failed. Please try again." },
+      {
+        error: storageDown
+          ? "We couldn't save your report just now. Please try again shortly."
+          : "Analysis failed. Please try again.",
+      },
       { status: 500 },
     );
   }

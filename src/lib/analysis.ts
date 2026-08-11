@@ -15,10 +15,11 @@ import {
   freeUnsaidFlagsPrompt,
 } from "@/lib/prompts";
 import { FreeSections, TranscriptData } from "@/lib/types";
+import { logPassCost } from "@/lib/usage";
 
 /**
- * The free report — eleven sections from five parallel Haiku requests, fired
- * the moment the test is submitted.
+ * The free report — eleven sections from five Haiku requests, fired the moment
+ * the test is submitted.
  *
  * Five rather than one because eleven sections do not fit in a single 2000
  * token response, and rather than eleven because sections that must agree with
@@ -26,9 +27,15 @@ import { FreeSections, TranscriptData } from "@/lib/types";
  * drawn from it, the sliders and the perception gap that read off the same
  * comparisons.
  *
- * They run concurrently, so the reader waits for the slowest one rather than
- * the sum. Any one failing fails the whole report — a report missing its score
- * or its dynamic is not worth showing.
+ * The score goes first and the other four run concurrently behind it. That
+ * costs one request's latency — about a second on Haiku for a section this
+ * short — and buys the overall score for the other four prompts. Two of the
+ * calibration rules are written in terms of that number, and a section that
+ * couldn't see it was guessing at the tone: a couple who scored 52 was being
+ * told, by the radar, that their biggest gap was staggering.
+ *
+ * Any one failing fails the whole report — a report missing its score or its
+ * dynamic is not worth showing.
  */
 
 /**
@@ -44,6 +51,7 @@ const RADAR_MAX_TOKENS = 3000;
 
 export async function generateFreeReport(
   input: TranscriptData,
+  reportId: string,
 ): Promise<FreeSections> {
   const system = baseSystemPrompt(
     input.partner1.name || "Partner 1",
@@ -59,6 +67,7 @@ export async function generateFreeReport(
   ) =>
     generateJson({
       label: `free/${label}`,
+      reportId,
       model: HAIKU,
       system,
       prompt,
@@ -66,16 +75,34 @@ export async function generateFreeReport(
       validate,
     });
 
-  const [scoreDynamic, radar, slidersGaps, unsaidFlags, scenariosQuestion] =
-    await Promise.all([
-      request("score", freeScoreDynamicPrompt(input), validateScoreDynamic),
-      request("radar", freeRadarPrompt(input), validateRadar, RADAR_MAX_TOKENS),
-      request("sliders", freeSlidersGapsPrompt(input), validateSlidersGaps),
-      request("unsaid", freeUnsaidFlagsPrompt(input), validateUnsaidFlags),
-      request("scenarios", freeScenariosQuestionPrompt(input), validateScenariosQuestion),
-    ]);
+  const scoreDynamic = await request(
+    "score",
+    freeScoreDynamicPrompt(input),
+    validateScoreDynamic,
+  );
+  const { overall } = scoreDynamic.coupleScore;
+  console.log(
+    `[free] scored ${overall}/100 in ${Date.now() - startedAt}ms; four more requests to go`,
+  );
+
+  const [radar, slidersGaps, unsaidFlags, scenariosQuestion] = await Promise.all([
+    request(
+      "radar",
+      freeRadarPrompt(input, overall),
+      validateRadar,
+      RADAR_MAX_TOKENS,
+    ),
+    request("sliders", freeSlidersGapsPrompt(input, overall), validateSlidersGaps),
+    request("unsaid", freeUnsaidFlagsPrompt(input, overall), validateUnsaidFlags),
+    request(
+      "scenarios",
+      freeScenariosQuestionPrompt(input, overall),
+      validateScenariosQuestion,
+    ),
+  ]);
 
   console.log(`[free] all five requests done in ${Date.now() - startedAt}ms`);
+  await logPassCost(reportId, "free");
 
   return {
     ...scoreDynamic,

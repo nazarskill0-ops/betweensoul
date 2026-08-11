@@ -23,7 +23,16 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  let report = await getReport(id);
+
+  // Same reason as the GET beside it: an unreachable store must answer with
+  // JSON, not with an error escaping the handler.
+  let report;
+  try {
+    report = await getReport(id);
+  } catch (error) {
+    console.error("[unlock] could not read %s:", id, error);
+    return Response.json({ error: "Could not load that report." }, { status: 500 });
+  }
 
   if (!report) {
     return Response.json({ error: "Report not found." }, { status: 404 });

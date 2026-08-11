@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito } from "next/font/google";
+import { Inter } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
-const nunito = Nunito({
-  variable: "--font-nunito",
+/** The whole site's face. See `--font-sans` in globals.css. */
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
@@ -21,7 +22,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${nunito.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">
         {children}
         <SiteFooter />

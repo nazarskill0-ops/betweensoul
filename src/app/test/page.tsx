@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTestStore } from "@/store/useTestStore";
+import { partnerPaletteStyle } from "@/lib/partnerColors";
 import { Gender, PartnerInfo } from "@/lib/types";
 
 const genderOptions: { value: Gender; label: string }[] = [
@@ -44,7 +46,7 @@ function PartnerFields({
         className="field"
       />
       <label className="block">
-        <span className="mb-1 block text-xs font-semibold text-ink-500">
+        <span className="mb-1 block text-xs font-semibold text-slate-500">
           Birthday
         </span>
         <input
@@ -80,8 +82,29 @@ export default function TestPage() {
     setPartner2,
     setRelationshipStart,
     setEmail,
+    reportId,
+    resetTest,
   } = useTestStore();
   const router = useRouter();
+  const cleared = useRef(false);
+
+  /**
+   * Starting over in a tab that already finished a test.
+   *
+   * Submitting drops the saved copy of the answers, but the live store still
+   * holds them — names, answers, and the question the reader stopped on — so
+   * coming back here from the report and pressing Start Analysis would drop
+   * them straight onto question 15 of the test they just took. A report id in
+   * memory is what marks that tab as finished.
+   *
+   * Arriving mid-quiz (browser Back from question 1) has no report id, so a
+   * half-finished test is left exactly as it was.
+   */
+  useEffect(() => {
+    if (cleared.current || !reportId) return;
+    cleared.current = true;
+    resetTest();
+  }, [reportId, resetTest]);
 
   const partnersReady = [partner1, partner2].every(
     (p) => p.name.trim() && p.birthday && p.gender,
@@ -93,31 +116,34 @@ export default function TestPage() {
   };
 
   return (
-    <main className="flex-1 px-5 py-10">
+    <main
+      className="flex-1 px-5 py-10"
+      style={partnerPaletteStyle(partner1.gender, partner2.gender)}
+    >
       <div className="mx-auto w-full max-w-lg space-y-6">
         <Link
           href="/"
-          className="inline-block text-sm font-semibold text-ink-500 transition-colors hover:text-ink-700"
+          className="inline-block text-sm font-semibold text-slate-500 transition-colors hover:text-slate-600"
         >
           ← Back
         </Link>
 
         <header className="space-y-2 text-center">
-          <h1 className="text-3xl font-extrabold leading-tight text-ink-900">
+          <h1 className="text-3xl font-bold leading-tight text-slate-900">
             Take the test{" "}
-            <span className="bg-gradient-to-r from-blush-500 to-lilac-400 bg-clip-text text-transparent">
+            <span className="italic text-accent-500">
               together
             </span>{" "}
             from one device
           </h1>
-          <p className="text-ink-700">
+          <p className="text-slate-600">
             We compare your two sets of answers — that&rsquo;s where the
             analysis comes from.
           </p>
         </header>
 
         <section className="card space-y-5 p-6">
-          <h2 className="text-center font-bold text-ink-700">Who&rsquo;s taking it?</h2>
+          <h2 className="text-center font-bold text-slate-600">Who&rsquo;s taking it?</h2>
           <div className="grid grid-cols-2 gap-4">
             <PartnerFields
               label="Partner 1"
@@ -136,7 +162,7 @@ export default function TestPage() {
 
         <section className="card space-y-4 p-6">
           <label className="block">
-            <span className="mb-1 block text-sm font-semibold text-ink-700">
+            <span className="mb-1 block text-sm font-semibold text-slate-600">
               When did your relationship start?
             </span>
             <input
@@ -145,13 +171,13 @@ export default function TestPage() {
               onChange={(e) => setRelationshipStart(e.target.value)}
               className="field"
             />
-            <span className="mt-1 block text-xs text-ink-300">
+            <span className="mt-1 block text-xs text-slate-400">
               Roughly is fine.
             </span>
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-sm font-semibold text-ink-700">
+            <span className="mb-1 block text-sm font-semibold text-slate-600">
               Your email
             </span>
             <input
@@ -163,9 +189,12 @@ export default function TestPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="field"
             />
-            <span className="mt-1 block text-xs text-ink-300">
-              So we can send your results.
-            </span>
+            {/*
+              "So we can send your results" belongs here the day results are
+              actually emailed — the privacy policy says they aren't, so the
+              line was promising something the product doesn't do. Put it back
+              with the mailing, not before.
+            */}
           </label>
         </section>
 
@@ -173,13 +202,13 @@ export default function TestPage() {
           Start Analysis ♥
         </button>
 
-        <p className="text-center text-xs text-ink-300">
+        <p className="text-center text-xs text-slate-400">
           By continuing you agree to our{" "}
-          <a href="#" className="underline hover:text-ink-500">
+          <a href="#" className="underline hover:text-slate-500">
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="#" className="underline hover:text-ink-500">
+          <a href="#" className="underline hover:text-slate-500">
             Privacy Policy
           </a>
           .
