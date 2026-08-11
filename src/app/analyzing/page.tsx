@@ -63,6 +63,51 @@ async function readJson(
   }
 }
 
+/* --------------------------- the refresh guard ---------------------------- */
+
+/**
+ * A hard refresh of this page remounts it, and the effect below fires a second
+ * POST for a submission that has already been analyzed.
+ *
+ * The server is idempotent — the report id is a hash of the answers, so the
+ * repeat is a Redis lookup rather than another five model requests — but it is
+ * still a request against a limit of five per hour, and a reader who refreshes
+ * a few times would lock themselves out of their own report. So the id is
+ * remembered for the tab and the second POST is never sent.
+ *
+ * Keyed by a fingerprint of the submission, so starting a different test in the
+ * same tab doesn't redirect to the previous couple's report.
+ */
+const GUARD_KEY = "couplescan:analyzed";
+
+/** djb2. Not security, just "are these the same answers as a moment ago". */
+function fingerprint(payload: unknown): string {
+  const text = JSON.stringify(payload);
+  let hash = 5381;
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) + hash + text.charCodeAt(i)) | 0;
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function readGuard(): { fp: string; reportId: string } | null {
+  try {
+    const raw = sessionStorage.getItem(GUARD_KEY);
+    return raw ? (JSON.parse(raw) as { fp: string; reportId: string }) : null;
+  } catch {
+    // Private mode, or storage disabled. The idempotent server is the backstop.
+    return null;
+  }
+}
+
+function writeGuard(fp: string, reportId: string) {
+  try {
+    sessionStorage.setItem(GUARD_KEY, JSON.stringify({ fp, reportId }));
+  } catch {
+    // Not worth failing the analysis over.
+  }
+}
+
 function StepRow({
   label,
   state,
@@ -131,17 +176,12 @@ export default function AnalyzingPage() {
   );
 
   const runAnalysis = useCallback(async () => {
+    const payload = { partner1, partner2, relationshipStart, email, answers };
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          partner1,
-          partner2,
-          relationshipStart,
-          email,
-          answers,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await readJson(response);
@@ -157,6 +197,9 @@ export default function AnalyzingPage() {
         throw new Error("The analysis came back incomplete. Please try again.");
       }
 
+      // Remembered before the redirect, so a refresh during the animation
+      // doesn't spend a second request on a report that already exists.
+      writeGuard(fingerprint(payload), data.reportId);
       setReport(data.reportId, data.teaser as FreeSections);
       setReportId(data.reportId);
     } catch (err) {
@@ -184,11 +227,34 @@ export default function AnalyzingPage() {
       router.replace("/test");
       return;
     }
+
+    // Already analyzed in this tab: go straight to it rather than asking for
+    // the same report again.
+    const guard = readGuard();
+    if (
+      guard &&
+      guard.fp === fingerprint({ partner1, partner2, relationshipStart, email, answers })
+    ) {
+      router.replace(`/result?id=${guard.reportId}`);
+      return;
+    }
     // Every state write inside runAnalysis happens after the fetch resolves,
     // so there's no synchronous cascade — the rule can't see past the async fn.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void runAnalysis();
-  }, [answers, hydrated, partner1.name, router, runAnalysis]);
+    // The `started` ref keeps this to one run per mount, so the extra
+    // dependencies below can't re-trigger it — they are listed because the
+    // fingerprint reads them.
+  }, [
+    answers,
+    email,
+    hydrated,
+    partner1,
+    partner2,
+    relationshipStart,
+    router,
+    runAnalysis,
+  ]);
 
   // One clock for the whole page. A background tab throttles the interval, so
   // every derived value reads from `elapsed` rather than from a step counter

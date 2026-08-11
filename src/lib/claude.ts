@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { costOf, recordUsage } from "@/lib/usage";
 
 /**
  * One Claude request that must come back as valid JSON.
@@ -19,8 +20,10 @@ export const HAIKU = "claude-haiku-4-5-20251001";
 export const SONNET = "claude-sonnet-4-6";
 
 interface RequestOptions<T> {
-  /** Appears in logs, e.g. "free/radar". */
+  /** Appears in logs and in the usage record, e.g. "free/radar". */
   label: string;
+  /** Which report's usage log this call belongs to. */
+  reportId: string;
   model: string;
   system: string;
   prompt: string;
@@ -43,6 +46,7 @@ async function attempt<T>(
   client: Anthropic,
   model: string,
   maxTokens: number,
+  isFallback: boolean,
   options: RequestOptions<T>,
 ): Promise<T> {
   const startedAt = Date.now();
@@ -52,6 +56,19 @@ async function attempt<T>(
     max_tokens: maxTokens,
     system: options.system,
     messages: [{ role: "user", content: options.prompt }],
+  });
+
+  // Recorded before the response is judged: a refusal, a truncation and a
+  // response that fails validation are all billed, and a cost log that only
+  // counts the calls that worked would hide exactly the runs worth finding.
+  await recordUsage(options.reportId, {
+    model,
+    section: options.label,
+    input_tokens: message.usage.input_tokens,
+    output_tokens: message.usage.output_tokens,
+    cost_usd: costOf(model, message.usage.input_tokens, message.usage.output_tokens),
+    timestamp: new Date().toISOString(),
+    is_fallback: isFallback,
   });
 
   if (message.stop_reason === "refusal") {
@@ -87,8 +104,9 @@ export async function generateJson<T>(options: RequestOptions<T>): Promise<T> {
   let maxTokens = options.maxTokens;
 
   for (const [index, model] of models.entries()) {
+    const isFallback = model !== options.model;
     try {
-      if (model !== options.model) {
+      if (isFallback) {
         console.warn(
           "[%s] falling back to %s after %s failed.",
           options.label,
@@ -96,7 +114,7 @@ export async function generateJson<T>(options: RequestOptions<T>): Promise<T> {
           options.model,
         );
       }
-      return await attempt(client, model, maxTokens, options);
+      return await attempt(client, model, maxTokens, isFallback, options);
     } catch (error) {
       // A refusal on the primary model is not a transport hiccup; only the
       // fallback is worth trying, and only because it is a different model.

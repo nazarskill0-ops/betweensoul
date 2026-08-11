@@ -15,6 +15,7 @@ import {
   freeUnsaidFlagsPrompt,
 } from "@/lib/prompts";
 import { FreeSections, TranscriptData } from "@/lib/types";
+import { logPassCost } from "@/lib/usage";
 
 /**
  * The free report — eleven sections from five parallel Haiku requests, fired
@@ -44,6 +45,7 @@ const RADAR_MAX_TOKENS = 3000;
 
 export async function generateFreeReport(
   input: TranscriptData,
+  reportId: string,
 ): Promise<FreeSections> {
   const system = baseSystemPrompt(
     input.partner1.name || "Partner 1",
@@ -59,6 +61,7 @@ export async function generateFreeReport(
   ) =>
     generateJson({
       label: `free/${label}`,
+      reportId,
       model: HAIKU,
       system,
       prompt,
@@ -76,6 +79,7 @@ export async function generateFreeReport(
     ]);
 
   console.log(`[free] all five requests done in ${Date.now() - startedAt}ms`);
+  await logPassCost(reportId, "free");
 
   return {
     ...scoreDynamic,
