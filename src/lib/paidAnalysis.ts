@@ -28,6 +28,7 @@ import {
   PaidSections,
   TranscriptData,
 } from "@/lib/types";
+import { logPassCost } from "@/lib/usage";
 
 /**
  * The paid report — ten sections from five parallel Sonnet requests, run once
@@ -60,6 +61,7 @@ const SCENARIO_MAX_TOKENS = 4000;
 export async function generatePaidSections(
   input: TranscriptData,
   free: FreeSections,
+  reportId: string,
 ): Promise<PaidSections> {
   const system = baseSystemPrompt(
     input.partner1.name || "Partner 1",
@@ -81,6 +83,7 @@ export async function generatePaidSections(
   ) =>
     generateJson({
       label: `paid/${label}`,
+      reportId,
       model: SONNET,
       fallbackModel: HAIKU,
       system,
@@ -109,6 +112,7 @@ export async function generatePaidSections(
     ]);
 
   console.log(`[paid] all five requests done in ${Date.now() - startedAt}ms`);
+  await logPassCost(reportId, "paid");
 
   return {
     fullXRay,
@@ -144,7 +148,7 @@ export async function runPaidGeneration(
     // with no Sonnet call and no Paddle checkout. Dev-only — see devMode.ts.
     const sections = MOCK_MODE
       ? buildMockPaidSections(report.partner1Name, report.partner2Name)
-      : await generatePaidSections(report.answers, report.free);
+      : await generatePaidSections(report.answers, report.free, reportId);
 
     await savePaidSections(reportId, sections);
     console.log("[paid] report %s is ready.", reportId);

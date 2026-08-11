@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { generateFreeReport } from "@/lib/analysis";
 import { MOCK_MODE } from "@/lib/devMode";
 import { buildMockFreeReport } from "@/lib/mockAnalysis";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 import { getReport, saveReport } from "@/lib/reportStore";
 import { AnswerValue, PartnerInfo } from "@/lib/types";
 
@@ -58,6 +59,26 @@ function reportIdFor(body: AnalyzeBody): string {
 }
 
 export async function POST(request: NextRequest) {
+  // First thing in the handler, before the body is even read: this is the
+  // expensive endpoint, and the point of the limit is to stop the work from
+  // starting.
+  const ip = clientIp(request);
+  try {
+    const limit = await checkRateLimit(ip);
+    if (!limit.allowed) {
+      console.warn("[analyze] rate limit hit by %s (%d requests).", ip, limit.count);
+      return Response.json(
+        { error: "Too many requests. Try again later." },
+        { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+      );
+    }
+  } catch (error) {
+    // A limiter that can't reach Redis must not take the whole endpoint down
+    // with it — failing open costs money in the worst case, failing closed
+    // costs every customer.
+    console.error("[analyze] rate limit check failed; allowing the request:", error);
+  }
+
   let body: AnalyzeBody;
   try {
     body = await request.json();
@@ -99,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     const free = MOCK_MODE
       ? buildMockFreeReport(partner1.name, partner2.name)
-      : await generateFreeReport(transcript);
+      : await generateFreeReport(transcript, id);
 
     await saveReport({
       id,

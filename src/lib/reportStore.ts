@@ -1,4 +1,4 @@
-import { Redis } from "@upstash/redis";
+import { redis } from "@/lib/redis";
 import { CouplescanReport, PaidSections } from "@/lib/types";
 
 /**
@@ -29,25 +29,8 @@ const key = (id: string) => `report:${id}`;
 /** Held for the duration of one paid generation. See claimPaidGeneration. */
 const claimKey = (id: string) => `report:${id}:generating`;
 
-let client: Redis | null = null;
-
-function db(): Redis {
-  if (client) return client;
-
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-
-  // Constructed lazily so a build without the variables still succeeds; the
-  // failure lands on the request that needed the store, naming what's missing.
-  if (!url || !token) {
-    throw new Error(
-      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set to store reports.",
-    );
-  }
-
-  client = new Redis({ url, token });
-  return client;
-}
+/** The connection is shared with the rate limiter and the usage log. */
+const db = redis;
 
 /**
  * Every write uses the same absolute expiry rather than a fresh 24h window, so

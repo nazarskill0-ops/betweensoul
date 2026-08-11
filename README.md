@@ -141,6 +141,39 @@ Paddle's own SDK enforces a five-second window, which a cold start can blow
 through on a valid delivery; that is why verification here is hand-rolled and
 `@paddle/paddle-node-sdk` is not a dependency.
 
+## Rate limiting and cost
+
+`POST /api/analyze` is capped at **5 requests per hour per IP** — a fixed window
+counted in Redis under `ratelimit:<ip>` (`src/lib/rateLimit.ts`). The check is
+the first thing in the handler, before the body is read, because the point is to
+stop five model requests from starting. Over the limit answers 429 with a
+`Retry-After`. The IP is the leftmost entry of `x-forwarded-for`; locally that
+header is `::1`, so all dev traffic shares one bucket.
+
+If Redis is unreachable the limiter fails **open** and logs it: refusing every
+customer is a worse outcome than an unpoliced hour.
+
+Every call to Anthropic is recorded under `usage:<reportId>` — model, section,
+token counts, cost, timestamp, and whether it ran on the fallback model
+(`src/lib/usage.ts`). It's a Redis list rather than a JSON array under one key,
+because the five requests of a pass run concurrently and read-modify-write would
+lose entries; `LRANGE usage:<id> 0 -1` still reads back as the array of objects.
+
+Calls are recorded **before** the response is validated, so a truncation or a
+refusal — billed, and the runs most worth finding — appear in the log rather
+than vanishing from it.
+
+Each pass logs its total when it finishes:
+
+```
+[CouplesScan] Report 72fce6a8… — free cost: $0.0177 (Haiku, 5 calls)
+[CouplesScan] Report 72fce6a8… — paid cost: $0.1522 (Sonnet, 5 calls)
+```
+
+Those are measured, not estimated: **~$0.17 of model spend per fully unlocked
+report** against a $9.99 price. The X-ray alone is a third of it. Update
+`PRICING` in `src/lib/usage.ts` if the rates change.
+
 ## Report storage
 
 Reports live in Upstash Redis (`src/lib/reportStore.ts`) under `report:<id>` as
