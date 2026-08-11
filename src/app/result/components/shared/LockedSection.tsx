@@ -119,7 +119,7 @@ export function GeneratingSection({
 export function Spinner({ className = "" }: { className?: string }) {
   return (
     <span
-      className={`inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-coral-500 ${className}`}
+      className={`inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-slate-300 border-t-accent-500 ${className}`}
       role="status"
       aria-label="Working"
     />

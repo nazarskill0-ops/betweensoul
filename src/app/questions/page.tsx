@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Choice, Question, SCALE_POINTS, questions } from "@/lib/questions";
 import { useTestStore } from "@/store/useTestStore";
+import { partnerPaletteStyle } from "@/lib/partnerColors";
 
 type PartnerAnswers = { p1: string; p2: string };
 
@@ -54,9 +55,9 @@ function OptionButton({
   children: React.ReactNode;
 }) {
   const selectedStyles = {
-    p1: "border-[var(--color-p1)] bg-[var(--color-p1-soft)] text-ink-900",
-    p2: "border-[var(--color-p2)] bg-[var(--color-p2-soft)] text-ink-900",
-    both: "border-lilac-400 bg-lilac-50 text-ink-900",
+    p1: "border-[var(--color-p1)] bg-[var(--color-p1-soft)] text-slate-900",
+    p2: "border-[var(--color-p2)] bg-[var(--color-p2-soft)] text-slate-900",
+    both: "border-slate-300 bg-slate-50 text-slate-900",
   }[accent];
 
   return (
@@ -67,7 +68,7 @@ function OptionButton({
       className={`w-full rounded-2xl border-2 p-3 text-left text-sm leading-snug transition-all ${
         selected
           ? `${selectedStyles} font-semibold`
-          : "border-transparent bg-white text-ink-700 shadow-[0_2px_10px_-6px_rgba(90,60,110,0.4)] hover:bg-blush-50"
+          : "border-transparent bg-white text-slate-600 shadow-[0_1px_2px_rgba(16,24,40,0.06)] ring-1 ring-slate-900/5 hover:bg-slate-50"
       } ${disabled && !selected ? "opacity-40" : ""}`}
     >
       {children}
@@ -105,7 +106,7 @@ function PartnerChip({
       <span className={`pill ${styles} max-w-full truncate`}>
         {about ? `${name} → about ${about}` : name}
       </span>
-      {note && <p className="mt-1.5 text-xs text-ink-300">{note}</p>}
+      {note && <p className="mt-1.5 text-xs text-slate-400">{note}</p>}
     </div>
   );
 }
@@ -188,39 +189,42 @@ export default function QuestionsPage() {
   const otherName = (slot: "p1" | "p2") => (slot === "p1" ? p2Name : p1Name);
 
   return (
-    <main className="flex-1 px-4 py-8">
+    <main
+      className="flex-1 px-4 py-8"
+      style={partnerPaletteStyle(partner1.gender, partner2.gender)}
+    >
       <div className="mx-auto w-full max-w-2xl">
         {/* Header + progress */}
         <div className="mb-2 flex items-center justify-between">
           <button
             onClick={goBack}
             disabled={currentIndex === 0}
-            className="text-sm font-semibold text-ink-500 transition-colors hover:text-ink-700 disabled:opacity-0"
+            className="text-sm font-semibold text-slate-500 transition-colors hover:text-slate-600 disabled:opacity-0"
           >
             ← Back
           </button>
-          <span className="text-sm font-semibold text-ink-500">
+          <span className="text-sm font-semibold text-slate-500">
             Question {currentIndex + 1} of {questions.length}
           </span>
         </div>
         <div className="mb-8 h-2 w-full overflow-hidden rounded-full bg-white">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-blush-400 to-lilac-400 transition-all duration-500"
+            className="h-full rounded-full bg-accent-500 transition-all duration-500"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         <div key={question.id} className="animate-in-up">
-          <h2 className="text-center text-2xl font-extrabold leading-snug text-ink-900">
+          <h2 className="text-center text-2xl font-bold leading-snug text-slate-900">
             {question.text}
           </h2>
           {question.subtitle && (
-            <p className="mt-2 text-center text-sm text-ink-500">
+            <p className="mt-2 text-center text-sm text-slate-500">
               {question.subtitle}
             </p>
           )}
           {isCross && (
-            <p className="mt-2 text-center text-sm font-semibold text-lilac-500">
+            <p className="mt-2 text-center text-sm font-semibold text-slate-600">
               Answer about your PARTNER, not yourself.
             </p>
           )}
@@ -231,7 +235,7 @@ export default function QuestionsPage() {
               {together ? (
                 <div className="space-y-2.5">
                   <div className="mb-4 text-center">
-                    <span className="pill bg-lilac-100 text-lilac-500">
+                    <span className="pill bg-slate-100 text-slate-600">
                       Answer together
                     </span>
                   </div>
@@ -326,7 +330,7 @@ export default function QuestionsPage() {
               {together ? (
                 <>
                   <div className="mb-4 text-center">
-                    <span className="pill bg-lilac-100 text-lilac-500">
+                    <span className="pill bg-slate-100 text-slate-600">
                       Answer together
                     </span>
                   </div>
@@ -384,7 +388,7 @@ export default function QuestionsPage() {
                         ? verdict === "fine"
                           ? "border-emerald-400 bg-emerald-50 text-emerald-700"
                           : "border-rose-400 bg-rose-50 text-rose-700"
-                        : "border-transparent bg-blush-50 text-ink-500 hover:bg-blush-100"
+                        : "border-transparent bg-slate-50 text-slate-500 hover:bg-slate-100"
                     }`}
                   >
                     {verdict === "fine" ? "👍 Fine" : "👎 Dealbreaker"}
@@ -393,7 +397,7 @@ export default function QuestionsPage() {
 
                 return (
                   <div key={item.id} className="card p-4">
-                    <p className="mb-3 text-center font-semibold text-ink-900">
+                    <p className="mb-3 text-center font-semibold text-slate-900">
                       {item.statement}
                     </p>
                     {together ? (
@@ -449,7 +453,7 @@ export default function QuestionsPage() {
                           className={`h-8 flex-1 rounded-lg border-2 transition-all ${
                             selected
                               ? ""
-                              : "border-transparent bg-blush-50 hover:bg-blush-100"
+                              : "border-transparent bg-slate-50 hover:bg-slate-100"
                           }`}
                           style={
                             selected
@@ -464,7 +468,7 @@ export default function QuestionsPage() {
                             className={
                               selected
                                 ? "text-xs font-bold"
-                                : "text-xs font-semibold text-ink-300"
+                                : "text-xs font-semibold text-slate-400"
                             }
                             style={
                               selected ? { color: `var(--color-${slot})` } : undefined
@@ -480,7 +484,7 @@ export default function QuestionsPage() {
 
                 return (
                   <div key={item.id} className="card p-4">
-                    <div className="mb-3 flex items-start justify-between gap-3 text-xs font-semibold text-ink-500">
+                    <div className="mb-3 flex items-start justify-between gap-3 text-xs font-semibold text-slate-500">
                       <span className="flex-1 text-left">{item.left}</span>
                       <span className="flex-1 text-right">{item.right}</span>
                     </div>
@@ -516,7 +520,7 @@ export default function QuestionsPage() {
           {isLast ? "See Our Results ♥" : "Next"}
         </button>
 
-        <p className="mt-5 text-center text-xs text-ink-300">
+        <p className="mt-5 text-center text-xs text-slate-400">
           Don&rsquo;t try to answer &ldquo;correctly&rdquo; — answer how you
           really feel.
         </p>

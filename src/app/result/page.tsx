@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { openCheckout } from "@/lib/paddle";
 import { useTestStore } from "@/store/useTestStore";
 import { useStoreHydrated } from "@/store/useHydrated";
-import { FreeSections, PaidSections, PaidStatus } from "@/lib/types";
+import { FreeSections, Gender, PaidSections, PaidStatus } from "@/lib/types";
+import { partnerPaletteStyle } from "@/lib/partnerColors";
 
 import { CoupleScore } from "./components/free/CoupleScore";
 import { CoupleDynamic } from "./components/free/CoupleDynamic";
@@ -50,6 +51,9 @@ interface ReportResponse {
   paidStatus: PaidStatus;
   partner1Name: string;
   partner2Name: string;
+  /** Picks which pair of colours stands for the two partners. */
+  partner1Gender: Gender | "";
+  partner2Gender: Gender | "";
   free: FreeSections;
   paidSections: PaidSections | null;
   /** Paid for, but the deep analysis hasn't been generated yet. */
@@ -211,8 +215,7 @@ function ResultContent() {
   if (loadState === "error" && !free) {
     return (
       <>
-        <PageSurface />
-        <main className="font-report flex flex-1 items-center justify-center px-4 py-12">
+        <main className="flex flex-1 items-center justify-center px-4 py-12">
           <div className="report-card w-full max-w-sm text-center">
             <div className="text-4xl">😕</div>
             <h1 className="mt-4 text-xl font-bold text-slate-900">
@@ -237,8 +240,7 @@ function ResultContent() {
   if (!reportId || loadState === "notfound" || !free) {
     return (
       <>
-        <PageSurface />
-        <main className="font-report flex flex-1 items-center justify-center px-4 py-12">
+        <main className="flex flex-1 items-center justify-center px-4 py-12">
           <div className="report-card w-full max-w-sm text-center">
             <div className="text-4xl">🔍</div>
             <h1 className="mt-4 text-xl font-bold text-slate-900">
@@ -262,6 +264,12 @@ function ResultContent() {
 
   const p1Name = report?.partner1Name || partner1.name || "Partner 1";
   const p2Name = report?.partner2Name || partner2.name || "Partner 2";
+  // Server first: a report opened from a receipt link on another device has no
+  // store to read the genders from.
+  const palette = partnerPaletteStyle(
+    report?.partner1Gender ?? partner1.gender,
+    report?.partner2Gender ?? partner2.gender,
+  );
   const paidSections = report?.paidSections ?? null;
   const unlocked = paidSections !== null;
   // Paid for, deep dive not stored yet — or paid in this session and the
@@ -271,11 +279,10 @@ function ResultContent() {
 
   return (
     <>
-      <PageSurface />
       <UnlockProvider
         value={{ onUnlock: unlock, loading: checkoutLoading, error: checkoutError }}
       >
-        <main className="font-report flex-1 px-4 py-8 sm:px-6 sm:py-10">
+        <main className="flex-1 px-4 py-8 sm:px-6 sm:py-10" style={palette}>
           <div className="mx-auto w-full max-w-[680px] space-y-8 sm:space-y-10">
             {unlocked && (
               <p className="text-center">
@@ -397,22 +404,10 @@ function ResultContent() {
   );
 }
 
-/**
- * The report's own background, behind everything including the footer.
- *
- * The rest of the app sits on a pink gradient set on `body`; covering it from
- * inside the route keeps the change scoped to this page rather than turning
- * into a site-wide restyle.
- */
-function PageSurface() {
-  return <div className="fixed inset-0 -z-10 bg-surface" aria-hidden />;
-}
-
 function CenteredNote({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <PageSurface />
-      <main className="font-report flex flex-1 items-center justify-center px-4 py-12">
+      <main className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="flex items-center gap-3 text-slate-500">
           <Spinner />
           <p className="font-medium">{children}</p>

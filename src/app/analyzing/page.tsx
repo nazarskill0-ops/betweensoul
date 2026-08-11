@@ -125,7 +125,7 @@ function StepRow({
         {state === "done" ? (
           <span className="text-green-600">✓</span>
         ) : state === "active" ? (
-          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-coral-500" />
+          <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-accent-500" />
         ) : (
           <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
         )}
@@ -286,11 +286,11 @@ export default function AnalyzingPage() {
       <main className="flex flex-1 items-center justify-center px-5 py-12">
         <div className="card w-full max-w-md space-y-5 p-8 text-center">
           <div className="text-4xl">😕</div>
-          <h1 className="text-2xl font-extrabold text-ink-900">
+          <h1 className="text-2xl font-bold text-slate-900">
             We couldn&rsquo;t finish your analysis
           </h1>
-          <p className="text-sm text-ink-700">{error}</p>
-          <p className="text-sm text-ink-500">
+          <p className="text-sm text-slate-600">{error}</p>
+          <p className="text-sm text-slate-500">
             Your answers are still saved — nothing was lost.
           </p>
           <button onClick={retry} className="btn-primary">
@@ -306,39 +306,32 @@ export default function AnalyzingPage() {
       <div className="w-full max-w-md space-y-7 text-center">
         <div className="relative mx-auto h-40 w-40">
           <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-            <circle cx="60" cy="60" r="54" fill="none" stroke="white" strokeWidth="10" />
+            <circle cx="60" cy="60" r="54" fill="none" stroke="#e9ecf2" strokeWidth="10" />
             <circle
               cx="60"
               cy="60"
               r="54"
               fill="none"
-              stroke="url(#ring)"
+              stroke="var(--color-accent-500)"
               strokeWidth="10"
               strokeLinecap="round"
               strokeDasharray={RING_CIRCUMFERENCE}
               strokeDashoffset={RING_CIRCUMFERENCE * (1 - progress / 100)}
               style={{ transition: "stroke-dashoffset 0.2s linear" }}
             />
-            <defs>
-              <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="var(--color-blush-400)" />
-                <stop offset="100%" stopColor="var(--color-lilac-400)" />
-              </linearGradient>
-            </defs>
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="animate-heartbeat text-3xl">💗</span>
-            <span className="mt-1 text-2xl font-extrabold text-ink-900">
+            <span className="text-2xl font-bold tabular-nums text-slate-900">
               {Math.floor(progress)}%
             </span>
           </div>
         </div>
 
         <div className="space-y-1">
-          <h1 className="text-2xl font-extrabold text-ink-900">
+          <h1 className="text-2xl font-bold text-slate-900">
             Analyzing {p1Name} &amp; {p2Name}
           </h1>
-          <p className="text-sm text-ink-500">
+          <p className="text-sm text-slate-500">
             Reading all 15 answers from both of you. Don&rsquo;t close the page.
           </p>
         </div>

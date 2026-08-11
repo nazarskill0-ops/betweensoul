@@ -1,100 +1,87 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  /* One face for the whole site — the funnel used to run on a different one. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  /**
-   * The report reads as an analysis tool rather than a quiz, so it runs on its
-   * own face and its own surface — Inter on light grey, kept separate from the
-   * playful brand styling the funnel uses.
-   */
-  --font-report: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* One surface. Every page sits on this; cards are white on top of it. */
   --color-surface: #f5f6f8;
 
-  /* CTA colour for the report. Deliberately not the brand pink. */
-  --color-coral-50: #fff2ef;
-  --color-coral-100: #ffe1db;
-  --color-coral-500: #e2513a;
-  --color-coral-600: #c53f2c;
-
-  /* Brand — playful pink/purple, deliberately light. */
-  --color-blush-50: #fff5f8;
-  --color-blush-100: #ffe9f0;
-  --color-blush-200: #ffd3e2;
-  --color-blush-300: #ffabc7;
-  --color-blush-400: #ff7ba8;
-  --color-blush-500: #f9548b;
-  --color-blush-600: #e63a72;
-
-  --color-lilac-50: #f8f4ff;
-  --color-lilac-100: #f0e8ff;
-  --color-lilac-200: #e2d3ff;
-  --color-lilac-300: #c9aeff;
-  --color-lilac-400: #ab84f5;
-  --color-lilac-500: #8f5fe8;
-
-  --color-ink-900: #2c1f38;
-  --color-ink-700: #574566;
-  --color-ink-500: #837292;
-  --color-ink-300: #b3a8bd;
-
-  /* Partner identity colours, used consistently across every screen. */
-  --color-p1: #f9548b;
-  --color-p1-soft: #ffe9f0;
-  --color-p2: #5b7cfa;
-  --color-p2-soft: #e6ecff;
+  /**
+   * One accent. Every call to action on the site is this colour and nothing
+   * else is — no gradients, no second button style, no orange.
+   */
+  --color-accent-50: #fdeef2;
+  --color-accent-100: #fbd8e1;
+  --color-accent-200: #f7b3c5;
+  --color-accent-500: #e84067;
+  --color-accent-600: #cf2f55;
+  --color-accent-700: #ad2444;
 }
 
 /* The app is a fixed light theme — no dark-mode variant. */
 :root {
   color-scheme: light;
+
+  /**
+   * The two partners' colours, read by everything that shows them side by
+   * side: the sliders, the perception gaps, the quiz's own answer chips.
+   *
+   * These are defaults. The pair actually used depends on who is taking the
+   * test — see src/lib/partnerColors.ts, which sets these four variables on a
+   * wrapper so a component never has to know which pair it is drawing.
+   */
+  --color-p1: #e84067;
+  --color-p1-soft: #fdeef2;
+  --color-p2: #2a9d8f;
+  --color-p2-soft: #e6f4f1;
 }
 
 body {
-  background:
-    radial-gradient(60rem 40rem at 15% -10%, var(--color-blush-100), transparent 60%),
-    radial-gradient(50rem 35rem at 95% 5%, var(--color-lilac-100), transparent 60%),
-    linear-gradient(180deg, #fffbfd 0%, #faf7ff 100%);
-  background-attachment: fixed;
-  color: var(--color-ink-900);
+  background: var(--color-surface);
+  color: var(--color-slate-900);
   -webkit-font-smoothing: antialiased;
 }
 
 @layer components {
+  /* The card, everywhere: white, quietly raised, no gradient behind it. */
   .card {
-    @apply rounded-3xl bg-white/85 backdrop-blur-sm border border-white shadow-[0_10px_40px_-16px_rgba(140,90,160,0.35)];
+    @apply rounded-2xl bg-white ring-1 ring-slate-900/5
+      shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(16,24,40,0.12)];
   }
 
+  /* The same card with the report's padding baked in. `@apply` can't reference
+     another component class, so the surface is spelled out twice. */
+  .report-card {
+    @apply rounded-2xl bg-white p-5 ring-1 ring-slate-900/5 sm:p-7
+      shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(16,24,40,0.12)];
+  }
+
+  /* The primary action: full width, used at the end of a page. */
   .btn-primary {
-    @apply w-full rounded-full py-4 text-lg font-bold text-white transition-all;
-    background-image: linear-gradient(
-      100deg,
-      var(--color-blush-400),
-      var(--color-blush-500) 55%,
-      var(--color-lilac-400)
-    );
-    box-shadow: 0 12px 28px -10px rgba(249, 84, 139, 0.75);
+    @apply w-full rounded-xl bg-accent-500 py-3.5 text-base font-semibold text-white
+      transition-colors hover:bg-accent-600
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+      focus-visible:outline-accent-500
+      disabled:bg-slate-300 disabled:text-white/80;
   }
-  .btn-primary:hover:not(:disabled) {
-    filter: brightness(1.05);
-    transform: translateY(-1px);
-  }
-  .btn-primary:active:not(:disabled) {
-    transform: translateY(0);
-  }
-  .btn-primary:disabled {
-    background-image: none;
-    @apply bg-ink-300/40 text-white/70 shadow-none;
+
+  /* The same button, compact — used inside locked sections. */
+  .btn-unlock {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent-500 px-5 py-2.5
+      text-sm font-semibold text-white transition-colors hover:bg-accent-600
+      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+      focus-visible:outline-accent-500 disabled:bg-slate-300;
   }
 
   .field {
-    @apply w-full rounded-2xl border border-lilac-200 bg-white px-4 py-3 text-sm text-ink-900
-      placeholder:text-ink-300 outline-none transition-colors
-      focus:border-blush-300 focus:ring-4 focus:ring-blush-100;
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900
+      placeholder:text-slate-400 outline-none transition-colors
+      focus:border-accent-200 focus:ring-4 focus:ring-accent-50;
   }
 
   .pill {
-    @apply inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold;
   }
 }
 
@@ -114,20 +101,6 @@ body {
   user-select: none;
   -webkit-user-select: none;
   pointer-events: none;
-}
-
-/* The report's own card: flat white on grey, no brand gradient behind it. */
-@layer components {
-  .report-card {
-    @apply rounded-2xl bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(16,24,40,0.12)] ring-1 ring-slate-900/5 sm:p-7;
-  }
-
-  .btn-unlock {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-coral-500 px-5 py-2.5
-      text-sm font-semibold text-white transition-colors hover:bg-coral-600
-      focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-      focus-visible:outline-coral-500 disabled:bg-slate-300;
-  }
 }
 
 @keyframes float-up {

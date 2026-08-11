@@ -22,7 +22,7 @@ function RichText({ text }: { text: string }) {
       {parts.map((part, i) => {
         if (part.startsWith("**") && part.endsWith("**")) {
           return (
-            <strong key={i} className="font-bold text-ink-900">
+            <strong key={i} className="font-bold text-slate-900">
               {part.slice(2, -2)}
             </strong>
           );
@@ -37,7 +37,7 @@ function RichText({ text }: { text: string }) {
               key={i}
               href={href}
               {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-              className="font-semibold text-blush-600 underline decoration-blush-200 underline-offset-2 transition-colors hover:decoration-blush-400"
+              className="font-semibold text-accent-600 underline decoration-accent-200 underline-offset-2 transition-colors hover:decoration-accent-500"
             >
               {label}
             </a>
@@ -53,7 +53,7 @@ function RichText({ text }: { text: string }) {
 function BlockView({ block }: { block: Block }) {
   if (block.kind === "heading") {
     return (
-      <h2 className="pt-6 text-xl font-extrabold text-ink-900">{block.text}</h2>
+      <h2 className="pt-6 text-xl font-bold text-slate-900">{block.text}</h2>
     );
   }
 
@@ -61,8 +61,8 @@ function BlockView({ block }: { block: Block }) {
     return (
       <ul className="space-y-2 pl-1">
         {block.items.map((item) => (
-          <li key={item} className="flex gap-2.5 text-ink-700">
-            <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blush-300" />
+          <li key={item} className="flex gap-2.5 text-slate-600">
+            <span aria-hidden className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-200" />
             <span>
               <RichText text={item} />
             </span>
@@ -73,7 +73,7 @@ function BlockView({ block }: { block: Block }) {
   }
 
   return (
-    <p className="text-ink-700">
+    <p className="text-slate-600">
       <RichText text={block.text} />
     </p>
   );
@@ -85,12 +85,12 @@ export function LegalPage({ doc }: { doc: LegalDocument }) {
       <div className="mx-auto w-full max-w-[700px]">
         <Link
           href="/"
-          className="text-sm font-semibold text-ink-500 transition-colors hover:text-ink-700"
+          className="text-sm font-semibold text-slate-500 transition-colors hover:text-slate-600"
         >
           ← Back
         </Link>
 
-        <h1 className="mt-6 text-3xl font-extrabold leading-tight text-ink-900 sm:text-4xl">
+        <h1 className="mt-6 text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">
           {doc.title}
         </h1>
 
