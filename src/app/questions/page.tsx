@@ -1,20 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Choice, Question, SCALE_POINTS, questions } from "@/lib/questions";
+import { PartnerAnswers } from "@/lib/types";
 import { useTestStore } from "@/store/useTestStore";
+import { useStoreHydrated } from "@/store/useHydrated";
 import { partnerPaletteStyle } from "@/lib/partnerColors";
 
-type PartnerAnswers = { p1: string; p2: string };
-
 const EMPTY: PartnerAnswers = { p1: "", p2: "" };
-
-/**
- * Keyed by question id — or `${questionId}_${itemId}` for the blitz round and
- * the scale question, which store one answer per sub-item.
- */
-type AnswerMap = Record<string, PartnerAnswers>;
 
 const SCALE_STEPS = Array.from({ length: SCALE_POINTS }, (_, i) => String(i + 1));
 
@@ -112,13 +105,23 @@ function PartnerChip({
 }
 
 export default function QuestionsPage() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  // One map for everything, so going Back restores what was already picked.
-  const [answers, setAnswers] = useState<AnswerMap>({});
-
-  const { partner1, partner2, setAnswer } = useTestStore();
+  const {
+    partner1,
+    partner2,
+    setAnswer,
+    // One map for everything, so going Back — or reloading the page — restores
+    // what was already picked. It lives in the store rather than in component
+    // state because a hard refresh here used to mean starting the quiz over.
+    drafts,
+    updateDraft,
+    questionIndex,
+    setQuestionIndex,
+  } = useTestStore();
+  const hydrated = useStoreHydrated();
   const router = useRouter();
 
+  // A saved index from a build with fewer questions would index past the end.
+  const currentIndex = Math.min(questionIndex, questions.length - 1);
   const question = questions[currentIndex];
   const isLast = currentIndex === questions.length - 1;
   const progress = ((currentIndex + 1) / questions.length) * 100;
@@ -129,12 +132,9 @@ export default function QuestionsPage() {
   // "cross" is answered like "each" — only the labelling differs.
   const isCross = question.answeredBy === "cross";
 
-  const get = (key: string) => answers[key] ?? EMPTY;
+  const get = (key: string) => drafts[key] ?? EMPTY;
   const set = (key: string, patch: Partial<PartnerAnswers>) =>
-    setAnswers((prev) => ({
-      ...prev,
-      [key]: { ...(prev[key] ?? EMPTY), ...patch },
-    }));
+    updateDraft(key, (current) => ({ ...current, ...patch }));
 
   /**
    * Multi-select has to derive from the previous state rather than the value
@@ -147,13 +147,10 @@ export default function QuestionsPage() {
     choiceId: string,
     max?: number,
   ) =>
-    setAnswers((prev) => {
-      const current = prev[key] ?? EMPTY;
-      return {
-        ...prev,
-        [key]: { ...current, [slot]: toggleId(current[slot], choiceId, max) },
-      };
-    });
+    updateDraft(key, (current) => ({
+      ...current,
+      [slot]: toggleId(current[slot], choiceId, max),
+    }));
 
   const isComplete = (key: string, value = get(key)) =>
     together
@@ -174,19 +171,29 @@ export default function QuestionsPage() {
     if (isLast) {
       router.push("/analyzing");
     } else {
-      setCurrentIndex((i) => i + 1);
+      setQuestionIndex(currentIndex + 1);
       window.scrollTo({ top: 0 });
     }
   };
 
   const goBack = () => {
     if (currentIndex === 0) return;
-    setCurrentIndex((i) => i - 1);
+    setQuestionIndex(currentIndex - 1);
     window.scrollTo({ top: 0 });
   };
 
   const partnerName = (slot: "p1" | "p2") => (slot === "p1" ? p1Name : p2Name);
   const otherName = (slot: "p1" | "p2") => (slot === "p1" ? p2Name : p1Name);
+
+  // Rendering before the saved answers are back would paint question 1 and then
+  // jump to wherever the reader actually was, taking their picks with it.
+  if (!hydrated) {
+    return (
+      <main className="flex flex-1 items-center justify-center px-5 py-12">
+        <p className="text-sm text-slate-400">Loading your answers…</p>
+      </main>
+    );
+  }
 
   return (
     <main

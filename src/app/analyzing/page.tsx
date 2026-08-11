@@ -108,6 +108,29 @@ function writeGuard(fp: string, reportId: string) {
   }
 }
 
+/**
+ * What to tell the reader when the analysis doesn't finish.
+ *
+ * A rate limit is the one failure where tapping the button again immediately
+ * gets the same answer — the window has to pass first — so it says how long to
+ * wait rather than repeating that something is broken. Everything else is worth
+ * retrying now, and the wording says so.
+ */
+interface Failure {
+  heading: string;
+  detail: string;
+}
+
+const GENERIC_FAILURE: Failure = {
+  heading: "Something went wrong",
+  detail: "Your answers are saved — tap to try again.",
+};
+
+const RATE_LIMITED: Failure = {
+  heading: "Too many requests",
+  detail: "Please wait a few minutes and try again.",
+};
+
 function StepRow({
   label,
   state,
@@ -148,12 +171,19 @@ function StepRow({
 export default function AnalyzingPage() {
   const router = useRouter();
   const hydrated = useStoreHydrated();
-  const { partner1, partner2, relationshipStart, email, answers, setReport } =
-    useTestStore();
+  const {
+    partner1,
+    partner2,
+    relationshipStart,
+    email,
+    answers,
+    setReport,
+    clearSaved,
+  } = useTestStore();
 
   const [elapsed, setElapsed] = useState(0);
   const [reportId, setReportId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failure, setFailure] = useState<Failure | null>(null);
   const started = useRef(false);
 
   const p1Name = partner1.name || "Partner 1";
@@ -169,6 +199,8 @@ export default function AnalyzingPage() {
   const progress = reportReady
     ? fraction * 100
     : Math.min(fraction * 100, HOLD_AT);
+  /** The animation has run out but the report hasn't arrived: say so. */
+  const holding = !reportReady && fraction * 100 >= HOLD_AT;
 
   const activeStep = Math.min(
     STEPS.length - 1,
@@ -184,17 +216,21 @@ export default function AnalyzingPage() {
         body: JSON.stringify(payload),
       });
 
+      // Out of quota, not broken: a different thing to say, and the only
+      // failure here where trying again immediately is the wrong advice.
+      if (response.status === 429) {
+        setFailure(RATE_LIMITED);
+        return;
+      }
+
       const data = await readJson(response);
 
-      if (!response.ok) {
+      if (!response.ok || typeof data?.reportId !== "string") {
         throw new Error(
           typeof data?.error === "string"
             ? data.error
-            : `Something went wrong on our side (error ${response.status}).`,
+            : `analyze responded ${response.status}`,
         );
-      }
-      if (typeof data?.reportId !== "string") {
-        throw new Error("The analysis came back incomplete. Please try again.");
       }
 
       // Remembered before the redirect, so a refresh during the animation
@@ -203,15 +239,15 @@ export default function AnalyzingPage() {
       setReport(data.reportId, data.teaser as FreeSections);
       setReportId(data.reportId);
     } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Something went wrong on our side.",
-      );
+      // The specific reason is for the console; the reader gets the one line
+      // that tells them what to do about it.
+      console.error("[analyzing] generation failed:", err);
+      setFailure(GENERIC_FAILURE);
     }
   }, [answers, email, partner1, partner2, relationshipStart, setReport]);
 
   const retry = () => {
-    setError(null);
+    setFailure(null);
     setElapsed(0);
     setReportId(null);
     void runAnalysis();
@@ -260,39 +296,44 @@ export default function AnalyzingPage() {
   // every derived value reads from `elapsed` rather than from a step counter
   // that could miss a tick.
   useEffect(() => {
-    if (error) return;
+    if (failure) return;
     const start = performance.now();
     const ticker = setInterval(() => setElapsed(performance.now() - start), 50);
     return () => clearInterval(ticker);
-  }, [error]);
+  }, [failure]);
 
   // Slow is one thing; never is another.
   useEffect(() => {
-    if (error || reportReady) return;
-    const bail = setTimeout(() => {
-      setError("This is taking longer than it should.");
-    }, TIMEOUT_MS);
+    if (failure || reportReady) return;
+    const bail = setTimeout(() => setFailure(GENERIC_FAILURE), TIMEOUT_MS);
     return () => clearTimeout(bail);
-  }, [error, reportReady]);
+  }, [failure, reportReady]);
 
   // Leave once the animation has run its course and the report exists. The id
-  // also rides in the URL so the report survives a refresh or a cleared store.
+  // rides in the URL, so this is also the moment the saved answers stop being
+  // worth keeping: the report is on the server and the reader is on their way
+  // to it. Clearing any earlier would strand a refresh made while the animation
+  // was still playing, which would find no answers and bounce back to /test.
+  //
+  // Not while an error is on screen: a response that lands a second after the
+  // timeout gave up would otherwise navigate out from under someone who is
+  // reading "something went wrong" — or reaching for the retry button. Their
+  // retry gets the finished report straight back from the store anyway.
   useEffect(() => {
-    if (timelineDone && reportId) router.replace(`/result?id=${reportId}`);
-  }, [reportId, router, timelineDone]);
+    if (failure || !timelineDone || !reportId) return;
+    clearSaved();
+    router.replace(`/result?id=${reportId}`);
+  }, [clearSaved, failure, reportId, router, timelineDone]);
 
-  if (error) {
+  if (failure) {
     return (
       <main className="flex flex-1 items-center justify-center px-5 py-12">
         <div className="card w-full max-w-md space-y-5 p-8 text-center">
           <div className="text-4xl">😕</div>
           <h1 className="text-2xl font-bold text-slate-900">
-            We couldn&rsquo;t finish your analysis
+            {failure.heading}
           </h1>
-          <p className="text-sm text-slate-600">{error}</p>
-          <p className="text-sm text-slate-500">
-            Your answers are still saved — nothing was lost.
-          </p>
+          <p className="text-sm text-slate-600">{failure.detail}</p>
           <button onClick={retry} className="btn-primary">
             Try again
           </button>
@@ -332,7 +373,9 @@ export default function AnalyzingPage() {
             Analyzing {p1Name} &amp; {p2Name}
           </h1>
           <p className="text-sm text-slate-500">
-            Reading all 15 answers from both of you. Don&rsquo;t close the page.
+            {holding
+              ? "Almost there — putting your report together. Don’t close the page."
+              : "Reading all 15 answers from both of you. Don’t close the page."}
           </p>
         </div>
 

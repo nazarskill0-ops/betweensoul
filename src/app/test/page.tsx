@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTestStore } from "@/store/useTestStore";
@@ -81,8 +82,29 @@ export default function TestPage() {
     setPartner2,
     setRelationshipStart,
     setEmail,
+    reportId,
+    resetTest,
   } = useTestStore();
   const router = useRouter();
+  const cleared = useRef(false);
+
+  /**
+   * Starting over in a tab that already finished a test.
+   *
+   * Submitting drops the saved copy of the answers, but the live store still
+   * holds them — names, answers, and the question the reader stopped on — so
+   * coming back here from the report and pressing Start Analysis would drop
+   * them straight onto question 15 of the test they just took. A report id in
+   * memory is what marks that tab as finished.
+   *
+   * Arriving mid-quiz (browser Back from question 1) has no report id, so a
+   * half-finished test is left exactly as it was.
+   */
+  useEffect(() => {
+    if (cleared.current || !reportId) return;
+    cleared.current = true;
+    resetTest();
+  }, [reportId, resetTest]);
 
   const partnersReady = [partner1, partner2].every(
     (p) => p.name.trim() && p.birthday && p.gender,
@@ -167,9 +189,12 @@ export default function TestPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="field"
             />
-            <span className="mt-1 block text-xs text-slate-400">
-              So we can send your results.
-            </span>
+            {/*
+              "So we can send your results" belongs here the day results are
+              actually emailed — the privacy policy says they aren't, so the
+              line was promising something the product doesn't do. Put it back
+              with the mailing, not before.
+            */}
           </label>
         </section>
 

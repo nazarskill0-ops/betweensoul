@@ -92,6 +92,8 @@ A couple with constant fighting, trust issues, and different goals = 15-35.
 Mid-range (40-60) is ONLY for genuinely ambiguous cases.
 Score honestly rather than defaulting to a safe middle. The one exception: where the answers point at the very bottom of the range, do not go below 25 — a couple who took a quiz together deserves a reading they can act on, not a verdict.
 
+LANGUAGE: Always generate the report in English, regardless of what language the partners used in their answers. The quiz interface is in English and the audience is US-based.
+
 Respond ONLY with valid JSON. No markdown, no backticks, no preamble.`;
 }
 

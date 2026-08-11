@@ -324,12 +324,33 @@ export interface CouplescanReport {
 
 /* --------------------------------- client --------------------------------- */
 
+/** What each partner has picked so far on the question currently on screen. */
+export interface PartnerAnswers {
+  p1: string;
+  p2: string;
+}
+
+/**
+ * The questions page's working copy, keyed by question id — or
+ * `${questionId}_${itemId}` for the blitz round and the scale question, which
+ * hold one answer per sub-item.
+ *
+ * `answers` below is the committed version, written when a question is left
+ * and shaped the way the API expects. This is the half-filled state in between,
+ * kept so that going Back — or reloading the page — restores what was picked
+ * rather than a blank question.
+ */
+export type DraftAnswers = Record<string, PartnerAnswers>;
+
 export interface TestStore {
   partner1: PartnerInfo;
   partner2: PartnerInfo;
   relationshipStart: string;
   email: string;
   answers: Record<string, AnswerValue>;
+  /** Which question the reader is on, 0-based. */
+  questionIndex: number;
+  drafts: DraftAnswers;
   reportId: string | null;
   teaser: FreeSections | null;
   setPartner1: (data: Partial<PartnerInfo>) => void;
@@ -337,6 +358,13 @@ export interface TestStore {
   setRelationshipStart: (date: string) => void;
   setEmail: (email: string) => void;
   setAnswer: (questionId: string, answer: AnswerValue) => void;
+  setQuestionIndex: (index: number) => void;
+  updateDraft: (key: string, update: (current: PartnerAnswers) => PartnerAnswers) => void;
   setReport: (reportId: string, teaser: FreeSections) => void;
   resetTest: () => void;
+  /**
+   * Drops the saved copy without touching the live store, so the tab that just
+   * submitted keeps working and the next reload starts clean.
+   */
+  clearSaved: () => void;
 }
