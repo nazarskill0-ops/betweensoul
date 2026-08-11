@@ -90,7 +90,7 @@ You are analyzing a 15-question relationship quiz, not a clinical assessment. Ke
    You are showing the couple what their answers reveal — not diagnosing their relationship. Use language like "your answers suggest," "this might mean," "worth exploring together" — not "this is a serious problem," "red flag," or "alarming difference."
 
 5. AVOID CATASTROPHIZING.
-   Never use: "serious concern," "red flag," "alarming," "deeply troubling," "fundamental incompatibility" — unless the OVERALL pattern across many questions consistently points to distress (overall score below 30).
+   Never use: "serious concern," "red flag," "alarming," "deeply troubling," "fundamental incompatibility" — unless the OVERALL pattern across many questions consistently points to distress (overall score below 25).
 
 6. DIFFERENCES CAN BE STRENGTHS.
    One partner high on spontaneity and the other low isn't automatically a problem — it can be complementary. Present both readings: the tension AND the potential balance.
@@ -135,6 +135,20 @@ THEIR ANSWERS:
 ${buildAnswersBlock(input)}`;
 }
 
+/**
+ * The overall score, handed to all nine requests that don't compute it.
+ *
+ * Rules 5 and 7 of the calibration block are written in terms of the overall
+ * score, and exactly one request out of ten could see it — the one that works
+ * it out. Every other section was pitching its tone from its own slice of the
+ * answers, which is how a couple who scored 52 still got told their gap was
+ * staggering. The paid half already receives the finished free report; the free
+ * half now scores first and passes the number down (see analysis.ts).
+ */
+function overallScoreContext(overall: number): string {
+  return `Their overall couple score is ${overall}/100 — the number the report shows them. Rules 5 and 7 of your instructions are keyed to it: pitch this section's tone to that number, and do not write as if the relationship were in worse or better shape than it says.`;
+}
+
 /* ------------------------------- free: 1-5 -------------------------------- */
 
 export function freeScoreDynamicPrompt(input: TranscriptData): string {
@@ -172,7 +186,7 @@ GOOD: "You clearly enjoy each other's company, but your answers about conflict s
   );
 }
 
-export function freeRadarPrompt(input: TranscriptData): string {
+export function freeRadarPrompt(input: TranscriptData, overall: number): string {
   const dimensions = DIMENSION_IDS.map(
     (id) =>
       `    {
@@ -186,6 +200,8 @@ export function freeRadarPrompt(input: TranscriptData): string {
   return withAnswers(
     input,
     `Generate the relationship radar (8 dimensions), biggest strength, and biggest tension.
+
+${overallScoreContext(overall)}
 
 Return JSON:
 {
@@ -220,7 +236,10 @@ IMPORTANT:
   );
 }
 
-export function freeSlidersGapsPrompt(input: TranscriptData): string {
+export function freeSlidersGapsPrompt(
+  input: TranscriptData,
+  overall: number,
+): string {
   const sliders = SLIDER_QUESTIONS.map(
     (question) =>
       `    { "question": "${question}", "partner1Position": <number 0-100> }`,
@@ -229,6 +248,8 @@ export function freeSlidersGapsPrompt(input: TranscriptData): string {
   return withAnswers(
     input,
     `Generate the "You vs Your Partner" sliders and perception gap analysis.
+
+${overallScoreContext(overall)}
 
 Return JSON:
 {
@@ -262,12 +283,17 @@ PERCEPTION GAP RULES:
   );
 }
 
-export function freeUnsaidFlagsPrompt(input: TranscriptData): string {
+export function freeUnsaidFlagsPrompt(
+  input: TranscriptData,
+  overall: number,
+): string {
   const { p1, p2 } = partners(input);
 
   return withAnswers(
     input,
     `Generate "Things Your Partner May Not Say Directly" and green flags / watch-outs.
+
+${overallScoreContext(overall)}
 
 Return JSON:
 {
@@ -311,7 +337,10 @@ WATCH-OUTS RULES:
   );
 }
 
-export function freeScenariosQuestionPrompt(input: TranscriptData): string {
+export function freeScenariosQuestionPrompt(
+  input: TranscriptData,
+  overall: number,
+): string {
   const { p1, p2 } = partners(input);
   const scenarios = SCENARIO_IDS.map(
     (id) =>
@@ -321,6 +350,8 @@ export function freeScenariosQuestionPrompt(input: TranscriptData): string {
   return withAnswers(
     input,
     `Generate scenario previews and the final question.
+
+${overallScoreContext(overall)}
 
 Return JSON:
 {
@@ -362,6 +393,8 @@ export function paidXRayPrompt(input: TranscriptData, free: FreeSections): strin
     input,
     `Generate the full deep analysis for all 8 relationship dimensions.
 
+${overallScoreContext(free.coupleScore.overall)}
+
 These are the radar scores already shown to them in the free report. Use them exactly — do not recalculate:
 ${radarContext(free)}
 
@@ -396,6 +429,8 @@ export function paidGapsViewPrompt(input: TranscriptData, free: FreeSections): s
     input,
     `Generate all perception gaps and the "how you see each other" analysis.
 
+${overallScoreContext(free.coupleScore.overall)}
+
 The free report told them you found ${free.perceptionGap.totalGapsFound} gaps in total, and already showed this one:
 ${free.perceptionGap.shown
   .map((gap) => `- ${gap.topic}: ${gap.partner1Said} / ${gap.partner2Said}`)
@@ -429,12 +464,17 @@ RULES:
   );
 }
 
-export function paidConflictFuturePrompt(input: TranscriptData): string {
+export function paidConflictFuturePrompt(
+  input: TranscriptData,
+  free: FreeSections,
+): string {
   const { p1, p2 } = partners(input);
 
   return withAnswers(
     input,
     `Generate the conflict cycle analysis and future projection.
+
+${overallScoreContext(free.coupleScore.overall)}
 
 Return JSON:
 {
@@ -468,6 +508,8 @@ export function paidLoveAnchorsPrompt(input: TranscriptData, free: FreeSections)
   return withAnswers(
     input,
     `Generate love style analysis, relationship anchors, and one final unsaid thing per partner.
+
+${overallScoreContext(free.coupleScore.overall)}
 
 The free report already showed them these things each partner may not say directly. Do not repeat them:
 ${p1}: ${free.unsaidThings.partner1.shown.join(" / ")}
@@ -510,6 +552,8 @@ export function paidScenarioResetAnswerPrompt(
   return withAnswers(
     input,
     `Generate full scenario analysis, the action plan, and the final synthesis.
+
+${overallScoreContext(free.coupleScore.overall)}
 
 These are the scenario teasers already shown to them. Stay consistent with them:
 ${free.scenarios.map((s) => `- ${s.id} (${s.name}): ${s.teaser}`).join("\n")}
