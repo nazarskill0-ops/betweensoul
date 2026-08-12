@@ -11,12 +11,12 @@
    * One accent. Every call to action on the site is this colour and nothing
    * else is — no gradients, no second button style, no orange.
    */
-  --color-accent-50: #fdeef2;
-  --color-accent-100: #fbd8e1;
-  --color-accent-200: #f7b3c5;
-  --color-accent-500: #e84067;
-  --color-accent-600: #cf2f55;
-  --color-accent-700: #ad2444;
+  --color-accent-50: #fdeef3;
+  --color-accent-100: #f9d7e2;
+  --color-accent-200: #f0a9c1;
+  --color-accent-500: #d6336c;
+  --color-accent-600: #bc2a5e;
+  --color-accent-700: #9e224f;
 }
 
 /* The app is a fixed light theme — no dark-mode variant. */
@@ -31,8 +31,8 @@
    * test — see src/lib/partnerColors.ts, which sets these four variables on a
    * wrapper so a component never has to know which pair it is drawing.
    */
-  --color-p1: #e84067;
-  --color-p1-soft: #fdeef2;
+  --color-p1: #d6336c;
+  --color-p1-soft: #fdeef3;
   --color-p2: #2a9d8f;
   --color-p2-soft: #e6f4f1;
 }

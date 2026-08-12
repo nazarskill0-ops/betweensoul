@@ -24,7 +24,8 @@ export interface PartnerPalette {
 
 const PINK = { solid: "#f472b6", soft: "#fdf2f8" };
 const BLUE = { solid: "#5b7fff", soft: "#eef2ff" };
-const ACCENT = { solid: "#e84067", soft: "#fdeef2" };
+/** The site accent — keep in step with `--color-accent-500` in globals.css. */
+const ACCENT = { solid: "#d6336c", soft: "#fdeef3" };
 const TEAL = { solid: "#2a9d8f", soft: "#e6f4f1" };
 
 const NEUTRAL_PAIR: PartnerPalette = {
