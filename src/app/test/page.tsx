@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BirthdayField } from "@/components/BirthdayField";
+import { MonthField } from "@/components/MonthField";
 import { useTestStore } from "@/store/useTestStore";
 import { partnerPaletteStyle } from "@/lib/partnerColors";
 import { Gender, PartnerInfo } from "@/lib/types";
@@ -45,17 +47,12 @@ function PartnerFields({
         onChange={(e) => onChange({ name: e.target.value })}
         className="field"
       />
-      <label className="block">
-        <span className="mb-1 block text-xs font-semibold text-slate-500">
-          Birthday
-        </span>
-        <input
-          type="date"
-          value={value.birthday}
-          onChange={(e) => onChange({ birthday: e.target.value })}
-          className="field"
-        />
-      </label>
+      <BirthdayField
+        accent={accent}
+        align={accent === "p1" ? "left" : "right"}
+        value={value.birthday}
+        onChange={(birthday) => onChange({ birthday })}
+      />
       <select
         value={value.gender}
         onChange={(e) => onChange({ gender: e.target.value as Gender })}
@@ -161,20 +158,19 @@ export default function TestPage() {
         </section>
 
         <section className="card space-y-4 p-6">
-          <label className="block">
+          <div className="block">
             <span className="mb-1 block text-sm font-semibold text-slate-600">
               When did your relationship start?
             </span>
-            <input
-              type="month"
+            <MonthField
               value={relationshipStart}
-              onChange={(e) => setRelationshipStart(e.target.value)}
-              className="field"
+              onChange={setRelationshipStart}
+              label="Select a month"
             />
             <span className="mt-1 block text-xs text-slate-400">
               Roughly is fine.
             </span>
-          </label>
+          </div>
 
           <label className="block">
             <span className="mb-1 block text-sm font-semibold text-slate-600">
@@ -204,11 +200,11 @@ export default function TestPage() {
 
         <p className="text-center text-xs text-slate-400">
           By continuing you agree to our{" "}
-          <a href="#" className="underline hover:text-slate-500">
+          <a href="/terms" className="underline hover:text-slate-500">
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="#" className="underline hover:text-slate-500">
+          <a href="/privacy" className="underline hover:text-slate-500">
             Privacy Policy
           </a>
           .
