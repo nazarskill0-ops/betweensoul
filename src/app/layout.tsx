@@ -1,6 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+} from "@/lib/site";
 import "./globals.css";
 
 /** The whole site's face. See `--font-sans` in globals.css. */
@@ -10,10 +16,33 @@ const inter = Inter({
   display: "swap",
 });
 
+/**
+ * The defaults every route inherits.
+ *
+ * `metadataBase` is what lets the pages below write `canonical: "/terms"`
+ * instead of repeating the origin — and it is also what turns a relative Open
+ * Graph image path into the absolute URL the crawlers require.
+ *
+ * Deliberately no `alternates.canonical` here: metadata set on the root layout
+ * is inherited, so a canonical at this level would point every page on the site
+ * at the homepage. Each page declares its own.
+ */
 export const metadata: Metadata = {
-  title: "CouplesScan — How Strong Is Your Love?",
-  description:
-    "Take the relationship test together with your partner from one device. Our AI reads both sets of answers and tells you the truth about where you stand.",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    siteName: SITE_NAME,
+    type: "website",
+    url: SITE_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {

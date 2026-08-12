@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
 import { getLegalDocument } from "@/lib/legal";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Refund Policy — CouplesScan",
-  description: "When we refund the $9.99 full report, and how to ask.",
-};
+  description: "CouplesScan refund policy for paid compatibility reports.",
+  path: "/refund",
+});
 
 export default function RefundPage() {
   return <LegalPage doc={getLegalDocument("refund")} />;

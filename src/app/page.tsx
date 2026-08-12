@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   AnalyzingPhone,
@@ -17,6 +18,15 @@ import {
  * The rows alternate on desktop and stack on a phone, where a 280px mockup
  * beside a paragraph would leave neither enough room.
  */
+
+/**
+ * The homepage inherits the site title and description from the root layout;
+ * all it adds is the canonical, so the origin, `/index` and any campaign query
+ * string all resolve to one URL.
+ */
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const STEPS = [
   {
