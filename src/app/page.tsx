@@ -54,7 +54,13 @@ const STEPS = [
  * Someone deciding whether to start is weighing what lands at the end, and
  * "Conflict & Repair" names a category where "A 7-day action plan" names a
  * thing they get to keep.
+ *
+ * Five of twenty-one, which the chip after them says out loud. Listing five and
+ * stopping reads as the whole offer, and the report is four times that — the
+ * count is the honest version of "and more".
  */
+const TOTAL_SECTIONS = 21;
+
 const DELIVERABLES = [
   "A compatibility score out of 100",
   "Your couple type (12 possible dynamics)",
@@ -106,7 +112,7 @@ export default function Home() {
           <h2 className="mb-7 text-[28px] font-extrabold text-slate-900">
             What you&rsquo;ll get
           </h2>
-          <div className="mb-7 flex flex-wrap justify-center gap-3">
+          <div className="mb-5 flex flex-wrap justify-center gap-3">
             {DELIVERABLES.map((item) => (
               <span
                 key={item}
@@ -115,7 +121,16 @@ export default function Home() {
                 {item}
               </span>
             ))}
+            {/* Grey rather than pink: it belongs to the row but is a count, not
+                a sixth thing you get. */}
+            <span className="pill bg-slate-100 px-[22px] py-3 text-[15px] font-bold text-slate-500">
+              + {TOTAL_SECTIONS - DELIVERABLES.length} more
+            </span>
           </div>
+
+          <p className="mb-7 text-sm text-slate-400">
+            {TOTAL_SECTIONS} sections in your full report.
+          </p>
           <p className="mx-auto max-w-[560px] text-base leading-[1.6] text-slate-500">
             Answer honestly — the analysis is only as good as what you put in.
             There are no &ldquo;right&rdquo; answers here.

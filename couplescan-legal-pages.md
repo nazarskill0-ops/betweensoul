@@ -49,16 +49,19 @@ Questions? Email us at [support@couplescan.com](mailto:support@couplescan.com).
 
 # Privacy Policy
 
-**Last updated: August 9, 2026**
+**Last updated: August 13, 2026**
 
 ## 1. What We Collect
 
 When you take the CouplesScan test, we collect:
 
 - **Names (or nicknames) of both partners** — used only to personalize your report.
-- **Email address** — stored with your report and used to pre-fill the checkout form, and to identify your report if you contact support. We do not currently email reports to you, and there are no user accounts.
+- **Ages and how long you have been together** — used only as context for the analysis.
 - **Test answers** — used to generate your compatibility report.
+- **Your IP address** — used only to limit how many reports one visitor can generate per hour, so the service cannot be run up as a bill by a script. It is stored as a counter for one hour and is never linked to your report or your answers.
 - **Payment information** — processed entirely by Paddle ([paddle.com](https://paddle.com)). We never see or store your credit card details.
+
+We do not ask for your email address. There are no user accounts, we cannot email you, and the only address involved in a purchase is the one you give Paddle for your receipt — we never see it.
 
 ## 2. How We Use Your Data
 
@@ -67,15 +70,15 @@ When you take the CouplesScan test, we collect:
 - To process your payment (via Paddle).
 - We do NOT use your answers to train AI models.
 - We do NOT sell your personal data to third parties.
-- We do NOT send marketing emails.
+- We do NOT send marketing emails — we have no address to send them to.
 
 ## 3. AI Processing
 
-Your answers are sent to an AI service (Anthropic Claude) to generate your report. The names (or nicknames) you enter are sent along with them, because the report addresses you both by name. Your email address is not sent. Anthropic does not store or train on this data per their data usage policy.
+Your answers are sent to an AI service (Anthropic Claude) to generate your report. The names (or nicknames) you enter are sent along with them, because the report addresses you both by name, as are your ages and how long you have been together. Anthropic does not store or train on this data per their data usage policy.
 
 ## 4. Data Storage
 
-Your report and answers are stored on our servers so you can come back to your report from its link. They are deleted automatically 24 hours after you take the test. There are no user accounts — a report is reachable only by its unique link, and after those 24 hours the link stops working, so save anything you want to keep.
+Your report and answers are stored so you can come back to your report from its link. Storage is a hosted database run by Upstash ([upstash.com](https://upstash.com)); the record is set to delete itself automatically 24 hours after you take the test. There are no user accounts — a report is reachable only by its unique link, and after those 24 hours the link stops working, so save anything you want to keep.
 
 ## 5. Data Deletion
 
@@ -83,12 +86,13 @@ Your answers and report are deleted automatically 24 hours after the test, so in
 
 ## 6. Cookies
 
-We use only what the site needs to work: your answers are kept in your own browser's local storage while you take the test, and Paddle sets its own cookies when you open the checkout. We do not currently use analytics or advertising cookies. If we add analytics later, we will update this page first.
+We use only what the site needs to work: your answers are kept in your own browser's session storage while you take the test — which your browser clears when you close the tab — and Paddle sets its own cookies when you open the checkout. We do not currently use analytics or advertising cookies. If we add analytics later, we will update this page first.
 
 ## 7. Third-Party Services
 
 - **Paddle** ([paddle.com](https://paddle.com)) — payment processing. See Paddle's privacy policy at [paddle.com/legal/privacy](https://www.paddle.com/legal/privacy).
 - **Anthropic** ([anthropic.com](https://anthropic.com)) — AI report generation.
+- **Upstash** ([upstash.com](https://upstash.com)) — the database your report and answers are stored in for 24 hours.
 - **Vercel** ([vercel.com](https://vercel.com)) — website hosting.
 
 ## 8. Children
@@ -107,7 +111,7 @@ For privacy questions or data deletion requests: [support@couplescan.com](mailto
 
 # Refund Policy
 
-**Last updated: August 7, 2026**
+**Last updated: August 13, 2026**
 
 ## Your Satisfaction Matters
 
@@ -127,6 +131,6 @@ We want you to be happy with your CouplesScan report. Here's how refunds work:
 
 ## How to Request a Refund
 
-Email [support@couplescan.com](mailto:support@couplescan.com) with your email address and a brief reason. We will process approved refunds within 5-7 business days.
+Email [support@couplescan.com](mailto:support@couplescan.com) with your Paddle order reference — it is on the receipt Paddle sent you — and a brief reason. We do not hold your email address, so the order reference is what lets us find the purchase. Your report link helps too, if you still have it. We will process approved refunds within 5-7 business days.
 
 All refunds are processed through Paddle. You can also contact Paddle directly at [customer.paddle.com](https://customer.paddle.com).
