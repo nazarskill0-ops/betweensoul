@@ -175,7 +175,7 @@ export default function AnalyzingPage() {
     partner1,
     partner2,
     relationshipStart,
-    email,
+    submissionId,
     answers,
     setReport,
     clearSaved,
@@ -208,7 +208,7 @@ export default function AnalyzingPage() {
   );
 
   const runAnalysis = useCallback(async () => {
-    const payload = { partner1, partner2, relationshipStart, email, answers };
+    const payload = { partner1, partner2, relationshipStart, submissionId, answers };
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -244,7 +244,7 @@ export default function AnalyzingPage() {
       console.error("[analyzing] generation failed:", err);
       setFailure(GENERIC_FAILURE);
     }
-  }, [answers, email, partner1, partner2, relationshipStart, setReport]);
+  }, [answers, partner1, partner2, relationshipStart, setReport, submissionId]);
 
   const retry = () => {
     setFailure(null);
@@ -269,7 +269,7 @@ export default function AnalyzingPage() {
     const guard = readGuard();
     if (
       guard &&
-      guard.fp === fingerprint({ partner1, partner2, relationshipStart, email, answers })
+      guard.fp === fingerprint({ partner1, partner2, relationshipStart, submissionId, answers })
     ) {
       router.replace(`/result?id=${guard.reportId}`);
       return;
@@ -283,11 +283,11 @@ export default function AnalyzingPage() {
     // fingerprint reads them.
   }, [
     answers,
-    email,
     hydrated,
     partner1,
     partner2,
     relationshipStart,
+    submissionId,
     router,
     runAnalysis,
   ]);

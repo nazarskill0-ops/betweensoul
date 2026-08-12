@@ -315,7 +315,6 @@ export interface CouplescanReport {
   partner2Name: string;
   /** ISO 8601. Also drives the 24h expiry — see reportStore. */
   createdAt: string;
-  email: string;
   /** Kept so the paid pass can replay the test without the client. */
   answers: TranscriptData;
   free: FreeSections;
@@ -346,7 +345,17 @@ export interface TestStore {
   partner1: PartnerInfo;
   partner2: PartnerInfo;
   relationshipStart: string;
-  email: string;
+  /**
+   * Distinguishes this run of the test from any other, and nothing more.
+   *
+   * The report id is a hash of the submission so a client retry lands on the
+   * report it already made rather than billing a second one. That hash used to
+   * include the buyer's email, which was also what kept two different couples
+   * with the same names and the same answers off each other's report — the
+   * second would have inherited the first one's paid sections. With the email
+   * gone, this is what does that job: random per run, stable across retries.
+   */
+  submissionId: string;
   answers: Record<string, AnswerValue>;
   /** Which question the reader is on, 0-based. */
   questionIndex: number;
@@ -356,7 +365,6 @@ export interface TestStore {
   setPartner1: (data: Partial<PartnerInfo>) => void;
   setPartner2: (data: Partial<PartnerInfo>) => void;
   setRelationshipStart: (date: string) => void;
-  setEmail: (email: string) => void;
   setAnswer: (questionId: string, answer: AnswerValue) => void;
   setQuestionIndex: (index: number) => void;
   updateDraft: (key: string, update: (current: PartnerAnswers) => PartnerAnswers) => void;

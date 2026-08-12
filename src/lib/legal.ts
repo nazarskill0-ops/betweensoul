@@ -116,9 +116,3 @@ export function getLegalDocument(slug: LegalSlug): LegalDocument {
   return doc;
 }
 
-/** Route -> label, used by the footer and by each page's sibling links. */
-export const LEGAL_LINKS: { href: string; label: string }[] = [
-  { href: "/terms", label: "Terms" },
-  { href: "/privacy", label: "Privacy" },
-  { href: "/refund", label: "Refunds" },
-];

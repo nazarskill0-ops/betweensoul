@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LEGAL_LINKS } from "@/lib/legal";
+import { LEGAL_LINKS } from "@/lib/legalLinks";
 
 /**
  * Sits in the root layout, so every route carries the legal links — Paddle

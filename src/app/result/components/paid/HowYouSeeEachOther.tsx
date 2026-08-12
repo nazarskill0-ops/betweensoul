@@ -47,6 +47,7 @@ export function HowYouSeeEachOther({
 }) {
   return (
     <PaidSection
+      sectionId="howYouSeeEachOther"
       id={id}
       title="How You Really See Each Other"
       emoji="👀"

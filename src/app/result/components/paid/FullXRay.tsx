@@ -40,6 +40,7 @@ export function FullXRay({
 }) {
   return (
     <PaidSection
+      sectionId="fullXRay"
       id={id}
       title="Full Relationship X-Ray"
       emoji="🩻"

@@ -33,6 +33,7 @@ export function AllPerceptionGaps({
 }) {
   return (
     <PaidSection
+      sectionId="allPerceptionGaps"
       id={id}
       title="All Perception Gaps"
       emoji="🪞"

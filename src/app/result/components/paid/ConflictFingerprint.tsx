@@ -67,6 +67,7 @@ export function ConflictFingerprint({
 }) {
   return (
     <PaidSection
+      sectionId="conflictFingerprint"
       id={id}
       title="Your Conflict Fingerprint"
       emoji="🧬"

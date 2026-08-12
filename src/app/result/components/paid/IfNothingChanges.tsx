@@ -14,6 +14,7 @@ export function IfNothingChanges({
 }) {
   return (
     <PaidSection
+      sectionId="ifNothingChanges"
       id={id}
       title="If Nothing Changes"
       emoji="⏳"

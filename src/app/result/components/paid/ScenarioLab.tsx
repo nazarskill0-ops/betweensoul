@@ -43,6 +43,7 @@ export function ScenarioLab({
 }) {
   return (
     <PaidSection
+      sectionId="scenarioLab"
       id={id}
       title="Life Scenario Lab"
       emoji="🧪"

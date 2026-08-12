@@ -27,6 +27,7 @@ export function WhatKeepsYouTogether({
 }) {
   return (
     <PaidSection
+      sectionId="whatKeepsYouTogether"
       id={id}
       title="What Keeps You Together (And Is It Enough?)"
       emoji="💚"

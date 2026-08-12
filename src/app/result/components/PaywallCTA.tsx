@@ -1,6 +1,6 @@
 "use client";
 
-import { UnlockButton } from "./shared/UnlockButton";
+import { useUnlock } from "./shared/UnlockButton";
 
 /**
  * The main conversion point, after all 21 sections.
@@ -20,6 +20,8 @@ const INCLUDED = [
 ];
 
 export function PaywallCTA() {
+  const { openModal } = useUnlock();
+
   return (
     <section className="rounded-2xl bg-white p-6 text-center shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(16,24,40,0.12)] ring-1 ring-slate-900/5 sm:p-8">
       <h2 className="text-2xl font-bold tracking-tight text-slate-900">
@@ -38,8 +40,12 @@ export function PaywallCTA() {
         ))}
       </ul>
 
+      {/* Opens the modal rather than the checkout: the price and the full list
+          of what it buys are stated there, once, for the whole page. */}
       <div className="mx-auto mt-7 max-w-sm">
-        <UnlockButton full />
+        <button onClick={openModal} className="btn-primary">
+          Unlock Full Report 🔓
+        </button>
       </div>
 
       <p className="mt-3 text-xs text-slate-400">

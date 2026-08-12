@@ -14,7 +14,7 @@ interface AnalyzeBody {
   partner1?: PartnerInfo;
   partner2?: PartnerInfo;
   relationshipStart?: string;
-  email?: string;
+  submissionId?: string;
   answers?: Record<string, AnswerValue>;
 }
 
@@ -26,14 +26,17 @@ interface AnalyzeBody {
  * effect — and each retry used to mint a fresh UUID and bill another five
  * requests. Hashing the answers makes the second attempt a lookup instead.
  *
- * The email is part of the hash: without it two different couples who happened
- * to pick identical options and identical names would collide onto one report,
- * and the second couple would inherit the first one's paid sections.
+ * The submission id is part of the hash, and has to be: without it two
+ * different couples who happened to pick identical options and identical names
+ * would collide onto one report, and the second couple would inherit the first
+ * one's paid sections. It is random per run of the test and stable across the
+ * retries above, which is exactly the property this needs — the buyer's email
+ * used to provide it, and no longer exists.
  */
 function reportIdFor(body: AnalyzeBody): string {
   const answers = body.answers ?? {};
   const canonical = JSON.stringify({
-    email: (body.email ?? "").trim().toLowerCase(),
+    submissionId: body.submissionId ?? "",
     p1: body.partner1?.name ?? "",
     p2: body.partner2?.name ?? "",
     start: body.relationshipStart ?? "",
@@ -86,7 +89,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const { partner1, partner2, relationshipStart = "", email = "", answers } = body;
+  const { partner1, partner2, relationshipStart = "", answers } = body;
 
   if (!partner1?.name || !partner2?.name) {
     return Response.json({ error: "Both partner names are required." }, { status: 400 });
@@ -129,7 +132,6 @@ export async function POST(request: NextRequest) {
       partner1Name: partner1.name,
       partner2Name: partner2.name,
       createdAt: new Date().toISOString(),
-      email,
       // Stored so the paid pass can replay the test without the client.
       answers: transcript,
       free,

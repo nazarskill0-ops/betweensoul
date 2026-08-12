@@ -1,7 +1,8 @@
 "use client";
 
 import { ReactNode } from "react";
-import { UnlockButton } from "./UnlockButton";
+import type { PaidSectionId } from "../../paidSections";
+import { SectionUnlockButton } from "./UnlockButton";
 
 /**
  * A paid section the reader hasn't bought yet.
@@ -14,6 +15,7 @@ import { UnlockButton } from "./UnlockButton";
  */
 export function LockedSection({
   id,
+  sectionId,
   title,
   emoji,
   teaser,
@@ -21,6 +23,8 @@ export function LockedSection({
   children,
 }: {
   id?: string;
+  /** Which of the ten this is — picks the button's wording. */
+  sectionId: PaidSectionId;
   title: string;
   emoji?: string;
   teaser: string;
@@ -60,7 +64,7 @@ export function LockedSection({
       </div>
 
       <div className="mt-4">
-        <UnlockButton />
+        <SectionUnlockButton sectionId={sectionId} />
       </div>
     </section>
   );
@@ -134,6 +138,7 @@ export function Spinner({ className = "" }: { className?: string }) {
  */
 export function PaidSection<T>({
   id,
+  sectionId,
   title,
   emoji,
   teaser,
@@ -144,6 +149,7 @@ export function PaidSection<T>({
   children,
 }: {
   id?: string;
+  sectionId: PaidSectionId;
   title: string;
   emoji?: string;
   teaser: string;
@@ -174,6 +180,7 @@ export function PaidSection<T>({
   return (
     <LockedSection
       id={id}
+      sectionId={sectionId}
       title={title}
       emoji={emoji}
       teaser={teaser}

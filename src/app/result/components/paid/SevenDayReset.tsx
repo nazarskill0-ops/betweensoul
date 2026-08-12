@@ -42,6 +42,7 @@ export function SevenDayReset({
 }) {
   return (
     <PaidSection
+      sectionId="sevenDayReset"
       id={id}
       title="Your 7-Day Relationship Reset"
       emoji="🗓️"

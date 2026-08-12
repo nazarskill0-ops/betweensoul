@@ -31,6 +31,7 @@ export function LoveStyles({
 }) {
   return (
     <PaidSection
+      sectionId="loveStyles"
       id={id}
       title="How You Show Love vs How You Feel Loved"
       emoji="💞"

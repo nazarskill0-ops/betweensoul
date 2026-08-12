@@ -6,6 +6,17 @@ const emptyPartner = { name: "", birthday: "", gender: "" } as const;
 const emptyDraft: PartnerAnswers = { p1: "", p2: "" };
 
 /**
+ * One per run of the test. See `TestStore.submissionId` for why it exists.
+ *
+ * `randomUUID` needs a secure context, which every browser this runs in has —
+ * but a stray http:// origin would throw during store creation and take the
+ * whole app down, so it falls back rather than gambling on that.
+ */
+function newSubmissionId(): string {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+}
+
+/**
  * Everything the reader has typed so far, saved for the length of one sitting.
  *
  * sessionStorage rather than localStorage: this exists so a refresh, a stray
@@ -20,7 +31,7 @@ export const useTestStore = create<TestStore>()(
       partner1: { ...emptyPartner },
       partner2: { ...emptyPartner },
       relationshipStart: "",
-      email: "",
+      submissionId: newSubmissionId(),
       answers: {},
       questionIndex: 0,
       drafts: {},
@@ -31,7 +42,6 @@ export const useTestStore = create<TestStore>()(
       setPartner2: (data) =>
         set((state) => ({ partner2: { ...state.partner2, ...data } })),
       setRelationshipStart: (date) => set({ relationshipStart: date }),
-      setEmail: (email) => set({ email }),
       setAnswer: (questionId, answer) =>
         set((state) => ({ answers: { ...state.answers, [questionId]: answer } })),
       setQuestionIndex: (index) => set({ questionIndex: index }),
@@ -51,7 +61,7 @@ export const useTestStore = create<TestStore>()(
           partner1: { ...emptyPartner },
           partner2: { ...emptyPartner },
           relationshipStart: "",
-          email: "",
+          submissionId: newSubmissionId(),
           answers: {},
           questionIndex: 0,
           drafts: {},
@@ -75,7 +85,7 @@ export const useTestStore = create<TestStore>()(
        * migrating (a half-finished test, at most), so a version mismatch drops
        * the state and starts clean.
        */
-      version: 4,
+      version: 5,
       migrate: () => undefined,
       /**
        * The report itself is deliberately absent. `reportId` already survives
@@ -89,7 +99,7 @@ export const useTestStore = create<TestStore>()(
         partner1: state.partner1,
         partner2: state.partner2,
         relationshipStart: state.relationshipStart,
-        email: state.email,
+        submissionId: state.submissionId,
         answers: state.answers,
         questionIndex: state.questionIndex,
         drafts: state.drafts,

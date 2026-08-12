@@ -94,8 +94,6 @@ function loadPaddle(token: string) {
 
 export interface CheckoutParams {
   reportId: string;
-  /** Pre-fills the overlay when the buyer gave us an email during the test. */
-  email?: string;
   /**
    * Fires the moment Paddle confirms payment in the browser. The webhook is
    * what actually unlocks the report, so this only tells the page to start
@@ -106,7 +104,6 @@ export interface CheckoutParams {
 
 export async function openCheckout({
   reportId,
-  email,
   onCompleted: handler,
 }: CheckoutParams): Promise<void> {
   if (!TOKEN || !PRICE_ID) {
@@ -124,13 +121,13 @@ export async function openCheckout({
   paddle.Checkout.open({
     items: [{ priceId: PRICE_ID, quantity: 1 }],
     customData: { reportId },
-    ...(email ? { customer: { email } } : {}),
     settings: {
       displayMode: "overlay",
       theme: "light",
-      // With the email pre-filled there is no account to log out of, and the
-      // link only confuses the one-off buyer this checkout is built for.
-      allowLogout: !email,
+      // The app no longer collects an email, so Paddle asks for its own — the
+      // address the receipt goes to. There is no account behind it to log out
+      // of, but leaving the option costs nothing and the buyer may have one.
+      allowLogout: true,
     },
   });
 }

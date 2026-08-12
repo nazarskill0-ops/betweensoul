@@ -33,6 +33,7 @@ import { SevenDayReset } from "./components/paid/SevenDayReset";
 import { TheAnswer } from "./components/paid/TheAnswer";
 
 import { PaywallCTA } from "./components/PaywallCTA";
+import { UnlockModal } from "./components/UnlockModal";
 import { Spinner } from "./components/shared/LockedSection";
 import { UnlockProvider } from "./components/shared/UnlockButton";
 
@@ -76,7 +77,6 @@ function ResultContent() {
   const {
     partner1,
     partner2,
-    email,
     reportId: storedReportId,
     teaser: storedTeaser,
   } = useTestStore();
@@ -113,6 +113,7 @@ function ResultContent() {
   const [unlockFailed, setUnlockFailed] = useState(false);
   /** Bumped by the retry button, to restart a poll chain that has stopped. */
   const [retryNonce, setRetryNonce] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
 
   /**
    * A missing report and an unreachable one need different words: "this link
@@ -253,7 +254,6 @@ function ResultContent() {
     try {
       await openCheckout({
         reportId,
-        email: email || undefined,
         // Payment confirmed in the overlay, which is still on screen — the
         // work starts here rather than after it closes, so the sections are
         // already being written by the time the reader sees the page again.
@@ -278,7 +278,7 @@ function ResultContent() {
       // behind it so closing the overlay doesn't leave it stuck on "Opening…".
       setCheckoutLoading(false);
     }
-  }, [email, reportId, requestUnlock]);
+  }, [reportId, requestUnlock]);
 
   if (!hydrated || (reportId && loadState === "loading")) {
     return <CenteredNote>Loading your results…</CenteredNote>;
@@ -356,7 +356,12 @@ function ResultContent() {
   return (
     <>
       <UnlockProvider
-        value={{ onUnlock: unlock, loading: checkoutLoading, error: checkoutError }}
+        value={{
+          openModal: () => setModalOpen(true),
+          startCheckout: unlock,
+          loading: checkoutLoading,
+          error: checkoutError,
+        }}
       >
         <main className="flex-1 px-4 py-8 sm:px-6 sm:py-10" style={palette}>
           <div className="mx-auto w-full max-w-[680px] space-y-8 sm:space-y-10">
@@ -499,6 +504,8 @@ function ResultContent() {
             </p>
           </div>
         </main>
+
+        <UnlockModal open={modalOpen} onClose={() => setModalOpen(false)} />
       </UnlockProvider>
     </>
   );

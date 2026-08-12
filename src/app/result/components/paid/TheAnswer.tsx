@@ -20,6 +20,7 @@ export function TheAnswer({
 }) {
   return (
     <PaidSection
+      sectionId="theAnswer"
       id={id}
       title="The Answer"
       emoji="🕯️"

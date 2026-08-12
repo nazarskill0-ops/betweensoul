@@ -16,8 +16,6 @@ const genderOptions: { value: Gender; label: string }[] = [
   { value: "prefer-not-to-say", label: "Prefer not to say" },
 ];
 
-const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
 function PartnerFields({
   label,
   accent,
@@ -74,11 +72,9 @@ export default function TestPage() {
     partner1,
     partner2,
     relationshipStart,
-    email,
     setPartner1,
     setPartner2,
     setRelationshipStart,
-    setEmail,
     reportId,
     resetTest,
   } = useTestStore();
@@ -106,7 +102,7 @@ export default function TestPage() {
   const partnersReady = [partner1, partner2].every(
     (p) => p.name.trim() && p.birthday && p.gender,
   );
-  const isValid = partnersReady && Boolean(relationshipStart) && isEmail(email);
+  const isValid = partnersReady && Boolean(relationshipStart);
 
   const handleSubmit = () => {
     if (isValid) router.push("/questions");
@@ -172,26 +168,12 @@ export default function TestPage() {
             </span>
           </div>
 
-          <label className="block">
-            <span className="mb-1 block text-sm font-semibold text-slate-600">
-              Your email
-            </span>
-            <input
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="field"
-            />
-            {/*
-              "So we can send your results" belongs here the day results are
-              actually emailed — the privacy policy says they aren't, so the
-              line was promising something the product doesn't do. Put it back
-              with the mailing, not before.
-            */}
-          </label>
+          {/*
+            The email field is gone. It was collected, stored for 24 hours and
+            used for nothing: no results are sent, and Paddle asks for its own
+            address at checkout because that is where the receipt comes from.
+            Bring it back the day there is a mailing to justify it.
+          */}
         </section>
 
         <button onClick={handleSubmit} disabled={!isValid} className="btn-primary">
