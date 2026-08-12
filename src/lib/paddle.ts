@@ -74,9 +74,18 @@ function loadPaddle(token: string) {
       token,
       environment: ENVIRONMENT,
       eventCallback: (event) => {
-        if (event.name === CheckoutEventNames.CHECKOUT_COMPLETED) {
-          onCompleted?.();
-        }
+        if (event.name !== CheckoutEventNames.CHECKOUT_COMPLETED) return;
+
+        // The page first, the overlay second. Whatever the handler starts —
+        // the unlock request, the loading state — is under way before the
+        // overlay goes, so closing it can't be what delays the report.
+        onCompleted?.();
+
+        // Paddle's own "payment successful" screen is a dead end: it ends with
+        // a close button and no hint that the thing they bought is being
+        // written behind it. Closing it puts them back on their report, where
+        // the sections they just paid for are visibly filling in.
+        void paddlePromise?.then((paddle) => paddle?.Checkout.close());
       },
     });
   }

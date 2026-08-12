@@ -39,6 +39,14 @@ import { UnlockProvider } from "./components/shared/UnlockButton";
 const POLL_INTERVAL_MS = 2000;
 /** ~4 minutes. Five parallel Sonnet requests; this leaves room for a retry. */
 const MAX_POLLS = 120;
+/**
+ * How long a buyer waits before being offered a retry rather than a spinner.
+ *
+ * Generation lands in 15-25s; a minute means something is wrong — a lost
+ * webhook, a failed run — not that it is taking its time. The page keeps
+ * polling underneath, so a run that finishes late still unlocks itself.
+ */
+const UNLOCK_TIMEOUT_MS = 60000;
 
 /**
  * What /api/report/[id] returns. `paidSections` is null — not withheld — until
@@ -91,10 +99,20 @@ function ResultContent() {
     () => searchParams.get("paid") === "1",
   );
   const pollsRef = useRef(0);
-  /** One unlock request per page load — the webhook may also be running one. */
+  /**
+   * One accepted unlock request per page load — the webhook may also be
+   * running one. Only set once the route has taken the job: a 403 means the
+   * webhook hasn't marked the report paid yet, and the poll below has to be
+   * free to ask again when it has.
+   */
   const unlockRequested = useRef(false);
-  /** So the jump to the first unlocked section happens once, not on every poll. */
-  const scrolledToUnlocked = useRef(false);
+  /**
+   * Generation didn't finish in time. The payment is fine — this is only about
+   * the ten sections behind it — so the wording never questions the purchase.
+   */
+  const [unlockFailed, setUnlockFailed] = useState(false);
+  /** Bumped by the retry button, to restart a poll chain that has stopped. */
+  const [retryNonce, setRetryNonce] = useState(0);
 
   /**
    * A missing report and an unreachable one need different words: "this link
@@ -113,6 +131,49 @@ function ResultContent() {
     } catch {
       // Offline, or the request never landed.
       return { status: "error" as const };
+    }
+  }, []);
+
+  /**
+   * Asks the server to write the paid sections.
+   *
+   * Fired the instant Paddle confirms payment, which is usually before the
+   * `transaction.completed` webhook has marked the report paid — so a 403 here
+   * is the normal race, not a failure. It leaves `unlockRequested` clear so the
+   * poll below asks again once the webhook lands; anything the route accepts
+   * (200 with the sections, 202 while the webhook's own run holds the claim)
+   * claims the job so a second request can't bill a second set of Sonnet calls.
+   */
+  const requestUnlock = useCallback(async (id: string) => {
+    try {
+      const response = await fetch(`/api/report/${id}/unlock`, {
+        method: "POST",
+      });
+      if (response.status === 403) return;
+
+      unlockRequested.current = true;
+      if (!response.ok) return;
+
+      const data = (await response.json()) as {
+        paidSections?: PaidSections | null;
+      };
+      if (data.paidSections) {
+        setReport((current) =>
+          current
+            ? {
+                ...current,
+                paid: true,
+                paidStatus: "ready",
+                needsUnlock: false,
+                paidSections: data.paidSections ?? null,
+              }
+            : current,
+        );
+      }
+    } catch (error) {
+      // Offline or the request never landed. The poll keeps trying, and the
+      // deadline below is what eventually gives up.
+      console.error("[result] unlock request failed:", error);
     }
   }, []);
 
@@ -141,10 +202,7 @@ function ResultContent() {
       // result — but it means a report is never left ungenerated just because
       // the webhook was slow or lost.
       if (data.needsUnlock && !unlockRequested.current) {
-        unlockRequested.current = true;
-        void fetch(`/api/report/${reportId}/unlock`, { method: "POST" }).catch(
-          (error) => console.error("[result] unlock request failed:", error),
-        );
+        void requestUnlock(reportId);
       }
 
       // Keep polling while the deep dive is being written, and — coming back
@@ -162,20 +220,31 @@ function ResultContent() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [fetchReport, hydrated, justPaid, reportId]);
+  }, [fetchReport, hydrated, justPaid, reportId, requestUnlock, retryNonce]);
 
-  // The sections the reader just bought are below the fold, so take them there
-  // once — but only for someone who paid in this session. A returning buyer
-  // opens the page already unlocked and should start at the top.
+  /**
+   * Slow is one thing; never is another.
+   *
+   * Runs from the moment payment is confirmed and is cleared the moment the
+   * sections arrive, so a reader is never left watching a skeleton pulse
+   * forever because the webhook was lost or generation died.
+   */
   useEffect(() => {
-    if (!justPaid || scrolledToUnlocked.current) return;
-    if (!report?.paidSections) return;
+    if (!justPaid || unlockFailed || report?.paidSections) return;
 
-    scrolledToUnlocked.current = true;
-    document
-      .getElementById("full-xray")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [justPaid, report?.paidSections]);
+    const bail = setTimeout(() => setUnlockFailed(true), UNLOCK_TIMEOUT_MS);
+    return () => clearTimeout(bail);
+  }, [justPaid, report?.paidSections, unlockFailed]);
+
+  /** Ask again, from a clean slate. */
+  const retryUnlock = useCallback(() => {
+    if (!reportId) return;
+    setUnlockFailed(false);
+    pollsRef.current = 0;
+    unlockRequested.current = false;
+    setRetryNonce((n) => n + 1);
+    void requestUnlock(reportId);
+  }, [reportId, requestUnlock]);
 
   const unlock = useCallback(async () => {
     if (!reportId) return;
@@ -185,12 +254,19 @@ function ResultContent() {
       await openCheckout({
         reportId,
         email: email || undefined,
-        // Payment confirmed in the overlay. The webhook is what actually
-        // unlocks the report, so all this does is restart the poll.
+        // Payment confirmed in the overlay, which is still on screen — the
+        // work starts here rather than after it closes, so the sections are
+        // already being written by the time the reader sees the page again.
+        //
+        // This is not proof of payment: the webhook is what marks the report
+        // paid, and the request below is refused until it has. It only saves
+        // the poll's first round trip in the common case where it already has.
         onCompleted: () => {
           pollsRef.current = 0;
           unlockRequested.current = false;
+          setUnlockFailed(false);
           setJustPaid(true);
+          void requestUnlock(reportId);
         },
       });
     } catch (err) {
@@ -202,7 +278,7 @@ function ResultContent() {
       // behind it so closing the overlay doesn't leave it stuck on "Opening…".
       setCheckoutLoading(false);
     }
-  }, [email, reportId]);
+  }, [email, reportId, requestUnlock]);
 
   if (!hydrated || (reportId && loadState === "loading")) {
     return <CenteredNote>Loading your results…</CenteredNote>;
@@ -292,18 +368,42 @@ function ResultContent() {
               </p>
             )}
 
-            {generating && (
+            {generating && !unlockFailed && (
               <div className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-900/5">
                 <Spinner />
                 <div>
                   <p className="text-[15px] font-semibold text-slate-900">
-                    Generating your full report…
+                    ✨ Unlocking your full report…
                   </p>
                   <p className="text-sm text-slate-500">
                     About a minute. You can leave this page — the link stays good
                     for 24 hours.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/*
+              The payment went through; only the writing of the ten sections
+              didn't. Saying so plainly matters — a buyer who reads this as a
+              failed charge goes looking for their money instead of tapping the
+              one button that fixes it.
+            */}
+            {generating && unlockFailed && (
+              <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-900/5">
+                <p className="text-[15px] font-semibold text-slate-900">
+                  Something went wrong
+                </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Your payment was received — tap to retry.
+                </p>
+                <button
+                  onClick={retryUnlock}
+                  className="btn-unlock mt-3"
+                  type="button"
+                >
+                  Try again
+                </button>
               </div>
             )}
 

@@ -118,6 +118,22 @@ body {
   animation: float-up 0.45s ease-out both;
 }
 
+/* A paid section arriving in place of its skeleton. Opacity only — the two
+   are the same width, and moving one would shift everything below it under a
+   reader who is already partway down the report. */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out both;
+}
+
 /* Score bars grow from zero on mount — CSS only, so there's no first-paint
    flash and nothing to coordinate in JS. */
 @keyframes bar-fill {
@@ -151,7 +167,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-in-up,
   .animate-heartbeat,
-  .animate-bar {
+  .animate-bar,
+  .animate-fade-in {
     animation: none;
   }
 }
