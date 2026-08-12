@@ -106,7 +106,9 @@ export function GeneratingSection({
         </h2>
         <Spinner />
       </div>
-      <p className="text-[15px] text-slate-500">Writing this section…</p>
+      <p className="text-[15px] text-slate-500">
+        Generating your full analysis…
+      </p>
       <div className="mt-4 animate-pulse space-y-2" aria-hidden>
         <div className="h-3 w-full rounded-full bg-slate-200" />
         <div className="h-3 w-11/12 rounded-full bg-slate-200" />
@@ -152,8 +154,10 @@ export function PaidSection<T>({
   children: (data: T) => ReactNode;
 }) {
   if (data) {
+    // Fades rather than cuts: these sections replace a pulsing skeleton the
+    // moment generation lands, and swapping them instantly reads as a glitch.
     return (
-      <section id={id} className="report-card scroll-mt-6">
+      <section id={id} className="report-card animate-fade-in scroll-mt-6">
         <h2 className="mb-4 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
           {emoji && <span className="mr-2">{emoji}</span>}
           {title}
