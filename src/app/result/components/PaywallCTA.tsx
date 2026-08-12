@@ -1,23 +1,18 @@
 "use client";
 
+import { PAID_SECTION_LIST } from "../paidSections";
 import { useUnlock } from "./shared/UnlockButton";
 
 /**
  * The main conversion point, after all 21 sections.
  *
- * Every unlock button above this one opens the same checkout for the same
- * purchase — this one just arrives after the reader has seen everything the
- * free half has to say.
+ * Everything above this opens the same modal for the same purchase — this one
+ * just arrives after the reader has seen everything the free half has to say,
+ * and it lists the same ten lines the modal does. It used to keep its own
+ * seven-item summary, written differently, so the page made two offers that
+ * did not match: the reader saw one list here and another the moment they
+ * tapped the button.
  */
-const INCLUDED = [
-  "Deep analysis of all 8 dimensions",
-  "Every perception gap, with the conversation to have",
-  "Your complete conflict pattern, stage by stage",
-  "How you each show love — and how you each need it",
-  "All 5 future scenarios, scored",
-  "A personalized 7-day plan",
-  "Our honest assessment of where you stand",
-];
 
 export function PaywallCTA() {
   const { openModal } = useUnlock();
@@ -32,10 +27,15 @@ export function PaywallCTA() {
       </p>
 
       <ul className="mx-auto mt-6 max-w-sm space-y-2.5 text-left">
-        {INCLUDED.map((item) => (
-          <li key={item} className="flex gap-2.5 text-[15px] text-slate-700">
-            <span className="mt-0.5 shrink-0 text-green-600">✓</span>
-            {item}
+        {PAID_SECTION_LIST.map((section) => (
+          <li
+            key={section.id}
+            className="flex gap-2.5 text-[15px] text-slate-700"
+          >
+            <span aria-hidden className="shrink-0">
+              {section.emoji}
+            </span>
+            <span>{section.modalTeaser}</span>
           </li>
         ))}
       </ul>
