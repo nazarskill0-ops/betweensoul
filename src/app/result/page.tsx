@@ -43,11 +43,17 @@ const MAX_POLLS = 120;
 /**
  * How long a buyer waits before being offered a retry rather than a spinner.
  *
- * Generation lands in 15-25s; a minute means something is wrong — a lost
- * webhook, a failed run — not that it is taking its time. The page keeps
- * polling underneath, so a run that finishes late still unlocks itself.
+ * This was a minute, and a minute is wrong: that figure came from the free
+ * half, which is five short Haiku requests. The paid half is five Sonnet ones,
+ * the largest of them an eight-thousand-token X-ray, with a Haiku retry behind
+ * any that fail — routinely longer than a minute, which is why the poll above
+ * is allowed four of them and the route itself is given five.
+ *
+ * So buyers were being shown "something went wrong" while their report was
+ * still being written, and then watching it arrive anyway. It now matches the
+ * poll: by the time this fires, the page really has stopped making progress.
  */
-const UNLOCK_TIMEOUT_MS = 60000;
+const UNLOCK_TIMEOUT_MS = POLL_INTERVAL_MS * MAX_POLLS;
 
 /**
  * What /api/report/[id] returns. `paidSections` is null — not withheld — until
@@ -267,6 +273,15 @@ function ResultContent() {
           setUnlockFailed(false);
           setJustPaid(true);
           void requestUnlock(reportId);
+
+          // The modal is still open behind Paddle's overlay, and its button
+          // still reads "Unlock Full Report" — a buyer who has just paid was
+          // being handed the same button again. Close it, then take them to
+          // the top, where the banner says the report is being written. They
+          // bought this from somewhere near the bottom of a long page; leaving
+          // them there shows them a paywall and no sign anything happened.
+          setModalOpen(false);
+          window.scrollTo({ top: 0, behavior: "smooth" });
         },
       });
     } catch (err) {
@@ -381,8 +396,8 @@ function ResultContent() {
                     ✨ Unlocking your full report…
                   </p>
                   <p className="text-sm text-slate-500">
-                    About a minute. You can leave this page — the link stays good
-                    for 24 hours.
+                    A minute or two. You can leave this page — the link stays
+                    good for 24 hours.
                   </p>
                 </div>
               </div>

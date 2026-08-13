@@ -90,7 +90,7 @@ function modelLabel(model: string) {
 /**
  * Logs what one pass cost, e.g.
  *
- *   [CouplesScan] Report abc — free cost: $0.0034 (Haiku, 5 calls)
+ *   [CoupleScan] Report abc — free cost: $0.0034 (Haiku, 5 calls)
  *
  * The pass is read off the section prefix, so a report that has been unlocked
  * reports its free and paid halves separately rather than as one number.
@@ -118,7 +118,7 @@ export async function logPassCost(
     : "";
 
   console.log(
-    `[CouplesScan] Report ${reportId} — ${pass} cost: $${total.toFixed(4)} ` +
+    `[CoupleScan] Report ${reportId} — ${pass} cost: $${total.toFixed(4)} ` +
       `(${primary}, ${entries.length} call${entries.length === 1 ? "" : "s"}${fallbackNote})`,
   );
 }

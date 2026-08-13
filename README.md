@@ -1,4 +1,4 @@
-# CouplesScan
+# CoupleScan
 
 An AI relationship test two partners take together from one device. The free
 report is generated on submit; the paid deep dive is generated only after
@@ -166,8 +166,8 @@ than vanishing from it.
 Each pass logs its total when it finishes:
 
 ```
-[CouplesScan] Report 72fce6a8… — free cost: $0.0177 (Haiku, 5 calls)
-[CouplesScan] Report 72fce6a8… — paid cost: $0.1522 (Sonnet, 5 calls)
+[CoupleScan] Report 72fce6a8… — free cost: $0.0177 (Haiku, 5 calls)
+[CoupleScan] Report 72fce6a8… — paid cost: $0.1522 (Sonnet, 5 calls)
 ```
 
 Those are measured, not estimated: **~$0.17 of model spend per fully unlocked

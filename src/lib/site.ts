@@ -11,8 +11,8 @@ export const SITE_URL = "https://couplescan.com";
  * The site-wide title and description, shared by the `<title>`, the Open Graph
  * tags and the Twitter card so the three can't drift apart.
  */
-export const SITE_NAME = "CouplesScan";
-export const SITE_TITLE = "CouplesScan — AI Relationship Compatibility Test";
+export const SITE_NAME = "CoupleScan";
+export const SITE_TITLE = "CoupleScan — AI Relationship Compatibility Test";
 export const SITE_DESCRIPTION =
   "Take a 15-question quiz with your partner and get an AI-powered compatibility report with personalized insights for your relationship.";
 

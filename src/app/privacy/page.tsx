@@ -4,8 +4,8 @@ import { getLegalDocument } from "@/lib/legal";
 import { pageMetadata } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Privacy Policy — CouplesScan",
-  description: "How CouplesScan handles your data and protects your privacy.",
+  title: "Privacy Policy — CoupleScan",
+  description: "How CoupleScan handles your data and protects your privacy.",
   path: "/privacy",
 });
 

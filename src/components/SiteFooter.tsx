@@ -22,7 +22,7 @@ export function SiteFooter() {
           ))}
         </nav>
         <p className="text-xs text-slate-400">
-          © {new Date().getFullYear()} CouplesScan · Not therapy or clinical
+          © {new Date().getFullYear()} CoupleScan · Not therapy or clinical
           advice.
         </p>
       </div>

@@ -4,9 +4,9 @@ import { getLegalDocument } from "@/lib/legal";
 import { pageMetadata } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Terms of Service — CouplesScan",
+  title: "Terms of Service — CoupleScan",
   description:
-    "Terms of service for using CouplesScan relationship compatibility test.",
+    "Terms of service for using CoupleScan relationship compatibility test.",
   path: "/terms",
 });
 

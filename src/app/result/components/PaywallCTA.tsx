@@ -20,7 +20,7 @@ export function PaywallCTA() {
   return (
     <section className="rounded-2xl bg-white p-6 text-center shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(16,24,40,0.12)] ring-1 ring-slate-900/5 sm:p-8">
       <h2 className="text-2xl font-bold tracking-tight text-slate-900">
-        Unlock your full CouplesScan report
+        Unlock your full CoupleScan report
       </h2>
       <p className="mt-2 text-[15px] text-slate-500">
         Ten more sections, written from all of your answers at once.

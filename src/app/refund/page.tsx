@@ -4,8 +4,8 @@ import { getLegalDocument } from "@/lib/legal";
 import { pageMetadata } from "@/lib/site";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Refund Policy — CouplesScan",
-  description: "CouplesScan refund policy for paid compatibility reports.",
+  title: "Refund Policy — CoupleScan",
+  description: "CoupleScan refund policy for paid compatibility reports.",
   path: "/refund",
 });
 

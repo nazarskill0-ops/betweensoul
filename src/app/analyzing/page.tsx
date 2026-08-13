@@ -27,7 +27,7 @@ const STEPS = [
   "Cross-referencing your responses",
   "Identifying perception gaps",
   "Building your relationship profile",
-  "Finalizing your CouplesScan report",
+  "Finalizing your CoupleScan report",
 ];
 
 const STEP_MS = 3000;
