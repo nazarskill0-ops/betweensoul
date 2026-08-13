@@ -49,7 +49,7 @@ Questions? Email us at [support@couplescan.com](mailto:support@couplescan.com).
 
 # Privacy Policy
 
-**Last updated: August 13, 2026**
+**Last updated: August 14, 2026**
 
 ## 1. What We Collect
 
@@ -59,6 +59,7 @@ When you take the CoupleScan test, we collect:
 - **Ages and how long you have been together** — used only as context for the analysis.
 - **Test answers** — used to generate your compatibility report.
 - **Your IP address** — used only to limit how many reports one visitor can generate per hour, so the service cannot be run up as a bill by a script. It is stored as a counter for one hour and is never linked to your report or your answers.
+- **Basic usage data** — which pages are visited, and general device and location information, through Google Analytics. See "Cookies" below.
 - **Payment information** — processed entirely by Paddle ([paddle.com](https://paddle.com)). We never see or store your credit card details.
 
 We do not ask for your email address. There are no user accounts, we cannot email you, and the only address involved in a purchase is the one you give Paddle for your receipt — we never see it.
@@ -86,7 +87,9 @@ Your answers and report are deleted automatically 24 hours after the test, so in
 
 ## 6. Cookies
 
-We use only what the site needs to work: your answers are kept in your own browser's session storage while you take the test — which your browser clears when you close the tab — and Paddle sets its own cookies when you open the checkout. We do not currently use analytics or advertising cookies. If we add analytics later, we will update this page first.
+Your answers are kept in your own browser's session storage while you take the test — which your browser clears when you close the tab — and Paddle sets its own cookies when you open the checkout.
+
+We also use Google Analytics, which sets its own cookies to count visits and show us which pages people use. It tells us how the site is doing, not who you are: it never receives your answers, your report, or your names. We do not use advertising cookies, and we do not run ads.
 
 ## 7. Third-Party Services
 
@@ -94,6 +97,7 @@ We use only what the site needs to work: your answers are kept in your own brows
 - **Anthropic** ([anthropic.com](https://anthropic.com)) — AI report generation.
 - **Upstash** ([upstash.com](https://upstash.com)) — the database your report and answers are stored in for 24 hours.
 - **Vercel** ([vercel.com](https://vercel.com)) — website hosting.
+- **Google Analytics** ([policies.google.com/privacy](https://policies.google.com/privacy)) — how many people visit the site and which pages they use. It receives page addresses and general device and location information; it does not receive your answers, your report, or your names.
 
 ## 8. Children
 

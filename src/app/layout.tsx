@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   SITE_DESCRIPTION,
@@ -49,6 +50,13 @@ export const viewport: Viewport = {
   themeColor: "#fffbfd",
 };
 
+/**
+ * Read at build time, so a deploy without the variable simply ships no
+ * analytics rather than a broken tag — and local development doesn't send
+ * pageviews into the production property unless the id is set there too.
+ */
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
@@ -56,6 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {children}
         <SiteFooter />
       </body>
+      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   );
 }
