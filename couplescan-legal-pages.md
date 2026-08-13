@@ -59,7 +59,7 @@ When you take the CoupleScan test, we collect:
 - **Ages and how long you have been together** — used only as context for the analysis.
 - **Test answers** — used to generate your compatibility report.
 - **Your IP address** — used only to limit how many reports one visitor can generate per hour, so the service cannot be run up as a bill by a script. It is stored as a counter for one hour and is never linked to your report or your answers.
-- **Basic usage data** — which pages are visited, and general device and location information, through Google Analytics. See "Cookies" below.
+- **Basic usage data** — which pages are visited, and general device and location information, through Google Analytics. Only if you accept analytics cookies; see "Cookies" below.
 - **Payment information** — processed entirely by Paddle ([paddle.com](https://paddle.com)). We never see or store your credit card details.
 
 We do not ask for your email address. There are no user accounts, we cannot email you, and the only address involved in a purchase is the one you give Paddle for your receipt — we never see it.
@@ -89,7 +89,11 @@ Your answers and report are deleted automatically 24 hours after the test, so in
 
 Your answers are kept in your own browser's session storage while you take the test — which your browser clears when you close the tab — and Paddle sets its own cookies when you open the checkout.
 
-We also use Google Analytics, which sets its own cookies to count visits and show us which pages people use. It tells us how the site is doing, not who you are: it never receives your answers, your report, or your names. We do not use advertising cookies, and we do not run ads.
+We also use Google Analytics, which sets its own cookies to count visits and show us which pages people use. It tells us how the site is doing, not who you are: it never receives your answers, your report, or your names.
+
+**Analytics only run if you accept them.** The first time you visit, a banner asks. Until you choose, nothing is loaded and no analytics cookie is set; if you decline, none ever is, and the test works exactly the same either way. Your choice is remembered in your own browser, so to change it, clear this site's data and answer the banner again.
+
+We do not use advertising cookies, and we do not run ads.
 
 ## 7. Third-Party Services
 

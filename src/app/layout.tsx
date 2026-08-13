@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import { CookieConsent } from "@/components/CookieConsent";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
   SITE_DESCRIPTION,
@@ -54,6 +54,9 @@ export const viewport: Viewport = {
  * Read at build time, so a deploy without the variable simply ships no
  * analytics rather than a broken tag — and local development doesn't send
  * pageviews into the production property unless the id is set there too.
+ *
+ * It is handed to the consent banner rather than to the tag directly: nothing
+ * loads until the reader has said yes. See CookieConsent.
  */
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
@@ -63,8 +66,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col font-sans">
         {children}
         <SiteFooter />
+        <CookieConsent gaId={GA_ID} />
       </body>
-      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </html>
   );
 }
