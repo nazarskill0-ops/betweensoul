@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BirthdayField } from "@/components/BirthdayField";
@@ -99,10 +99,24 @@ export default function TestPage() {
     resetTest();
   }, [reportId, resetTest]);
 
+  /**
+   * The terms and the age check, as one deliberate act.
+   *
+   * This used to be a line of grey text under the button saying that carrying
+   * on meant agreeing — which is agreement nobody performs and nobody reads,
+   * and it was also the only place the site asked about age at all while Terms
+   * §6 and Privacy §8 both say 18 and over. A box someone has to tick is a
+   * record that they were asked.
+   *
+   * Component state, not the store: it is a statement made about this
+   * submission, so it should not survive a reload the way the names do.
+   */
+  const [agreed, setAgreed] = useState(false);
+
   const partnersReady = [partner1, partner2].every(
     (p) => p.name.trim() && p.birthday && p.gender,
   );
-  const isValid = partnersReady && Boolean(relationshipStart);
+  const isValid = partnersReady && Boolean(relationshipStart) && agreed;
 
   const handleSubmit = () => {
     if (isValid) router.push("/questions");
@@ -176,21 +190,37 @@ export default function TestPage() {
           */}
         </section>
 
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-600 transition-colors hover:bg-slate-50">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 size-4 shrink-0 accent-accent-500"
+          />
+          <span>
+            I agree to the{" "}
+            {/* Links inside a label are safe to click: the spec skips the
+                label's toggle when the click lands on interactive content. */}
+            <a
+              href="/terms"
+              className="font-semibold text-slate-700 underline hover:text-slate-900"
+            >
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a
+              href="/privacy"
+              className="font-semibold text-slate-700 underline hover:text-slate-900"
+            >
+              Privacy Policy
+            </a>
+            , and I confirm that I am 18 or older.
+          </span>
+        </label>
+
         <button onClick={handleSubmit} disabled={!isValid} className="btn-primary">
           Start Analysis ♥
         </button>
-
-        <p className="text-center text-xs text-slate-400">
-          By continuing you agree to our{" "}
-          <a href="/terms" className="underline hover:text-slate-500">
-            Terms of Service
-          </a>{" "}
-          and{" "}
-          <a href="/privacy" className="underline hover:text-slate-500">
-            Privacy Policy
-          </a>
-          .
-        </p>
       </div>
     </main>
   );

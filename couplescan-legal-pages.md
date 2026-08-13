@@ -1,6 +1,6 @@
 # Terms of Service
 
-**Last updated: August 9, 2026**
+**Last updated: August 14, 2026**
 
 ## 1. What This Is
 
@@ -11,7 +11,7 @@ CoupleScan ("we," "us," "our") provides an AI-powered relationship compatibility
 CoupleScan is an entertainment and self-reflection tool — not therapy, counseling, or professional advice. Our test uses AI to analyze answers provided by you and your partner and generate a compatibility report.
 
 - **Free report:** A basic overview is provided at no cost after completing the test.
-- **Paid report:** A detailed deep-dive analysis is available as a one-time purchase for $9.99 USD.
+- **Paid report:** A detailed deep-dive analysis is available as a one-time purchase. The standard price is $14.99 USD. A launch offer of $9.99 USD is in effect while the site is new; we may end it at any time, after which the standard price applies. Whatever price is shown at checkout is the price you pay for that purchase, and ending the offer never changes the price of a purchase already made.
 
 ## 3. Not Professional Advice
 
@@ -27,7 +27,7 @@ AI-generated content may contain inaccuracies. We do not guarantee the accuracy,
 
 ## 6. Age Requirement
 
-You must be at least 18 years old to use CoupleScan.
+You must be at least 18 years old to use CoupleScan. Before the test starts you are asked to confirm this, together with your agreement to these terms and to the privacy policy. The test does not begin until you do.
 
 ## 7. Intellectual Property
 
@@ -87,13 +87,25 @@ Your answers and report are deleted automatically 24 hours after the test, so in
 
 ## 6. Cookies
 
-Your answers are kept in your own browser's session storage while you take the test — which your browser clears when you close the tab — and Paddle sets its own cookies when you open the checkout.
+There are two kinds on this site, and only one of them is your choice.
 
-We also use Google Analytics, which sets its own cookies to count visits and show us which pages people use. It tells us how the site is doing, not who you are: it never receives your answers, your report, or your names.
+**Essential — always on, because the test cannot work without them.**
 
-**Analytics only run if you accept them.** The first time you visit, a banner asks. Until you choose, nothing is loaded and no analytics cookie is set; if you decline, none ever is, and the test works exactly the same either way. Your choice is remembered in your own browser, so to change it, clear this site's data and answer the banner again.
+- **Your answers**, kept in your own browser's session storage while you take the test. They stay on your device and your browser clears them when you close the tab. This is what lets you move between questions without losing what you have already answered.
+- **Paddle's cookies**, set when you open the checkout. Paddle uses them to run the payment and to spot fraudulent purchases. They are set only if you actually open the checkout, and only Paddle can read them — see Paddle's privacy policy, linked below.
+- **Your cookie choice itself**, stored in your browser so we do not ask again on every page. It is a key in your browser's local storage rather than a cookie, and it holds one word: accepted or declined.
 
-We do not use advertising cookies, and we do not run ads.
+**Analytics — only if you accept.**
+
+We use Google Analytics, which sets two cookies — one named **_ga** and one whose name starts with **_ga_** and ends with our Analytics property id. They give a returning browser the same random identifier, so one person reading four pages is not counted as four people. Google expires them two years after your last visit.
+
+What we do with that: count how many people arrive, see which pages get read and which get skipped, and find where people leave. A test nobody finishes and a page everyone closes look the same in a total visit count and completely different here, and that is the whole reason we collect it — to know what to fix next.
+
+What it never gets: your answers, your report, your names, or anything else you type into the test. Google receives page addresses, plus general device and approximate location information from the request itself. We do not use advertising cookies, we do not run ads, and we do not sell anything to anyone.
+
+**Nothing analytics-related loads until you say yes.** The first time you visit, a dialog asks. Until you answer, no analytics script is fetched and no analytics cookie exists; if you decline, none ever is. The test, the report and the price are identical either way — declining costs you nothing.
+
+**Changing your mind:** choose "Cookies" at the bottom of any page and the dialog comes back. If you had accepted and now decline, we delete the two Google Analytics cookies from your browser and reload the page without the analytics script, so it stops there and then. Nothing you have to clear by hand — though clearing this site's data from your browser settings removes everything either way, including the record of your choice.
 
 ## 7. Third-Party Services
 

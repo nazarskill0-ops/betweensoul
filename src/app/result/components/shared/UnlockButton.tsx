@@ -5,16 +5,25 @@ import { PAID_SECTIONS, type PaidSectionId } from "../../paidSections";
 
 export const PRICE = "$9.99";
 /**
- * The price the discount is measured against, shown struck through beside it.
+ * The price the offer is measured against, shown struck through beside it.
  *
- * Struck-through pricing is a claim about what the thing normally costs, and in
- * most of the markets this sells into — the UK, the EU, and a growing list of
- * US states — a "was" price has to have actually been charged, recently, for a
- * meaningful stretch. Right now it hasn't been: $9.99 is the only price this
- * has ever had. Worth knowing before the offer runs anywhere with a regulator.
+ * Read as a "was" price this would be a problem: in most of the markets this
+ * sells into — the UK, the EU, and a growing list of US states — a crossed-out
+ * price has to be one that was actually charged, recently, for a meaningful
+ * stretch, and $9.99 is the only price this has ever had. So nothing here says
+ * "was". It says $14.99 is the standard price and $9.99 is the launch offer,
+ * which is a statement about what happens next rather than about a past that
+ * didn't happen — and it is the direction that creates urgency anyway, because
+ * the deadline is in front of the reader instead of behind them.
+ *
+ * That makes it a promise rather than a claim, and it stays true only while
+ * the intention to charge $14.99 is real. Terms §2 names both numbers; if the
+ * standard price is ever settled at something else, it changes in both places.
  */
 export const FULL_PRICE = "$14.99";
-export const OFFER_LABEL = "Limited offer";
+export const OFFER_LABEL = "Launch offer";
+/** Spelled out under the button, so the strikethrough can't be read as a "was". */
+export const OFFER_NOTE = `Goes to ${FULL_PRICE} when the launch offer ends`;
 
 interface UnlockState {
   /** Opens the one modal that sells the report. */

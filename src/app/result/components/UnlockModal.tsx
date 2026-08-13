@@ -7,6 +7,7 @@ import { PAID_SECTION_LIST } from "../paidSections";
 import {
   FULL_PRICE,
   OFFER_LABEL,
+  OFFER_NOTE,
   PRICE,
   useUnlock,
 } from "./shared/UnlockButton";
@@ -113,15 +114,16 @@ export function UnlockModal({
         </ul>
 
         <div className="shrink-0 border-t border-slate-100 p-6 pt-4 sm:p-7 sm:pt-4">
-          {/* The old price first and smaller, so the eye lands on what is
-              actually being charged rather than on the number being crossed
-              out. `line-through` on the text itself, not a decorative rule —
-              a screen reader announcing "$14.99 $9.99" with no indication one
-              is void would be reading out the wrong price. */}
+          {/* The standard price first and smaller, so the eye lands on what is
+              actually being charged rather than on the number beside it.
+              `line-through` on the text itself, not a decorative rule — a
+              screen reader announcing "$14.99 $9.99" with no indication which
+              one is being charged would be reading out the wrong price. The
+              label is "standard price", never "was": see FULL_PRICE. */}
           <div className="text-center">
             <p className="flex items-baseline justify-center gap-2.5">
               <s className="text-base text-slate-400">
-                <span className="sr-only">Was </span>
+                <span className="sr-only">Standard price </span>
                 {FULL_PRICE}
               </s>
               <span className="text-3xl font-bold tracking-tight text-accent-500">
@@ -152,6 +154,9 @@ export function UnlockModal({
 
           <p className="mt-3 text-center text-xs text-slate-400">
             One-time payment · No subscription
+          </p>
+          <p className="mt-1 text-center text-xs font-semibold text-slate-500">
+            {OFFER_NOTE}
           </p>
 
           <nav className="mt-3 flex justify-center gap-5 text-xs">
