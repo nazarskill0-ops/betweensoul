@@ -12,14 +12,12 @@ import { partnerPaletteStyle } from "@/lib/partnerColors";
 import { CoupleScore } from "./components/free/CoupleScore";
 import { CoupleDynamic } from "./components/free/CoupleDynamic";
 import { RelationshipRadar } from "./components/free/RelationshipRadar";
-import { BiggestStrength } from "./components/free/BiggestStrength";
-import { BiggestTension } from "./components/free/BiggestTension";
+import { SuperpowerPressurePoint } from "./components/free/SuperpowerPressurePoint";
+import { GreenFlagsWatchouts } from "./components/free/GreenFlagsWatchouts";
 import { YouVsPartner } from "./components/free/YouVsPartner";
+import { ScenarioPreview } from "./components/free/ScenarioPreview";
 import { PerceptionGapFree } from "./components/free/PerceptionGapFree";
 import { UnsaidThings } from "./components/free/UnsaidThings";
-import { GreenFlagsWatchouts } from "./components/free/GreenFlagsWatchouts";
-import { ScenarioPreview } from "./components/free/ScenarioPreview";
-import { TheQuestion } from "./components/free/TheQuestion";
 
 import { FullXRay } from "./components/paid/FullXRay";
 import { AllPerceptionGaps } from "./components/paid/AllPerceptionGaps";
@@ -427,26 +425,55 @@ function ResultContent() {
               </div>
             )}
 
-            {/* Block 1 — first impression, no interruptions */}
+            {/*
+              Nine free sections, in the order the brief fixes them, with the
+              ten paid ones threaded in beside whichever free section raises the
+              question they answer: the X-ray under the pressure point, the full
+              gaps under the one gap, the scenario lab under the three futures.
+              A reader who stops at any padlock has just been shown exactly what
+              is behind it.
+
+              Free 1-3 — first impression, no interruptions and nothing to buy.
+            */}
             <CoupleScore data={free.coupleScore} p1Name={p1Name} p2Name={p2Name} />
             <CoupleDynamic data={free.coupleDynamic} />
             <RelationshipRadar data={free.radar} />
 
-            {/* Block 2 — the good news, the problem, then the explanation */}
-            <BiggestStrength data={free.biggestStrength} />
-            <BiggestTension data={free.biggestTension} />
+            {/* Free 4 — the pattern named; the X-ray is the why. */}
+            <SuperpowerPressurePoint
+              strength={free.biggestStrength}
+              tension={free.biggestTension}
+              locked={!unlocked}
+            />
             <FullXRay
               id="full-xray"
               data={paidSections?.fullXRay}
               generating={generating}
             />
 
-            {/* Block 3 — the shareable stuff */}
+            {/* Free 5-6 — the shareable stuff */}
+            <GreenFlagsWatchouts data={free.flags} />
             <YouVsPartner
               sliders={free.sliders}
               p1Name={p1Name}
               p2Name={p2Name}
             />
+            <HowYouSeeEachOther
+              data={paidSections?.howYouSeeEachOther}
+              generating={generating}
+              p1Name={p1Name}
+              p2Name={p2Name}
+            />
+
+            {/* Free 7 — three futures of five */}
+            <ScenarioPreview scenarios={free.scenarios} locked={!unlocked} />
+            <ScenarioLab data={paidSections?.scenarioLab} generating={generating} />
+            <IfNothingChanges
+              data={paidSections?.ifNothingChanges}
+              generating={generating}
+            />
+
+            {/* Free 8 — one gap of however many were found */}
             <PerceptionGapFree
               data={free.perceptionGap}
               p1Name={p1Name}
@@ -461,7 +488,7 @@ function ResultContent() {
               p2Name={p2Name}
             />
 
-            {/* Block 4 — getting personal */}
+            {/* Free 9 — one of three, then the rest of the paid report */}
             <UnsaidThings
               data={free.unsaidThings}
               unlocked={paidSections?.unsaidThingsUnlocked}
@@ -478,30 +505,10 @@ function ResultContent() {
               p1Name={p1Name}
               p2Name={p2Name}
             />
-
-            {/* Block 5 — flags and perspectives */}
-            <GreenFlagsWatchouts data={free.flags} />
-            <HowYouSeeEachOther
-              data={paidSections?.howYouSeeEachOther}
-              generating={generating}
-              p1Name={p1Name}
-              p2Name={p2Name}
-            />
-
-            {/* Block 6 — the future */}
-            <ScenarioPreview scenarios={free.scenarios} locked={!unlocked} />
-            <ScenarioLab data={paidSections?.scenarioLab} generating={generating} />
-            <IfNothingChanges
-              data={paidSections?.ifNothingChanges}
-              generating={generating}
-            />
             <WhatKeepsYouTogether
               data={paidSections?.whatKeepsYouTogether}
               generating={generating}
             />
-
-            {/* Block 7 — the finale */}
-            <TheQuestion data={free.theQuestion} locked={!unlocked} />
             <SevenDayReset
               data={paidSections?.sevenDayReset}
               generating={generating}

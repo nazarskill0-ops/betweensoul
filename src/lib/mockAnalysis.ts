@@ -6,6 +6,7 @@ import {
   SCENARIO_IDS,
   SCENARIO_LABELS,
   SLIDER_QUESTIONS,
+  ScenarioStatus,
 } from "@/lib/types";
 
 /**
@@ -76,12 +77,30 @@ export function buildMockFreeReport(p1: string, p2: string): FreeSections {
   const lowest = ranked[ranked.length - 1];
 
   const sliderPositions = [32, 71, 78, 45, 24, 63];
-  const teasers: Record<(typeof SCENARIO_IDS)[number], string> = {
-    living_together: `${p2}'s need for solitude and ${p1}'s need for contact would meet in the same square footage, which is either the fix or the fight.`,
-    long_distance: "Your trust scores suggest you'd handle the distance better than most couples do.",
-    financial_stress: "You've never had to disagree about money under pressure, so this one is genuinely untested.",
-    major_life_change: "The pattern where one of you decides and the other adjusts would get expensive here.",
-    having_a_child: "Sleep deprivation would land hard on a conflict style that already relies on having time to cool off.",
+  const scenarioMock: Record<
+    (typeof SCENARIO_IDS)[number],
+    { status: ScenarioStatus; teaser: string }
+  > = {
+    living_together: {
+      status: "watch",
+      teaser: `${p2}'s need for solitude would meet ${p1}'s need for contact in one flat.`,
+    },
+    long_distance: {
+      status: "good",
+      teaser: "Your trust scores suggest you'd handle the distance better than most.",
+    },
+    financial_stress: {
+      status: "risk",
+      teaser: "Money under pressure lands straight on the argument you already avoid.",
+    },
+    major_life_change: {
+      status: "watch",
+      teaser: "The pattern where one of you decides and the other adjusts would get expensive.",
+    },
+    having_a_child: {
+      status: "risk",
+      teaser: "Sleep deprivation would hit a conflict style that needs time to cool off.",
+    },
   };
 
   return {
@@ -95,27 +114,20 @@ export function buildMockFreeReport(p1: string, p2: string): FreeSections {
     coupleDynamic: {
       name: "The Anchor & The Spark",
       description: `${p1} pushes toward resolution and novelty; ${p2} steadies things and waits. In the day to day this reads as balance, and in an argument it reads as one of you chasing and one of you retreating.`,
-      whatWorks: `${p1} gets you both out of ruts. ${p2} keeps the household from running on adrenaline, and your answers about the last five years suggest that's kept you steady through at least one rough patch.`,
-      whereItGetsDifficult: `The same difference that balances you stops working under pressure. ${p1} reads ${p2}'s silence as indifference; ${p2} reads ${p1}'s urgency as an attack.`,
     },
-    radar: {
-      dimensions,
-      interconnection:
-        "Your high trust sits right next to your low conflict score, which is the interesting part: the problem isn't that you don't feel safe with each other, it's that you feel safe enough to postpone the hard conversation indefinitely.",
-    },
+    radar: { dimensions },
     biggestStrength: {
       dimensionId: highest.id,
       dimensionName: highest.name,
       score: highest.score,
-      explanation: `Neither of you marked a single boundary question as a dealbreaker, and you described each other's privacy in almost identical terms. That's rare — most couples disagree on at least two of those.`,
-      whyItMatters:
-        "Trust at this level is what lets a couple survive a bad month. It's the thing you'd be rebuilding from if anything else broke.",
+      explanation:
+        "Neither of you marked a single boundary question as a dealbreaker.",
     },
     biggestTension: {
       dimensionId: lowest.id,
       dimensionName: lowest.name,
       score: lowest.score,
-      explanation: `Your answers about the last real fight didn't match: one of you called it hours, the other called it days. That gap usually means one of you thinks it's over while the other is still in it.`,
+      explanation: `${p1} called your last fight hours long; ${p2} called it days.`,
     },
     sliders: SLIDER_QUESTIONS.map((question, i) => ({
       question,
@@ -134,42 +146,29 @@ export function buildMockFreeReport(p1: string, p2: string): FreeSections {
       totalGapsFound: 4,
     },
     unsaidThings: {
-      partner1: {
-        shown: [
-          `${p1} may need more reassurance than they let on, judging by how often "being understood" came up.`,
-          `${p1} may be quietly keeping score of who apologizes first.`,
-        ],
-        hasLocked: true,
-      },
-      partner2: {
-        shown: [
-          `${p2} may be more affected by tone during arguments than they show.`,
-          `${p2} may want more time alone without it meaning anything about the relationship.`,
-        ],
-        hasLocked: true,
-      },
+      about: "partner1",
+      shown: `${p1} may need more reassurance than they let on, judging by how often "being understood" came up.`,
+      lockedTeaser:
+        "One of you is holding something back about how the last argument actually landed.",
     },
     flags: {
       greenFlags: [
-        "Strong mutual trust",
-        "Shared sense of humor",
+        "You laugh together easily",
+        "Neither of you keeps secrets",
         "Aligned on the next five years",
-        "Neither is keeping secrets",
+        "You handle jealousy well",
       ],
       watchOuts: [
-        "Different expectations around personal space",
-        "Arguments end without either of you naming what happened",
+        "You tend to avoid hard conversations",
+        "Arguments end without anyone naming what happened",
       ],
     },
     scenarios: SCENARIO_IDS.map((id) => ({
       id,
       name: SCENARIO_LABELS[id],
-      teaser: teasers[id],
+      status: scenarioMock[id].status,
+      teaser: scenarioMock[id].teaser,
     })),
-    theQuestion: {
-      question: `If ${p1} stopped being the one who reaches out first after a fight, would ${p2} step in — or would the silence just get longer?`,
-      hook: "Your answers suggest there may be more to this question than either of you expects.",
-    },
   };
 }
 

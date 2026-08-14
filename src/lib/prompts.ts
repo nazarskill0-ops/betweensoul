@@ -26,6 +26,15 @@ import {
  * is written in the same request: the radar and the strength/tension drawn from
  * it, the sliders and the perception gap they both read off the same
  * comparisons. Splitting those would need a second pass to reconcile them.
+ *
+ * The free half is written to be read in a couple of minutes and to leave the
+ * reader wanting the rest — chips, one-liners and a single revealed example
+ * where there used to be paragraphs. That is a property of these prompts, not
+ * only of the page: a model asked for "2-3 sentences" will supply them, and no
+ * amount of CSS makes a paragraph feel like a teaser. Where a section shows
+ * part of a set — three scenarios of five, one perception gap, one unsaid
+ * thing — the prompt still generates the whole set. The page decides how much
+ * of it is free; the paid half needs all of it either way.
  */
 
 function partners(input: TranscriptData) {
@@ -171,9 +180,7 @@ Return JSON:
   },
   "coupleDynamic": {
     "name": "<dynamic name from the list below, copied exactly>",
-    "description": "<2-3 sentences describing how this dynamic manifests in THIS couple>",
-    "whatWorks": "<2-3 sentences about the strengths of this dynamic, specific to their answers>",
-    "whereItGetsDifficult": "<2-3 sentences about the friction points, specific to their answers>"
+    "description": "<2-3 sentences, and no more, describing how this dynamic shows up in THIS couple. This is the whole section — do not explain what works or where it gets difficult.>"
   }
 }
 
@@ -210,21 +217,19 @@ Return JSON:
   "radar": {
     "dimensions": [
 ${dimensions}
-    ],
-    "interconnection": "<1-2 sentences showing how 2-3 dimensions relate to each other for THIS couple. Example: 'Your high trust combined with low conflict recovery suggests the issue isn't safety — it's that you avoid hard conversations because you feel secure enough to postpone them.'>"
+    ]
   },
   "biggestStrength": {
     "dimensionId": "<id of the highest-scoring dimension>",
     "dimensionName": "<name>",
     "score": <the score>,
-    "explanation": "<2-3 sentences why this is strong, referencing specific answers>",
-    "whyItMatters": "<1-2 sentences>"
+    "explanation": "<ONE sentence, under 25 words, saying why this is strong, referencing a specific answer>"
   },
   "biggestTension": {
     "dimensionId": "<id of the lowest-scoring dimension>",
     "dimensionName": "<name>",
     "score": <the score>,
-    "explanation": "<2-3 sentences what the tension is, referencing specific answers>"
+    "explanation": "<ONE sentence, under 25 words, saying what the tension is, referencing a specific answer>"
   }
 }
 
@@ -233,8 +238,8 @@ IMPORTANT:
 - biggestStrength.dimensionId MUST be the highest-scoring dimension from radar.
 - biggestTension.dimensionId MUST be the lowest-scoring dimension from radar.
 - The 8 scores must spread. If several dimensions land within a few points of each other, you have not read the answers closely enough.
-- The "interconnection" field is critical — it shows you are actually THINKING, not just listing scores. Find a real relationship between 2-3 dimensions.
-- Each dimension insight must be specific. BAD: "You communicate well." GOOD: "You both value honesty, but one of you prefers directness in a way the other may read as blunt."`,
+- Each dimension insight must be specific. BAD: "You communicate well." GOOD: "You both value honesty, but one of you prefers directness in a way the other may read as blunt."
+- The two explanations are one sentence each. Not two. They name the pattern; they do not explain it.`,
   );
 }
 
@@ -300,20 +305,9 @@ ${overallScoreContext(overall)}
 Return JSON:
 {
   "unsaidThings": {
-    "partner1": {
-      "shown": [
-        "<1 sentence — inference about what ${p1} may not express directly, based on their answers>",
-        "<1 sentence — second inference>"
-      ],
-      "hasLocked": true
-    },
-    "partner2": {
-      "shown": [
-        "<1 sentence — inference about ${p2}>",
-        "<1 sentence — second inference>"
-      ],
-      "hasLocked": true
-    }
+    "about": "<partner1 or partner2 — which of them the revealed thing is about>",
+    "shown": "<1 sentence — the inference itself>",
+    "lockedTeaser": "<1 short line hinting at the two you are NOT revealing, naming neither partner and no specifics. Example: 'One of you is holding something back about how much the last argument actually landed.'>"
   },
   "flags": {
     "greenFlags": ["<short item>", "<short item>", "<short item>"],
@@ -322,36 +316,37 @@ Return JSON:
 }
 
 UNSAID THINGS RULES:
-- These MUST be inferences from actual answers, not invented psychology.
-- Frame as "may" — never absolute. "They may need more reassurance than they show." NOT "Deep down they're terrified you'll leave."
+- There are three of these in the full report. Reveal exactly ONE here, and it must be the LEAST raw of the three — intriguing, not exposing. The two sharpest are written later, behind the paywall, so do not spend them now.
+- It MUST be an inference from actual answers, not invented psychology.
+- Frame as "may" — never absolute. "${p1} may need more reassurance than they show." NOT "Deep down they're terrified you'll leave."
 - Be specific to THIS couple. BAD: "They may have feelings they haven't shared." GOOD: "They may be more affected by your tone during arguments than they let on."
-- Each partner gets exactly 2 items.
+- "about" says which partner the revealed line concerns, so the page can colour it correctly. Use the literal string "partner1" (${p1}) or "partner2" (${p2}).
 
 GREEN FLAGS RULES:
-- 3-5 items. Based on actual positive patterns in answers.
-- Short — 3-6 words each.
+- 3-4 items. Based on actual positive patterns in answers.
+- Each is one short line, 3-7 words, that stands alone on a chip. No explanation follows it anywhere, so it has to make sense by itself.
+- Write them as statements about the couple: "You laugh together easily", "Neither of you keeps secrets".
 
 WATCH-OUTS RULES:
-- 1-3 items. Cautious, non-judgmental tone.
+- 2-3 items. Cautious, non-judgmental tone.
 - Frame as patterns to be aware of, not accusations.
 - NEVER use the "red flag" label. NEVER say "abuser" or "toxic".
-- Short — 5-10 words each.`,
+- Same shape as the green flags: one short line, 4-9 words, no explanation. "You tend to avoid hard conversations."`,
   );
 }
 
-export function freeScenariosQuestionPrompt(
+export function freeScenariosPrompt(
   input: TranscriptData,
   overall: number,
 ): string {
-  const { p1, p2 } = partners(input);
   const scenarios = SCENARIO_IDS.map(
     (id) =>
-      `    { "id": "${id}", "name": "${SCENARIO_LABELS[id]}", "teaser": "<1 sentence>" }`,
+      `    { "id": "${id}", "name": "${SCENARIO_LABELS[id]}", "status": "<good | watch | risk>", "teaser": "<1 sentence, under 20 words>" }`,
   ).join(",\n");
 
   return withAnswers(
     input,
-    `Generate scenario previews and the final question.
+    `Generate the five "what happens if" scenario previews.
 
 ${overallScoreContext(overall)}
 
@@ -359,23 +354,15 @@ Return JSON:
 {
   "scenarios": [
 ${scenarios}
-  ],
-  "theQuestion": {
-    "question": "<A specific, thought-provoking question tailored to THIS couple's patterns. Not generic. Example: 'If ${p1} stopped being the one to fix things after a fight, would ${p2} step in — or would the silence just grow?'>",
-    "hook": "<1 sentence teaser. Example: 'Your answers suggest there may be more to this question than either of you expects.'>"
-  }
+  ]
 }
 
 SCENARIO RULES:
 - Return all five, in the order given, with these exact ids.
-- Each teaser is 1 sentence, specific to this couple (not a generic "this will be challenging").
-- Reference their actual dynamics. If they have trust concerns, the long-distance teaser should reflect that.
-- Vary the tone — some can be positive ("You may handle this better than most"), some cautious.
-
-THE QUESTION RULES:
-- This must be the single most important question for THIS couple based on ALL their answers.
-- It must be specific enough that it couldn't apply to just any couple.
-- It should create a "that's exactly what we need to talk about" reaction.`,
+- "status" is how the scenario reads at a glance: "good" if their answers suggest they would handle it better than most, "watch" if it would expose a difference they have not settled, "risk" if it lands directly on their weakest pattern.
+- Do not give all five the same status. Their answers are not uniformly good or bad, and five identical badges tell the reader nothing.
+- Each teaser is ONE sentence, under 20 words, specific to this couple — never a generic "this will be challenging". It sits alone on a single line with no paragraph under it.
+- Reference their actual dynamics. If they have trust concerns, the long-distance teaser should reflect that.`,
   );
 }
 
@@ -513,9 +500,8 @@ export function paidLoveAnchorsPrompt(input: TranscriptData, free: FreeSections)
 
 ${overallScoreContext(free.coupleScore.overall)}
 
-The free report already showed them these things each partner may not say directly. Do not repeat them:
-${p1}: ${free.unsaidThings.partner1.shown.join(" / ")}
-${p2}: ${free.unsaidThings.partner2.shown.join(" / ")}
+The free report already revealed one of the three things a partner may not say directly, and blurred the other two. This is the one they have seen — do not repeat it, and do not contradict it:
+About ${free.unsaidThings.about === "partner1" ? p1 : p2}: ${free.unsaidThings.shown}
 
 Return JSON:
 {
@@ -532,7 +518,7 @@ Return JSON:
     "isItEnough": "<2-3 sentences — nuanced conclusion, neither dismissive nor blindly optimistic>"
   },
   "unsaidThingsUnlocked": {
-    "partner1": "<1-2 sentences — the third and most revealing thing ${p1} may not say directly>",
+    "partner1": "<1-2 sentences — the most revealing thing ${p1} may not say directly>",
     "partner2": "<1-2 sentences — the same for ${p2}>"
   }
 }
@@ -541,7 +527,7 @@ RULES:
 - Do NOT use the phrase "love language" or reference the 5 Love Languages framework.
 - Frame as "how you show love" and "how you feel loved" — conversational, not clinical.
 - "isItEnough" must be nuanced. Not "yes you're fine" and not "no you're doomed". Something like: "Your connection is real, but your unresolved conflict pattern may test it more seriously over time."
-- The two unlocked unsaid things are the payoff for a padlock they saw in the free report, so they must be the sharpest of the three — still framed as "may", still grounded in the answers.`,
+- The two unlocked unsaid things are the payoff for two padlocks they saw in the free report, so they must be the sharpest of the three — still framed as "may", still grounded in the answers.`,
   );
 }
 

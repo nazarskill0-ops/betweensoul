@@ -1,8 +1,8 @@
-import { Slider } from "@/lib/types";
+import { FREE_SLIDER_COUNT, Slider } from "@/lib/types";
 import { SliderBar } from "../shared/SliderBar";
 
 /**
- * Position 7 — six comparisons, and the most screenshot-friendly thing on the
+ * Position 6 — two comparisons, and the most screenshot-friendly thing on the
  * page.
  *
  * A white card like every other section: the dark panel this used to sit on
@@ -10,6 +10,10 @@ import { SliderBar } from "../shared/SliderBar";
  * makes it hold together when it's cropped out and sent to a friend is the pair
  * of names at the top of the tracks, in the tracks' own two colours, and the
  * site name at the foot.
+ *
+ * Two of the six, because six near-identical bars stopped being a picture and
+ * became a list. The other four are still generated in the same request at no
+ * extra cost.
  */
 export function YouVsPartner({
   sliders,
@@ -33,7 +37,7 @@ export function YouVsPartner({
         </div>
 
         <div className="mt-4 space-y-5">
-          {sliders.map((slider) => (
+          {sliders.slice(0, FREE_SLIDER_COUNT).map((slider) => (
             <SliderBar
               key={slider.question}
               question={slider.question}

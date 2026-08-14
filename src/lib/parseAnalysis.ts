@@ -1,6 +1,4 @@
 import {
-  BiggestStrength,
-  BiggestTension,
   ConflictFingerprint,
   CoupleDynamic,
   CoupleScore,
@@ -9,6 +7,7 @@ import {
   DimensionId,
   Flags,
   FullPerceptionGap,
+  Highlight,
   HowYouSeeEachOther,
   IfNothingChanges,
   LoveStyles,
@@ -20,10 +19,10 @@ import {
   ScenarioAnalysis,
   ScenarioId,
   ScenarioPreview,
+  ScenarioStatus,
   SevenDayReset,
   Slider,
   TheAnswer,
-  TheQuestion,
   UnsaidThings,
   WhatKeepsYouTogether,
   XRayDimension,
@@ -341,8 +340,6 @@ export function validateScoreDynamic(raw: string): ScoreDynamicResult {
     coupleDynamic: requireStrings(dynamic, "coupleDynamic", [
       "name",
       "description",
-      "whatWorks",
-      "whereItGetsDifficult",
     ] as const),
   };
 }
@@ -351,8 +348,8 @@ export function validateScoreDynamic(raw: string): ScoreDynamicResult {
 
 export interface RadarResult {
   radar: Radar;
-  biggestStrength: BiggestStrength;
-  biggestTension: BiggestTension;
+  biggestStrength: Highlight;
+  biggestTension: Highlight;
 }
 
 export function validateRadar(raw: string): RadarResult {
@@ -373,10 +370,6 @@ export function validateRadar(raw: string): RadarResult {
     ...requireStrings(aligned[i], `radar.dimensions.${id}`, ["insight"] as const),
   }));
 
-  const { interconnection } = requireStrings(radarRaw, "radar", [
-    "interconnection",
-  ] as const);
-
   // The model is asked to point strength and tension at its own highest and
   // lowest dimension and does not reliably do it, so the extremes are taken
   // from the scores themselves. The prose stays; only the target is corrected.
@@ -388,15 +381,12 @@ export function validateRadar(raw: string): RadarResult {
   const tensionRaw = requireObject(data, "biggestTension");
 
   return {
-    radar: { dimensions, interconnection },
+    radar: { dimensions },
     biggestStrength: {
       dimensionId: highest.id,
       dimensionName: highest.name,
       score: highest.score,
-      ...requireStrings(strengthRaw, "biggestStrength", [
-        "explanation",
-        "whyItMatters",
-      ] as const),
+      ...requireStrings(strengthRaw, "biggestStrength", ["explanation"] as const),
     },
     biggestTension: {
       dimensionId: lowest.id,
@@ -460,54 +450,61 @@ export interface UnsaidFlagsResult {
   flags: Flags;
 }
 
-function unsaidSide(source: Obj, field: string) {
-  const side = requireObject(source, field);
-  const shown = requireTextList(side, "shown", 1).slice(0, 2);
-  return { shown, hasLocked: true };
-}
-
 export function validateUnsaidFlags(raw: string): UnsaidFlagsResult {
   const data = parseJsonObject(raw);
 
   const unsaidRaw = requireObject(data, "unsaidThings");
   const flagsRaw = requireObject(data, "flags");
 
+  const text = requireStrings(unsaidRaw, "unsaidThings", [
+    "shown",
+    "lockedTeaser",
+  ] as const);
+
+  // "partner2", "Partner 2", the name itself with a 2 in it — anything else
+  // falls to partner 1. This only picks which colour the line is shown in, and
+  // the wrong colour is a better outcome than a failed report.
+  const about = String(unsaidRaw.about ?? "").includes("2")
+    ? "partner2"
+    : "partner1";
+
   return {
-    unsaidThings: {
-      partner1: unsaidSide(unsaidRaw, "partner1"),
-      partner2: unsaidSide(unsaidRaw, "partner2"),
-    },
+    unsaidThings: { about, ...text },
+    // Capped as well as floored: the chips are a glance, and nine of them is a
+    // list again. Four and three is the most the section can carry.
     flags: {
-      greenFlags: requireTextList(flagsRaw, "greenFlags", 3).slice(0, 5),
+      greenFlags: requireTextList(flagsRaw, "greenFlags", 3).slice(0, 4),
       watchOuts: requireTextList(flagsRaw, "watchOuts", 1).slice(0, 3),
     },
   };
 }
 
-/* --------------------- free 5: scenarios + the question ------------------- */
+/* ----------------------------- free 5: scenarios -------------------------- */
 
-export interface ScenariosQuestionResult {
+export interface ScenariosResult {
   scenarios: ScenarioPreview[];
-  theQuestion: TheQuestion;
 }
 
-export function validateScenariosQuestion(raw: string): ScenariosQuestionResult {
+/** Unrecognised statuses read as "watch" — the badge that claims the least. */
+function scenarioStatus(value: unknown): ScenarioStatus {
+  const normalized = normalizeId(value);
+  if (normalized === "good") return "good";
+  if (normalized === "risk") return "risk";
+  return "watch";
+}
+
+export function validateScenarios(raw: string): ScenariosResult {
   const data = parseJsonObject(raw);
 
   const aligned = alignToIds(requireArray(data, "scenarios"), SCENARIO_IDS, "scenarios");
   const scenarios = SCENARIO_IDS.map((id, i) => ({
     id,
     name: SCENARIO_LABELS[id],
+    status: scenarioStatus(aligned[i].status),
     ...requireStrings(aligned[i], `scenarios.${id}`, ["teaser"] as const),
   }));
 
-  return {
-    scenarios,
-    theQuestion: requireStrings(requireObject(data, "theQuestion"), "theQuestion", [
-      "question",
-      "hook",
-    ] as const),
-  };
+  return { scenarios };
 }
 
 /* ---------------------------- paid 1: full x-ray -------------------------- */
