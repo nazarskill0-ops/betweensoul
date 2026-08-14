@@ -1,4 +1,4 @@
-import { DimensionId, ScenarioId } from "@/lib/types";
+import { DimensionId, RiskLevel, ScenarioId } from "@/lib/types";
 
 /**
  * One score scale for the whole report.
@@ -78,6 +78,27 @@ export const DIMENSION_EMOJI: Record<DimensionId, string> = {
   shared_future: "🧭",
   independence: "🕊️",
   playfulness: "🎈",
+};
+
+/**
+ * The named risk levels, in the same three colours the score bands use for the
+ * equivalent range — so "high" on a scenario card reads as the same kind of bad
+ * as a red score, and the page has one visual vocabulary rather than two.
+ *
+ * A level and never a percentage: see `IfNothingChanges` in types.ts.
+ */
+export const RISK_BADGE: Record<
+  RiskLevel,
+  { emoji: string; label: string; chip: string; text: string }
+> = {
+  low: { emoji: "🟢", label: "Low risk", chip: "bg-green-50", text: "text-green-700" },
+  moderate: {
+    emoji: "🟡",
+    label: "Moderate risk",
+    chip: "bg-amber-50",
+    text: "text-amber-700",
+  },
+  high: { emoji: "🔴", label: "High risk", chip: "bg-red-50", text: "text-red-700" },
 };
 
 export const SCENARIO_EMOJI: Record<ScenarioId, string> = {

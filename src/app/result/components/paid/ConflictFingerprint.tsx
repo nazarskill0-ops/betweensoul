@@ -1,57 +1,74 @@
 import { ConflictFingerprint as ConflictFingerprintData } from "@/lib/types";
-import { Insight, Prose } from "../shared/SectionCard";
 import { PaidSection } from "../shared/LockedSection";
 
 /**
- * Position 11 — the fight cycle.
+ * Paid 3 — the fight, drawn as the loop it is.
  *
- * The five stage names stay sharp while their descriptions blur: the shape of
- * the loop is the hook, and seeing "escalation → withdrawal → aftermath →
- * repeat" spelled out is what makes someone want the sentences under it.
+ * A vertical flow rather than six labelled paragraphs: the connecting rail down
+ * the left is what turns a list of bad moments into a cycle, and the last step
+ * closes back to the first, which is the observation the whole section exists
+ * to make. Read top to bottom it should produce "that is literally what happens
+ * every time" — so each step is one or two sentences and never more.
+ *
+ * The stage names stay sharp while their text blurs in the locked preview. The
+ * shape of the loop is the hook; seeing trigger → reaction → escalation spelled
+ * out is what makes someone want the sentences under it.
  */
-const STAGES = [
-  { key: "trigger", label: "Trigger" },
-  { key: "reaction", label: "Reaction" },
-  { key: "escalation", label: "Escalation" },
-  { key: "withdrawal", label: "Withdrawal" },
-  { key: "aftermath", label: "Aftermath" },
+const STEPS = [
+  { key: "trigger", label: "Trigger", emoji: "⚡" },
+  { key: "reaction", label: "Reaction", emoji: "💬" },
+  { key: "escalation", label: "Escalation", emoji: "🌩️" },
+  { key: "withdrawal", label: "Withdrawal", emoji: "🚪" },
+  { key: "aftermath", label: "Aftermath", emoji: "🌅" },
+  { key: "repeat", label: "Repeat", emoji: "🔁" },
 ] as const;
 
-function CycleChain() {
+function Row({
+  emoji,
+  label,
+  last,
+  children,
+}: {
+  emoji: string;
+  label: string;
+  last: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {STAGES.map((stage, i) => (
-        <span key={stage.key} className="flex items-center gap-1.5">
-          <span className="rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
-            {stage.label}
-          </span>
-          <span className="text-slate-300" aria-hidden>
-            →
-          </span>
-          {i === STAGES.length - 1 && (
-            <span className="text-xs font-medium text-slate-400">repeat</span>
-          )}
+    <div className="flex gap-3">
+      {/* The rail: a dot per step and a line joining it to the next one. */}
+      <div className="flex flex-col items-center" aria-hidden>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm">
+          {emoji}
         </span>
-      ))}
+        {!last && <span className="w-px flex-1 bg-slate-200" />}
+      </div>
+      <div className={last ? "" : "pb-5"}>
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          {label}
+        </p>
+        <div className="mt-1">{children}</div>
+      </div>
     </div>
   );
 }
 
 function Preview() {
   return (
-    <div className="space-y-4">
-      <CycleChain />
-      <div className="locked-preview space-y-3">
-        {STAGES.map((stage) => (
-          <div key={stage.key} className="rounded-xl bg-white p-3">
-            <div className="mb-2 h-3 w-1/4 rounded-full bg-slate-200" />
-            <div className="space-y-2">
-              <div className="h-3 w-full rounded-full bg-slate-200" />
-              <div className="h-3 w-4/5 rounded-full bg-slate-200" />
-            </div>
+    <div>
+      {STEPS.map((step, i) => (
+        <Row
+          key={step.key}
+          emoji={step.emoji}
+          label={step.label}
+          last={i === STEPS.length - 1}
+        >
+          <div className="locked-preview space-y-2 pt-1">
+            <div className="h-3 w-64 max-w-full rounded-full bg-slate-200" />
+            <div className="h-3 w-48 max-w-full rounded-full bg-slate-200" />
           </div>
-        ))}
-      </div>
+        </Row>
+      ))}
     </div>
   );
 }
@@ -71,26 +88,26 @@ export function ConflictFingerprint({
       id={id}
       title="Your Conflict Fingerprint"
       emoji="🧬"
-      teaser="See exactly how your arguments unfold, stage by stage — and why the same one keeps coming back."
+      teaser="The same argument, stage by stage — what starts it, who leaves first, and why it comes back."
       data={data}
       generating={generating}
       preview={<Preview />}
       blurPreview={false}
     >
       {(cycle) => (
-        <div className="space-y-3">
-          <CycleChain />
-          {STAGES.map((stage) => (
-            <Insight key={stage.key} label={stage.label}>
-              <Prose text={cycle[stage.key]} />
-            </Insight>
+        <div>
+          {STEPS.map((step, i) => (
+            <Row
+              key={step.key}
+              emoji={step.emoji}
+              label={step.label}
+              last={i === STEPS.length - 1}
+            >
+              <p className="text-[15px] leading-relaxed text-slate-600">
+                {cycle[step.key]}
+              </p>
+            </Row>
           ))}
-          <Insight label="The pattern" tone="blue">
-            <Prose text={cycle.pattern} />
-          </Insight>
-          <Insight label="What's underneath it" tone="green">
-            <Prose text={cycle.insight} />
-          </Insight>
         </div>
       )}
     </PaidSection>

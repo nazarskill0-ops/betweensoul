@@ -368,223 +368,232 @@ SCENARIO RULES:
 
 /* ------------------------------- paid: 1-5 -------------------------------- */
 
-/** The radar scores the free report already showed, so paid can't contradict them. */
+/**
+ * The radar scores the free report already showed, so paid can't contradict
+ * them — and the one-line insight under each, which is the reading the paid
+ * half has to go past rather than repeat. The free page no longer prints these
+ * lines; this is the only place they are used.
+ */
 function radarContext(free: FreeSections): string {
   return free.radar.dimensions
     .map((d) => `${d.id} (${d.name}): ${d.score}/100 — ${d.insight}`)
     .join("\n");
 }
 
-export function paidXRayPrompt(input: TranscriptData, free: FreeSections): string {
-  const { p1 } = partners(input);
+/** What the reader has already been shown, so no paid section repeats it. */
+function freeContext(free: FreeSections, p1: string, p2: string): string {
+  return `Their radar, already shown:
+${radarContext(free)}
+
+Their dynamic, already named: ${free.coupleDynamic.name} — ${free.coupleDynamic.description}
+Their strongest area: ${free.biggestStrength.dimensionName} (${free.biggestStrength.score}/100) — ${free.biggestStrength.explanation}
+Their weakest area: ${free.biggestTension.dimensionName} (${free.biggestTension.score}/100) — ${free.biggestTension.explanation}
+The one thing already revealed, about ${free.unsaidThings.about === "partner1" ? p1 : p2}: ${free.unsaidThings.shown}`;
+}
+
+export function paidUnsaidGapsPrompt(input: TranscriptData, free: FreeSections): string {
+  const { p1, p2 } = partners(input);
 
   return withAnswers(
     input,
-    `Generate the full deep analysis for all 8 relationship dimensions.
+    `Generate all three "things they'd never say to your face" and every perception gap.
 
 ${overallScoreContext(free.coupleScore.overall)}
 
-These are the radar scores already shown to them in the free report. Use them exactly — do not recalculate:
-${radarContext(free)}
+${freeContext(free, p1, p2)}
 
 Return JSON:
 {
-  "fullXRay": [
+  "unsaidThings": [
     {
-      "dimensionId": "emotional_connection",
-      "dimensionName": "Emotional Connection",
-      "score": <same score as the radar>,
-      "whatWeSee": "<2-3 sentences — observable pattern>",
-      "whatAnswersSuggest": "<2-3 sentences — deeper inference, referencing specific answers>",
-      "whereYouDiffer": "<2-3 sentences — how the two partners differ on this>",
-      "whatCouldHelp": "<2-3 sentences — specific, actionable, not generic>"
+      "about": "<partner1 or partner2>",
+      "thing": "<1-2 sentences — the thing itself, stated plainly>",
+      "whyThisMatters": "<2-3 sentences — why it matters that this goes unsaid>"
     }
-    — and the same four fields for the other 7 dimensions, in the order given above
+    — exactly 3, and the first must be the one already revealed above, restated in your own words with the "why" it did not come with
+  ],
+  "allPerceptionGaps": [
+    {
+      "topic": "<short label for the gap, e.g. 'Feeling understood'>",
+      "partner1Said": "<what ${p1} expressed or implied, paraphrased>",
+      "partner2Said": "<what ${p2} expressed or implied — must clearly contrast>",
+      "whyItMatters": "<2-3 sentences>"
+    }
+    — ${free.perceptionGap.totalGapsFound} gaps in total
   ]
 }
 
-RULES:
-- All 8 dimensions, using the ids above.
-- "whatCouldHelp" must be SPECIFIC. BAD: "Try to communicate more openly." GOOD: "When ${p1} goes quiet after a disagreement, try asking 'Are you processing or pulling away?' — it gives them an exit from silence without pressure."
-- Reference the ACTUAL answers wherever possible.
-- Do not repeat the free report's one-line insight back at them — this is the deeper read.`,
+UNSAID THINGS RULES:
+- Exactly 3. The first is the one the free report already revealed — do not drop it and do not contradict it; this section is sold as "all 3 things" and a buyer who counts them will count.
+- The other two are the sharper ones. This is the section people paid for, so they must be worth the padlock: specific, grounded in real answers, and not something the reader could have guessed from the score alone.
+- Still inferences, never verdicts. "may", "seems to", "their answers suggest".
+- Do not distribute them evenly for the sake of it, but do not put all three on one partner unless the answers really do.
+
+PERCEPTION GAP RULES:
+- Exactly ${free.perceptionGap.totalGapsFound} — the number the free report told them you found. Fewer is a broken promise; more is a different promise.
+- The first should be the one already shown to them (topic: ${free.perceptionGap.shown.map((g) => g.topic).join(", ")}), covered again in more depth.
+- Each must come from a REAL difference between their answers, not an invented one.
+- "whyItMatters" is the whole payload of the card. No advice, no conversation prompts — just what this difference does to them day to day.`,
   );
 }
 
-export function paidGapsViewPrompt(input: TranscriptData, free: FreeSections): string {
+export function paidConflictLovePrompt(input: TranscriptData, free: FreeSections): string {
   const { p1, p2 } = partners(input);
 
   return withAnswers(
     input,
-    `Generate all perception gaps and the "how you see each other" analysis.
+    `Generate the conflict cycle and the love-style comparison.
 
 ${overallScoreContext(free.coupleScore.overall)}
 
-The free report told them you found ${free.perceptionGap.totalGapsFound} gaps in total, and already showed this one:
-${free.perceptionGap.shown
-  .map((gap) => `- ${gap.topic}: ${gap.partner1Said} / ${gap.partner2Said}`)
-  .join("\n")}
-Cover that one again in more depth, plus the rest.
-
-Return JSON:
-{
-  "allPerceptionGaps": [
-    {
-      "topic": "<topic>",
-      "partner1Said": "<what they expressed>",
-      "partner2Said": "<what they expressed>",
-      "whatThisMayMean": "<2-3 sentences>",
-      "whyItMatters": "<1-2 sentences>",
-      "conversationToHave": "<a specific question they should ask each other about this gap>"
-    }
-    — ${free.perceptionGap.totalGapsFound} gaps in total
-  ],
-  "howYouSeeEachOther": {
-    "herViewOfHim": "<2-3 sentences — how ${p1} sees ${p2}, based on their answers>",
-    "hisViewOfHer": "<2-3 sentences — how ${p2} sees ${p1}>",
-    "whatBothMiss": "<2-3 sentences — what neither seems to see about the other>"
-  }
-}
-
-RULES:
-- Only include perception gaps that are REAL — clearly visible in different answers to related questions.
-- "conversationToHave" should be a specific question, not generic. "When do you feel least understood by me?" is good. "Talk about your feelings more" is bad.
-- In "howYouSeeEachOther", reference what they actually said when describing each other. The field names are legacy: "herViewOfHim" is ${p1}'s view of ${p2}, "hisViewOfHer" is ${p2}'s view of ${p1}, whatever their genders.`,
-  );
-}
-
-export function paidConflictFuturePrompt(
-  input: TranscriptData,
-  free: FreeSections,
-): string {
-  const { p1, p2 } = partners(input);
-
-  return withAnswers(
-    input,
-    `Generate the conflict cycle analysis and future projection.
-
-${overallScoreContext(free.coupleScore.overall)}
+${freeContext(free, p1, p2)}
 
 Return JSON:
 {
   "conflictFingerprint": {
-    "trigger": "<2-3 sentences — what typically starts conflict for this couple>",
-    "reaction": "<2-3 sentences — how each partner initially reacts>",
-    "escalation": "<2-3 sentences — how it gets worse>",
-    "withdrawal": "<2-3 sentences — how they disengage>",
-    "aftermath": "<2-3 sentences — what happens after the fight>",
-    "pattern": "<2-3 sentences — the overall cycle summarized>",
-    "insight": "<2-3 sentences — the deeper reason behind the pattern>"
+    "trigger": "<1-2 sentences — what actually starts it, specific to them>",
+    "reaction": "<1-2 sentences — how each of them reacts in the first minutes>",
+    "escalation": "<1-2 sentences — the move that makes it worse>",
+    "withdrawal": "<1-2 sentences — who disengages first, and how>",
+    "aftermath": "<1-2 sentences — the hours or days after>",
+    "repeat": "<1-2 sentences — how it resets and starts again, and what never gets said in between>"
   },
-  "ifNothingChanges": {
-    "likelyStrengths": "<2-3 sentences — what will remain strong if they continue as-is>",
-    "pressurePoints": "<2-3 sentences — what will likely get worse>",
-    "whatBecomesMoreImportant": "<2-3 sentences — what they'll need to address over time>"
-  }
-}
-
-RULES:
-- The conflict fingerprint must describe a CYCLE, not isolated events.
-- "insight" should reveal something non-obvious — the WHY behind the pattern.
-- "ifNothingChanges" must NOT sound like fortune-telling. Use "may", "likely", "patterns suggest". Frame as projections from current patterns, not predictions.
-- Be specific. BAD: "Things might get harder." GOOD: "${p1} may start withdrawing rather than escalating, because escalation hasn't worked — and ${p2} may mistake that silence for peace."`,
-  );
-}
-
-export function paidLoveAnchorsPrompt(input: TranscriptData, free: FreeSections): string {
-  const { p1, p2 } = partners(input);
-
-  return withAnswers(
-    input,
-    `Generate love style analysis, relationship anchors, and one final unsaid thing per partner.
-
-${overallScoreContext(free.coupleScore.overall)}
-
-The free report already revealed one of the three things a partner may not say directly, and blurred the other two. This is the one they have seen — do not repeat it, and do not contradict it:
-About ${free.unsaidThings.about === "partner1" ? p1 : p2}: ${free.unsaidThings.shown}
-
-Return JSON:
-{
   "loveStyles": {
-    "partner1Shows": "<2-3 sentences — how ${p1} tends to show love, based on answers>",
-    "partner1FeelsLovedBy": "<2-3 sentences — what makes ${p1} feel loved>",
-    "partner2Shows": "<2-3 sentences — how ${p2} tends to show love>",
-    "partner2FeelsLovedBy": "<2-3 sentences — what makes ${p2} feel loved>",
-    "mismatch": "<2-3 sentences — where these styles don't align, creating friction>"
-  },
-  "whatKeepsYouTogether": {
-    "anchors": ["<short item>", "<short item>", "<short item>"],
-    "evidence": "<2-3 sentences — specific evidence from their answers>",
-    "isItEnough": "<2-3 sentences — nuanced conclusion, neither dismissive nor blindly optimistic>"
-  },
-  "unsaidThingsUnlocked": {
-    "partner1": "<1-2 sentences — the most revealing thing ${p1} may not say directly>",
-    "partner2": "<1-2 sentences — the same for ${p2}>"
+    "partner1Shows": "<1-2 sentences — how ${p1} shows love>",
+    "partner1FeelsLovedBy": "<1-2 sentences — what makes ${p1} feel loved>",
+    "partner1Gap": "<ONE sentence — the distance between those two, for ${p1}>",
+    "partner2Shows": "<1-2 sentences — how ${p2} shows love>",
+    "partner2FeelsLovedBy": "<1-2 sentences — what makes ${p2} feel loved>",
+    "partner2Gap": "<ONE sentence — the same for ${p2}>"
   }
 }
 
-RULES:
+CONFLICT RULES:
+- These six steps are drawn as a loop, one under the next, so each has to read as a step rather than as a paragraph about arguing. Short, concrete, in their own vocabulary.
+- The target is recognition: the reader should think "that is literally what happens every time". Name the specific move, not the category. BAD: "Communication breaks down." GOOD: "${p1} asks what's wrong three times, and the third time is sharper than the first two."
+- "repeat" closes the cycle. Say whether they actually reconcile or simply stop, and what that leaves behind.
+- Still a cycle read off fifteen quiz answers: frame it as the pattern their answers describe, not as a diagnosis.
+
+LOVE STYLE RULES:
 - Do NOT use the phrase "love language" or reference the 5 Love Languages framework.
-- Frame as "how you show love" and "how you feel loved" — conversational, not clinical.
-- "isItEnough" must be nuanced. Not "yes you're fine" and not "no you're doomed". Something like: "Your connection is real, but your unresolved conflict pattern may test it more seriously over time."
-- The two unlocked unsaid things are the payoff for two padlocks they saw in the free report, so they must be the sharpest of the three — still framed as "may", still grounded in the answers.`,
+- The two "gap" lines are the point of the section: one sentence each, naming exactly where what they give misses what the other needs.
+- Conversational, not clinical. This is love in practice, not a lecture.`,
   );
 }
 
-export function paidScenarioResetAnswerPrompt(
+export function paidMirrorScenarioPrompt(
   input: TranscriptData,
   free: FreeSections,
 ): string {
   const { p1, p2 } = partners(input);
+  const scenarios = SCENARIO_IDS.map(
+    (id) =>
+      `    { "id": "${id}", "name": "${SCENARIO_LABELS[id]}", "risk": "<low | moderate | high>", "analysis": "<3-4 sentences>" }`,
+  ).join(",\n");
 
   return withAnswers(
     input,
-    `Generate full scenario analysis, the action plan, and the final synthesis.
+    `Generate how they see each other, and the five scenario analyses.
 
 ${overallScoreContext(free.coupleScore.overall)}
 
-These are the scenario teasers already shown to them. Stay consistent with them:
-${free.scenarios.map((s) => `- ${s.id} (${s.name}): ${s.teaser}`).join("\n")}
+${freeContext(free, p1, p2)}
+
+These are the one-line scenario teasers already shown to them. Stay consistent with them — a scenario the free report called safe cannot come back rated high risk:
+${free.scenarios.map((s) => `- ${s.id} (${s.name}): [${s.status}] ${s.teaser}`).join("\n")}
 
 Return JSON:
 {
-  "scenarioLab": [
-    {
-      "id": "living_together",
-      "name": "Living Together",
-      "compatibility": <number 0-100>,
-      "strength": "<1-2 sentences — what would work well>",
-      "risk": "<1-2 sentences — what could be difficult>",
-      "whatYoudStruggleWith": "<1-2 sentences — the specific friction point>",
-      "whatWouldHelp": "<1-2 sentences — specific advice>"
-    }
-    — and the same fields for the other 4 scenarios, same ids and order as above
-  ],
-  "sevenDayReset": {
-    "day1Question": "<a specific question to ask their partner this week, tailored to their biggest gap>",
-    "day2Action": "<a specific action to try, tailored to their conflict pattern>",
-    "day3Date": "<a personalized date idea based on their shared interests/dynamic>",
-    "whyThisWorks": "<1-2 sentences connecting these to their specific patterns>"
+  "howYouSeeEachOther": {
+    "partner1SeesPartner2": ["<short line>", "<short line>", "<short line>"],
+    "partner2SeesPartner1": ["<short line>", "<short line>", "<short line>"],
+    "surprise": "<1-2 sentences — the thing neither of them realises about how they are seen>"
   },
-  "theAnswer": {
-    "synthesis": "<3-5 sentences — the real assessment of this relationship. Not a score, but a thoughtful conclusion. What's working, what's at risk, and what it comes down to.>",
-    "questionToDiscussTonight": "<1 specific question>",
-    "conversationStarters": ["<starter 1>", "<starter 2>", "<starter 3>"]
+  "scenarioLab": [
+${scenarios}
+  ]
+}
+
+MIRROR RULES:
+- Two or three lines each, one clause long, as if listing what one of them would say about the other. Not paragraphs — these are drawn as bullets facing each other.
+- Reference what they actually said when describing each other.
+- "surprise" is the payoff: something visible in the answers that neither of them has apparently noticed.
+
+SCENARIO RULES:
+- All five, in the order given, with these exact ids.
+- "risk" is how hard this would be for THIS couple: "low" if their answers suggest they would handle it well, "moderate" if it would strain something, "high" if it lands on their weakest pattern.
+- The five ratings must not all be the same. Five different pressures do not produce one verdict.
+- The free report already rated three of them at a glance (status good/watch/risk above). Map to the same reading: good → low, watch → moderate, risk → high. You may deepen the reasoning, not reverse the verdict.
+- "analysis" is 3-4 sentences: what would work, what would break, and the specific friction — in that order, as one short paragraph.`,
+  );
+}
+
+export function paidFuturePrompt(input: TranscriptData, free: FreeSections): string {
+  const { p1, p2 } = partners(input);
+
+  return withAnswers(
+    input,
+    `Generate the projection and what is actually holding them together.
+
+${overallScoreContext(free.coupleScore.overall)}
+
+${freeContext(free, p1, p2)}
+
+Return JSON:
+{
+  "ifNothingChanges": {
+    "sixMonths": "<2-3 sentences — what stays the same, and what starts to crack>",
+    "twelveMonths": "<2-3 sentences — where the tension has led by then>",
+    "turningPoint": "<2-3 sentences — what would have to happen to change the direction>",
+    "strain": "<low | moderate | high — how much strain the current pattern puts on them>"
+  },
+  "whatKeepsYouTogether": {
+    "mainForce": "<a few words naming the single strongest thing holding them together, e.g. 'Genuine emotional connection' or 'Shared history and comfort'>",
+    "alsoHolding": ["<a few words>", "<a few words>"],
+    "watchOutFor": "<1-2 sentences — the force that is holding them but should not be relied on: comfort, habit, fear of starting over, logistics>",
+    "isItEnough": "<2-3 sentences — the honest answer>"
   }
 }
 
-SCENARIO RULES:
-- The five compatibility scores should differ from each other — these are five different pressures, not one.
+PROJECTION RULES:
+- NEVER give a probability, a percentage or odds. No "37% chance of breaking up". You are reading fifteen quiz answers, and a number would imply a model that does not exist. The named strain level is the whole quantification.
+- These are projections from a current pattern, not predictions. "may", "likely", "if this holds". Never "you will".
+- Six months and twelve months must differ in kind, not just in degree — say what is actually different by the second one.
+- "turningPoint" is the way out and must be concrete enough to act on this month.
 
-7-DAY RESET RULES:
-- MUST be specific and personalized. Not "communicate more" or "spend quality time".
-- day1Question example: "Ask ${p2}: 'When we argue, what do you wish I did differently in the first 2 minutes?'"
-- day2Action example: "The next time ${p1} goes quiet after a disagreement, wait 10 minutes, then say: 'I'm not going anywhere. Take your time, but I'm here when you're ready.'"
-- day3Date should reference their dynamic and interests.
+WHAT KEEPS YOU TOGETHER RULES:
+- This is the honest one. If the answers suggest what holds them is comfort, habit or the cost of leaving rather than active affection, say so plainly — kindly, but say it.
+- "mainForce" is a label, not a sentence: it is printed as a headline.
+- "watchOutFor" must name a real force in THIS relationship, not a generic warning. If nothing worrying is holding them together, name the thing they are quietly taking for granted instead.
+- "isItEnough" is neither "you're fine" nor "you're doomed". Something like: "Your connection is real, but your unresolved conflict pattern may test it more seriously over time."`,
+  );
+}
 
-THE ANSWER RULES:
-- This is the emotional finale. It should read like a wise friend giving a real, honest summary.
-- Not overly positive, not doom. Grounded.
-- questionToDiscussTonight should be the single most impactful question for them.`,
+export function paidAnswerPrompt(input: TranscriptData, free: FreeSections): string {
+  const { p1, p2 } = partners(input);
+
+  return withAnswers(
+    input,
+    `Generate the finale — the last thing they read in the whole report.
+
+${overallScoreContext(free.coupleScore.overall)}
+
+${freeContext(free, p1, p2)}
+
+Return JSON:
+{
+  "theAnswer": {
+    "shortAnswer": "<the verdict in a few words, in the shape of 'Yes, but…' / 'Yes, and…' / 'It's complicated…' — pick the one their answers actually support>",
+    "verdict": "<2-3 sentences backing that up, referencing what the report has shown them>",
+    "biggestOpportunity": "<2-3 sentences — the thing that would most improve this relationship, specific to them>",
+    "conversationToHave": "<the one conversation they should actually have, stated as something they could say tonight — not a topic, a way in>"
+  }
+}
+
+RULES:
+- This is the emotional finale and the last thing they read. It has to land as a conclusion, not as a shrug. "It's complicated" is allowed only when the answers genuinely are.
+- Pull the threads together: their dynamic, their strongest and weakest areas, the pattern the rest of the report named. A finale that could be pasted onto another couple's report has failed.
+- Not overly positive, not doom. Grounded, and forward-looking — the last sentence should point at something they can do, not at how they scored.
+- "conversationToHave" must be specific enough to say out loud. BAD: "Talk about your feelings more." GOOD: "Ask ${p2}: 'When I go quiet after an argument, what do you think I'm doing?' — and let ${p1} answer second."`,
   );
 }

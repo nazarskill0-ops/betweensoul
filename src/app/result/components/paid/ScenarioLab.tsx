@@ -1,31 +1,26 @@
-import { SCENARIO_IDS, SCENARIO_LABELS, ScenarioAnalysis } from "@/lib/types";
-import { ScoreBar } from "../shared/ScoreBar";
-import { Insight, Prose } from "../shared/SectionCard";
+import { ScenarioAnalysis } from "@/lib/types";
 import { PaidSection, PreviewLines } from "../shared/LockedSection";
-import { SCENARIO_EMOJI } from "../shared/scale";
+import { RISK_BADGE, SCENARIO_EMOJI } from "../shared/scale";
 
 /**
- * Position 16 — the five scenarios, scored.
+ * Paid 6 — all five futures, one card each.
  *
- * Names sharp, scores hidden: the reader has already read the one-line teasers
- * upstairs, so what's missing here is the number and the advice.
+ * The free page rated three of these at a glance and shut the other two; this
+ * is the same five with the reasoning, and the badge carries the verdict so a
+ * reader skimming five cards still gets the answer from each one before
+ * deciding whether to read it.
+ *
+ * A named risk level rather than a compatibility score out of 100, which is
+ * what used to sit here. Five two-digit numbers invited arithmetic between
+ * scenarios that nothing in the analysis supports.
  */
 function Preview() {
   return (
-    <div className="space-y-4">
-      {SCENARIO_IDS.slice(0, 3).map((id) => (
-        <div key={id} className="rounded-xl bg-white p-4">
-          <div className="flex items-baseline justify-between">
-            <span className="text-[15px] font-semibold text-slate-900">
-              {SCENARIO_EMOJI[id]} {SCENARIO_LABELS[id]}
-            </span>
-            <span className="locked-preview text-lg font-bold text-slate-500">
-              72
-            </span>
-          </div>
-          <div className="locked-preview mt-3">
-            <PreviewLines count={2} />
-          </div>
+    <div className="space-y-3">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="rounded-xl border border-slate-100 bg-white p-4">
+          <div className="mb-3 h-3.5 w-1/3 rounded-full bg-slate-200" />
+          <PreviewLines count={2} />
         </div>
       ))}
     </div>
@@ -45,37 +40,44 @@ export function ScenarioLab({
     <PaidSection
       sectionId="scenarioLab"
       id={id}
-      title="Life Scenario Lab"
+      title="Would You Survive…?"
       emoji="🧪"
-      teaser="A compatibility score, the strengths, the risks and specific advice for each of the five scenarios."
+      teaser="Moving in, distance, money, a life change, a child — all five, rated and explained."
       data={data}
       generating={generating}
       preview={<Preview />}
-      blurPreview={false}
     >
-      {(lab) => (
-        <div className="space-y-8">
-          {lab.map((scenario) => (
-            <div key={scenario.id} className="space-y-3">
-              <ScoreBar
-                name={scenario.name}
-                emoji={SCENARIO_EMOJI[scenario.id]}
-                score={scenario.compatibility}
-              />
-              <Insight label="What would work" tone="green">
-                <Prose text={scenario.strength} />
-              </Insight>
-              <Insight label="The risk" tone="amber">
-                <Prose text={scenario.risk} />
-              </Insight>
-              <Insight label="What you'd struggle with">
-                <Prose text={scenario.whatYoudStruggleWith} />
-              </Insight>
-              <Insight label="What would help" tone="blue">
-                <Prose text={scenario.whatWouldHelp} />
-              </Insight>
-            </div>
-          ))}
+      {(scenarios) => (
+        <div className="space-y-3">
+          {scenarios.map((scenario) => {
+            const badge = RISK_BADGE[scenario.risk];
+            return (
+              <div
+                key={scenario.id}
+                className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-base font-bold text-slate-900">
+                    <span className="mr-1.5" aria-hidden>
+                      {SCENARIO_EMOJI[scenario.id]}
+                    </span>
+                    {scenario.name}
+                  </p>
+                  <span
+                    className={`shrink-0 rounded-full ${badge.chip} px-2.5 py-1 text-xs font-semibold ${badge.text}`}
+                  >
+                    <span aria-hidden className="mr-1">
+                      {badge.emoji}
+                    </span>
+                    {badge.label}
+                  </span>
+                </div>
+                <p className="mt-2 text-[15px] leading-relaxed text-slate-600">
+                  {scenario.analysis}
+                </p>
+              </div>
+            );
+          })}
         </div>
       )}
     </PaidSection>

@@ -29,13 +29,12 @@ function LockedRow({ teaser }: { teaser: string }) {
 
 export function UnsaidThings({
   data,
-  unlocked,
+  locked,
   p1Name,
   p2Name,
 }: {
   data: UnsaidThingsData;
-  /** The other two, once the report is unlocked. */
-  unlocked: { partner1: string; partner2: string } | undefined;
+  locked: boolean;
   p1Name: string;
   p2Name: string;
 }) {
@@ -63,26 +62,11 @@ export function UnsaidThings({
           </p>
         </li>
 
-        {unlocked ? (
-          <>
-            <li className="rounded-xl bg-[var(--color-p1-soft)] p-4">
-              <p className="text-xs font-semibold text-[var(--color-p1)]">
-                About {p1Name}
-              </p>
-              <p className="mt-1.5 text-[15px] leading-relaxed text-slate-700">
-                {unlocked.partner1}
-              </p>
-            </li>
-            <li className="rounded-xl bg-[var(--color-p2-soft)] p-4">
-              <p className="text-xs font-semibold text-[var(--color-p2)]">
-                About {p2Name}
-              </p>
-              <p className="mt-1.5 text-[15px] leading-relaxed text-slate-700">
-                {unlocked.partner2}
-              </p>
-            </li>
-          </>
-        ) : (
+        {/* Once the report is unlocked the other two are not shown here: the
+            paid section of the same name carries all three, each with the
+            reason it goes unsaid, and printing two of them twice on one page
+            would make the paid card read as a repeat of this one. */}
+        {locked && (
           <>
             <LockedRow teaser={data.lockedTeaser} />
             <LockedRow teaser="And the one neither of you has quite found the words for." />
@@ -90,7 +74,7 @@ export function UnsaidThings({
         )}
       </ul>
 
-      {!unlocked && (
+      {locked && (
         <PaywallHook
           question="Two more came out of your answers — one about each of you."
           cta="🔒 See all 3 things"

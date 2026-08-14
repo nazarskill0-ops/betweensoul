@@ -2,19 +2,19 @@ import { HAIKU, SONNET, generateJson } from "@/lib/claude";
 import { MOCK_MODE } from "@/lib/devMode";
 import { buildMockPaidSections } from "@/lib/mockAnalysis";
 import {
-  validateConflictFuture,
-  validateGapsView,
-  validateLoveAnchors,
-  validateScenarioResetAnswer,
-  validateXRay,
+  validateAnswer,
+  validateConflictLove,
+  validateFuture,
+  validateMirrorScenario,
+  validateUnsaidGaps,
 } from "@/lib/parseAnalysis";
 import {
   baseSystemPrompt,
-  paidConflictFuturePrompt,
-  paidGapsViewPrompt,
-  paidLoveAnchorsPrompt,
-  paidScenarioResetAnswerPrompt,
-  paidXRayPrompt,
+  paidAnswerPrompt,
+  paidConflictLovePrompt,
+  paidFuturePrompt,
+  paidMirrorScenarioPrompt,
+  paidUnsaidGapsPrompt,
 } from "@/lib/prompts";
 import {
   claimPaidGeneration,
@@ -22,16 +22,11 @@ import {
   releasePaidGeneration,
   savePaidSections,
 } from "@/lib/reportStore";
-import {
-  DimensionId,
-  FreeSections,
-  PaidSections,
-  TranscriptData,
-} from "@/lib/types";
+import { FreeSections, PaidSections, TranscriptData } from "@/lib/types";
 import { logPassCost } from "@/lib/usage";
 
 /**
- * The paid report — ten sections from five parallel Sonnet requests, run once
+ * The paid report — nine sections from five parallel Sonnet requests, run once
  * the transaction is confirmed.
  *
  * Sonnet rather than Haiku because this is the part that has to reason instead
@@ -48,14 +43,12 @@ import { logPassCost } from "@/lib/usage";
 /**
  * Token budgets, measured rather than guessed.
  *
- * Four of the five requests land between 950 and 2000 output tokens. The X-ray
- * is a different size of job — eight dimensions times four paragraphs each —
- * and truncated at 3000 on every attempt, taking the whole unlock down with it
- * after someone had already paid. It gets the room the section actually needs.
+ * A truncated response is a failed section for someone who has already paid,
+ * so each request gets more room than its measured ceiling rather than less.
+ * (A response that truncates anyway is retried at double — see claude.ts.)
  */
 const MAX_TOKENS = 3000;
-const XRAY_MAX_TOKENS = 8000;
-/** Five scenarios plus the reset plus the finale; measured at 2006. */
+/** Five scenarios of 3-4 sentences, plus the two facing bullet lists. */
 const SCENARIO_MAX_TOKENS = 4000;
 
 export async function generatePaidSections(
@@ -68,12 +61,6 @@ export async function generatePaidSections(
     input.partner2.name || "Partner 2",
   );
   const startedAt = Date.now();
-
-  // The X-ray reuses the radar's scores rather than scoring again, so the two
-  // halves of the report can't disagree about the same dimension.
-  const radarScores = Object.fromEntries(
-    free.radar.dimensions.map((d) => [d.id, d.score]),
-  ) as Record<DimensionId, number>;
 
   const request = <T>(
     label: string,
@@ -92,38 +79,33 @@ export async function generatePaidSections(
       validate,
     });
 
-  const [fullXRay, gapsView, conflictFuture, loveAnchors, scenarioResetAnswer] =
+  const [unsaidGaps, conflictLove, mirrorScenario, future, answer] =
     await Promise.all([
-      request(
-        "xray",
-        paidXRayPrompt(input, free),
-        (text) => validateXRay(text, radarScores),
-        XRAY_MAX_TOKENS,
-      ),
-      request("gaps", paidGapsViewPrompt(input, free), validateGapsView),
+      request("unsaid", paidUnsaidGapsPrompt(input, free), validateUnsaidGaps),
       request(
         "conflict",
-        paidConflictFuturePrompt(input, free),
-        validateConflictFuture,
+        paidConflictLovePrompt(input, free),
+        validateConflictLove,
       ),
-      request("love", paidLoveAnchorsPrompt(input, free), validateLoveAnchors),
       request(
         "scenarios",
-        paidScenarioResetAnswerPrompt(input, free),
-        validateScenarioResetAnswer,
+        paidMirrorScenarioPrompt(input, free),
+        validateMirrorScenario,
         SCENARIO_MAX_TOKENS,
       ),
+      request("future", paidFuturePrompt(input, free), validateFuture),
+      request("answer", paidAnswerPrompt(input, free), validateAnswer),
     ]);
 
   console.log(`[paid] all five requests done in ${Date.now() - startedAt}ms`);
   await logPassCost(reportId, "paid");
 
   return {
-    fullXRay,
-    ...gapsView,
-    ...conflictFuture,
-    ...loveAnchors,
-    ...scenarioResetAnswer,
+    ...unsaidGaps,
+    ...conflictLove,
+    ...mirrorScenario,
+    ...future,
+    ...answer,
   };
 }
 

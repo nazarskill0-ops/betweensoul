@@ -1,13 +1,18 @@
 import { TheAnswer as TheAnswerData } from "@/lib/types";
-import { Insight, Prose } from "../shared/SectionCard";
+import { Insight } from "../shared/SectionCard";
 import { PaidSection, PreviewLines } from "../shared/LockedSection";
 
 /**
- * Position 21 — the finale, and the target of the link under The Question.
+ * Paid 9 — the finale, and the last thing anyone reads.
  *
- * Its id is fixed so that link keeps working whether the section is locked or
- * unlocked; a reader who clicks through and lands on the padlock is exactly the
- * reader the section is for.
+ * The question is printed as the heading of the section's body and the verdict
+ * answers it in the first three words, because a reader who has scrolled a
+ * whole report deserves the answer before the reasoning. Everything after it
+ * points forward: the opportunity, then the sentence they could actually say
+ * tonight, which is where the report ends.
+ *
+ * The id is fixed so anything linking to `#the-answer` keeps working whether
+ * the section is locked or unlocked.
  */
 export function TheAnswer({
   id = "the-answer",
@@ -24,34 +29,44 @@ export function TheAnswer({
       id={id}
       title="The Answer"
       emoji="🕯️"
-      teaser="Our honest assessment of where your relationship stands — and three conversations that could change everything."
+      teaser="Whether you're actually a good match, said plainly — and the one conversation to have about it."
       data={data}
       generating={generating}
       preview={
         <div className="space-y-4">
-          <PreviewLines count={4} />
+          <PreviewLines count={3} />
           <PreviewLines count={2} />
         </div>
       }
     >
       {(answer) => (
-        <div className="space-y-4">
-          <Prose text={answer.synthesis} />
-          <Insight label="Talk about this tonight" tone="blue">
-            <p className="text-base font-semibold leading-snug text-slate-900">
-              &ldquo;{answer.questionToDiscussTonight}&rdquo;
+        <div className="space-y-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              So… are you actually a good match?
+            </p>
+            <p className="mt-2 text-2xl font-bold tracking-tight text-accent-500">
+              {answer.shortAnswer}
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-slate-600">
+              {answer.verdict}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-base font-bold text-slate-900">
+              Your biggest opportunity
+            </p>
+            <p className="mt-1 text-[15px] leading-relaxed text-slate-600">
+              {answer.biggestOpportunity}
+            </p>
+          </div>
+
+          <Insight label="The conversation to have" tone="blue">
+            <p className="text-[15px] leading-relaxed text-slate-700">
+              {answer.conversationToHave}
             </p>
           </Insight>
-          <ul className="space-y-2">
-            {answer.conversationStarters.map((starter) => (
-              <li
-                key={starter}
-                className="rounded-xl bg-slate-50 px-4 py-3 text-[15px] text-slate-700"
-              >
-                &ldquo;{starter}&rdquo;
-              </li>
-            ))}
-          </ul>
         </div>
       )}
     </PaidSection>

@@ -1,8 +1,15 @@
 import { FullPerceptionGap } from "@/lib/types";
-import { Insight, PartnerSplit, Prose } from "../shared/SectionCard";
+import { PartnerSplit } from "../shared/SectionCard";
 import { PaidSection, PreviewLines } from "../shared/LockedSection";
 
-/** Position 9 — every gap, with the conversation to have about each one. */
+/**
+ * Paid 2 — every gap, one numbered card each.
+ *
+ * The numbering is the point: the free page said how many were found, and the
+ * buyer should be able to count them off. Each card is a bordered block rather
+ * than a run of paragraphs so that five of them read as five findings instead
+ * of one long essay about disagreeing.
+ */
 function Preview() {
   return (
     <div className="space-y-4">
@@ -35,33 +42,42 @@ export function AllPerceptionGaps({
     <PaidSection
       sectionId="allPerceptionGaps"
       id={id}
-      title="All Perception Gaps"
+      title="Every Perception Gap"
       emoji="🪞"
-      teaser={`We found ${totalGapsFound} places where you see the relationship differently. Each gap includes what it may mean and a specific conversation to have about it.`}
+      teaser={`All ${totalGapsFound} places where you see the same relationship differently — with what each difference actually does to you.`}
       data={data}
       generating={generating}
       preview={<Preview />}
     >
       {(gaps) => (
-        <div className="space-y-8">
-          {gaps.map((gap) => (
-            <div key={gap.topic} className="space-y-3">
-              <p className="text-base font-semibold text-slate-900">{gap.topic}</p>
-              <PartnerSplit
-                p1Label={`${p1Name} feels:`}
-                p2Label={`${p2Name} feels:`}
-                p1Text={gap.partner1Said}
-                p2Text={gap.partner2Said}
-              />
-              <Prose text={gap.whatThisMayMean} />
-              <Insight label="Why it matters" tone="amber">
-                <Prose text={gap.whyItMatters} />
-              </Insight>
-              <Insight label="The conversation to have" tone="green">
-                <p className="text-[15px] leading-relaxed text-slate-700">
-                  &ldquo;{gap.conversationToHave}&rdquo;
+        <div className="space-y-4">
+          {gaps.map((gap, i) => (
+            <div
+              key={gap.topic}
+              className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:p-5"
+            >
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Gap #{i + 1}
+              </p>
+              <p className="mt-1 text-base font-bold text-slate-900">{gap.topic}</p>
+
+              <div className="mt-3">
+                <PartnerSplit
+                  p1Label={`${p1Name}:`}
+                  p2Label={`${p2Name}:`}
+                  p1Text={gap.partner1Said}
+                  p2Text={gap.partner2Said}
+                />
+              </div>
+
+              <div className="mt-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Why it matters
                 </p>
-              </Insight>
+                <p className="mt-1 text-[15px] leading-relaxed text-slate-600">
+                  {gap.whyItMatters}
+                </p>
+              </div>
             </div>
           ))}
         </div>

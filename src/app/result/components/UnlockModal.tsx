@@ -89,7 +89,7 @@ export function UnlockModal({
               Unlock Your Full Report
             </h2>
             <p className="mt-1 text-[15px] text-slate-500">
-              One payment — all 10 sections
+              One payment — all 9 sections
             </p>
           </div>
           <button
