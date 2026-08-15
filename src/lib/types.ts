@@ -76,25 +76,29 @@ export const SCENARIO_LABELS: Record<ScenarioId, string> = {
 };
 
 /**
- * The six slider questions. The model only supplies positions — the wording is
+ * The five slider questions. The model only supplies positions — the wording is
  * ours, so it can't drift between reports.
+ *
+ * Five distinct axes rather than six overlapping ones: the old list asked twice
+ * about who withdraws from a fight and twice about who softens first, which
+ * produced pairs of near-identical bars. These are five different things —
+ * needing, wanting, carrying, starting, planning.
  */
 export const SLIDER_QUESTIONS = [
   "Who needs more reassurance?",
   "Who needs more personal space?",
-  "Who is more likely to step away during conflict?",
-  "Who falls back into old habits faster?",
-  "Who makes the first move after a fight?",
-  "Who is more secretly romantic?",
+  "Who carries more of the emotional labor?",
+  "Who starts the hard conversations?",
+  "Who thinks further ahead about the future?",
 ] as const;
 
 /**
  * How many sliders the free report shows, taken off the front of the list.
  *
- * Six of them was a wall of near-identical bars that read as one long section
- * rather than as a thing worth screenshotting. Two comparisons make the point;
- * the rest are still generated because they cost nothing extra in the same
- * request and the paid half may yet want them.
+ * All five are generated in the same request either way; this is only how far
+ * down the free page reads before the padlock. The remaining three open with
+ * the report, which makes this the one place where paying adds to a section the
+ * free half already showed rather than starting a new one.
  */
 export const FREE_SLIDER_COUNT = 2;
 

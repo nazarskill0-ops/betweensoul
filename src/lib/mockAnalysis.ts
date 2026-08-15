@@ -3,6 +3,7 @@ import {
   DIMENSION_LABELS,
   FreeSections,
   PaidSections,
+  RiskLevel,
   SCENARIO_IDS,
   SCENARIO_LABELS,
   SLIDER_QUESTIONS,
@@ -15,7 +16,7 @@ import {
  *
  * Deliberately uneven: the scores spread from 41 to 88 and the sliders lean
  * both ways, so the page is exercised the way a real report would exercise it
- * rather than by eleven identical mid-range numbers.
+ * rather than by a set of identical mid-range numbers.
  */
 
 const DIMENSION_MOCK: Record<
@@ -76,7 +77,7 @@ export function buildMockFreeReport(p1: string, p2: string): FreeSections {
   const highest = ranked[0];
   const lowest = ranked[ranked.length - 1];
 
-  const sliderPositions = [32, 71, 78, 45, 24, 63];
+  const sliderPositions = [32, 71, 78, 45, 24];
   const scenarioMock: Record<
     (typeof SCENARIO_IDS)[number],
     { status: ScenarioStatus; teaser: string }
@@ -172,6 +173,37 @@ export function buildMockFreeReport(p1: string, p2: string): FreeSections {
   };
 }
 
+const SCENARIO_ANALYSIS_MOCK: Record<
+  (typeof SCENARIO_IDS)[number],
+  { risk: RiskLevel; analysis: (p1: string, p2: string) => string }
+> = {
+  living_together: {
+    risk: "moderate",
+    analysis: (p1, p2) =>
+      `The domestic side would go better than either of you expects: you agree about mess, money for groceries and who cooks, which is where most couples find their first real fight. What would not survive contact is solitude. ${p2} recovers alone and would have nowhere to do it, and ${p1} would read a closed door as a verdict rather than as a nap. The fix is unglamorous — one room, or one hour, that belongs to whoever needs it that evening.`,
+  },
+  long_distance: {
+    risk: "low",
+    analysis: (p1, p2) =>
+      `Distance mostly punishes couples who need proximity to feel secure, and neither of you does. Your answers about privacy and loyalty line up almost exactly, so the usual corrosion — checking, guessing, keeping score of replies — has nothing to feed on. What you would notice is the loss of the ordinary evenings you both named as the best part, which no amount of calling replaces. ${p1} would want to schedule contact and ${p2} would want it to stay spontaneous, and that is the negotiation, not trust.`,
+  },
+  financial_stress: {
+    risk: "high",
+    analysis: (p1, p2) =>
+      `Money is the one pressure you have never actually been tested by, and it arrives with a deadline attached — which is the specific thing your conflict style cannot absorb. ${p1} would want to decide tonight; ${p2} would want to think and come back to it, and the delay would read as avoidance rather than as caution. Within two rounds you would not be arguing about the expense but about who takes this seriously. Deciding in advance who has the final call on what size of spend would take most of the heat out of it.`,
+  },
+  major_life_change: {
+    risk: "moderate",
+    analysis: (p1, p2) =>
+      `A move or a new job would be decided the way things already get decided here: ${p1} proposes with momentum, ${p2} agrees rather than argues, and neither of you notices that agreeing was not the same as wanting. That works until the change costs something, at which point the one who adapted has a grievance with nowhere to sit. You are unusually good at the practical half — logistics, timelines, money — so the risk is not chaos. It is a quiet ledger that only opens two years later.`,
+  },
+  having_a_child: {
+    risk: "high",
+    analysis: (p1, p2) =>
+      `Sleep deprivation removes the one thing your pattern depends on: time. Right now a fight ends because ${p2} gets space and ${p1} waits until morning, and a newborn deletes both. The division of labour would probably be fair, judging by how you already split the invisible work, but fairness is not the thing that breaks here. It is that you would be having the same unfinished argument on four hours' sleep, several times a week, with no morning to reset it in.`,
+  },
+};
+
 export function buildMockPaidSections(p1: string, p2: string): PaidSections {
   return {
     unsaidThings: [
@@ -251,11 +283,16 @@ export function buildMockPaidSections(p1: string, p2: string): PaidSections {
       ],
       surprise: `Neither of you seems to notice you are doing the same thing — trying to protect this — in a language the other doesn't read as protection.`,
     },
-    scenarioLab: SCENARIO_IDS.map((id, i) => ({
+    /**
+     * Five genuinely different paragraphs, not one repeated — the fixture is
+     * how the section gets reviewed, and a fixture that says the same thing
+     * five times hides exactly the failure this section is most prone to.
+     */
+    scenarioLab: SCENARIO_IDS.map((id) => ({
       id,
       name: SCENARIO_LABELS[id],
-      risk: (["moderate", "low", "high", "moderate", "high"] as const)[i],
-      analysis: `Your trust means neither of you would be managing suspicion on top of the actual problem, which is more of a head start than most couples get. What would strain is the recovery pattern: ${p2} would need more time alone exactly when ${p1} would need more contact. Under sustained pressure there is less room to wait a fight out, and waiting it out is currently the whole method. Agreeing in advance on what a time-out looks like would take most of the risk out of this one.`,
+      risk: SCENARIO_ANALYSIS_MOCK[id].risk,
+      analysis: SCENARIO_ANALYSIS_MOCK[id].analysis(p1, p2),
     })),
     ifNothingChanges: {
       sixMonths: `Trust and humor hold — your answers suggest neither is conditional on things going well. The conflict pattern gets quieter rather than louder: ${p1} raises things slightly less often, and reads the drop in arguments as progress.`,

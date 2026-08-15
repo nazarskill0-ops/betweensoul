@@ -1,7 +1,6 @@
 import { Highlight } from "@/lib/types";
 import { SectionCard } from "../shared/SectionCard";
 import { PaywallHook } from "../shared/PaywallHook";
-import { DIMENSION_EMOJI, scoreBand } from "../shared/scale";
 
 /**
  * Position 4 — the best thing and the worst thing, one line each.
@@ -10,6 +9,9 @@ import { DIMENSION_EMOJI, scoreBand } from "../shared/scale";
  * apiece. Side by side they do more work and take a fifth of the room: the good
  * news and the bad news land in the same glance, which is the comparison the
  * reader is making anyway.
+ *
+ * The division of labour with the radar above: the radar says WHICH dimensions
+ * are top and bottom and what they scored; this says WHY, and nothing else.
  *
  * The hook at the bottom is the hinge of the whole page. Each half names a
  * pattern and stops before explaining it, and the X-ray that follows is the
@@ -27,7 +29,6 @@ function Half({
   data: Highlight;
   tone: "green" | "amber";
 }) {
-  const band = scoreBand(data.score);
   const panel =
     tone === "green"
       ? "bg-green-50/70 ring-green-500/10"
@@ -39,16 +40,11 @@ function Half({
       <p className={`text-xs font-semibold uppercase tracking-wide ${labelColor}`}>
         {badge} {label}
       </p>
-      <p className="mt-2 flex items-baseline gap-2">
-        <span className="text-[15px] font-bold text-slate-900">
-          <span className="mr-1.5" aria-hidden>
-            {DIMENSION_EMOJI[data.dimensionId]}
-          </span>
-          {data.dimensionName}
-        </span>
-        <span className={`text-lg font-bold ${band.text}`}>{data.score}</span>
-      </p>
-      <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
+      {/* No dimension name and no score. The radar directly above prints both,
+          in a callout that names the same two dimensions — repeating them here
+          spends the section's only two sentences on a label the reader read
+          four seconds ago. What is left is the part the radar cannot show. */}
+      <p className="mt-2 text-[15px] leading-relaxed text-slate-700">
         {data.explanation}
       </p>
     </div>

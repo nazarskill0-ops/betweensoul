@@ -220,26 +220,19 @@ ${dimensions}
     ]
   },
   "biggestStrength": {
-    "dimensionId": "<id of the highest-scoring dimension>",
-    "dimensionName": "<name>",
-    "score": <the score>,
-    "explanation": "<ONE sentence, under 25 words, saying why this is strong, referencing a specific answer>"
+    "explanation": "<ONE sentence, under 25 words, about the highest-scoring dimension — the specific thing in their answers that makes it strong>"
   },
   "biggestTension": {
-    "dimensionId": "<id of the lowest-scoring dimension>",
-    "dimensionName": "<name>",
-    "score": <the score>,
-    "explanation": "<ONE sentence, under 25 words, saying what the tension is, referencing a specific answer>"
+    "explanation": "<ONE sentence, under 25 words, about the lowest-scoring dimension — the specific thing in their answers that makes it the weak one>"
   }
 }
 
 IMPORTANT:
 - Return all 8 dimensions, with these exact ids, in this order.
-- biggestStrength.dimensionId MUST be the highest-scoring dimension from radar.
-- biggestTension.dimensionId MUST be the lowest-scoring dimension from radar.
 - The 8 scores must spread. If several dimensions land within a few points of each other, you have not read the answers closely enough.
 - Each dimension insight must be specific. BAD: "You communicate well." GOOD: "You both value honesty, but one of you prefers directness in a way the other may read as blunt."
-- The two explanations are one sentence each. Not two. They name the pattern; they do not explain it.`,
+- The two explanations are one sentence each. Not two.
+- Do NOT name the dimension or repeat its score in either explanation. The page prints the name and the number directly above, from the radar itself; these two sentences are the only place the reader is told what happened, so spending half of one on "Trust — 88" wastes it. Write the observation, not the label. BAD: "Trust is your strongest area at 88." GOOD: "Neither of you marked a single boundary question as a dealbreaker."`,
   );
 }
 
@@ -278,9 +271,10 @@ ${sliders}
 
 SLIDER RULES:
 - Position 0 means partner 1 fully matches the trait, 50 is even, 100 means partner 2 fully matches.
-- Return all six, in the order given, with the question text copied exactly.
+- Return all five, in the order given, with the question text copied exactly.
 - Do NOT make all sliders 50. Differentiate based on actual answers.
 - Use the full 15-85 range. Some sliders should be strongly skewed (20 or 80) if answers clearly show it.
+- These are five different axes and should not all lean the same way. If one partner comes out ahead on all five, check that the answers really say so rather than that you have formed a general impression of them.
 
 PERCEPTION GAP RULES:
 - Show exactly 1 gap in the "shown" array — the most impactful one.
@@ -362,7 +356,7 @@ SCENARIO RULES:
 - "status" is how the scenario reads at a glance: "good" if their answers suggest they would handle it better than most, "watch" if it would expose a difference they have not settled, "risk" if it lands directly on their weakest pattern.
 - Do not give all five the same status. Their answers are not uniformly good or bad, and five identical badges tell the reader nothing.
 - Each teaser is ONE sentence, under 20 words, specific to this couple — never a generic "this will be challenging". It sits alone on a single line with no paragraph under it.
-- Reference their actual dynamics. If they have trust concerns, the long-distance teaser should reflect that.`,
+- Each teaser must be about ITS OWN scenario and share no phrase with the other four: living together is about shared space and routines, long distance about absence and contact, financial stress about money under pressure, a major life change about who decides and who adapts, a child about sleep and divided labour. Five sentences that could be swapped between scenarios mean you wrote one sentence five times.`,
   );
 }
 
@@ -425,6 +419,7 @@ Return JSON:
 
 UNSAID THINGS RULES:
 - Exactly 3. The first is the one the free report already revealed — do not drop it and do not contradict it; this section is sold as "all 3 things" and a buyer who counts them will count.
+- The page labels that first one "already seen", so its "whyThisMatters" is the only new thing on the card and has to carry it: give the reason the line is true and what it costs them, not a paraphrase of the line itself.
 - The other two are the sharper ones. This is the section people paid for, so they must be worth the padlock: specific, grounded in real answers, and not something the reader could have guessed from the score alone.
 - Still inferences, never verdicts. "may", "seems to", "their answers suggest".
 - Do not distribute them evenly for the sake of it, but do not put all three on one partner unless the answers really do.
@@ -524,7 +519,15 @@ SCENARIO RULES:
 - "risk" is how hard this would be for THIS couple: "low" if their answers suggest they would handle it well, "moderate" if it would strain something, "high" if it lands on their weakest pattern.
 - The five ratings must not all be the same. Five different pressures do not produce one verdict.
 - The free report already rated three of them at a glance (status good/watch/risk above). Map to the same reading: good → low, watch → moderate, risk → high. You may deepen the reasoning, not reverse the verdict.
-- "analysis" is 3-4 sentences: what would work, what would break, and the specific friction — in that order, as one short paragraph.`,
+- "analysis" is 3-4 sentences: what would work, what would break, and the specific friction — in that order, as one short paragraph.
+
+EACH SCENARIO MUST BE COMPLETELY DIFFERENT FROM THE OTHER FOUR. Do not reuse a phrase, an example or an insight across two of them. These are five separate pressures and each one tests something the others do not — write about the pressure in front of you, not about the relationship in general:
+- living_together: shared space, routines, mess, time alone in the same rooms, who absorbs the other's habits.
+- long_distance: absence, trust at a distance, the effort of staying in contact, what happens to the parts of the relationship that need physical presence.
+- financial_stress: money decisions under pressure, who tightens and who spends, whether they can argue about it without it becoming about character.
+- major_life_change: a move, a job, a family upheaval — who decides, who adapts, and what happens to the one who adapted.
+- having_a_child: sleep, division of labour, becoming parents to each other's detriment, the recovery time neither of them would still have.
+If two of your five analyses could be swapped without a reader noticing, you have written one analysis five times and the section has failed.`,
   );
 }
 

@@ -12,6 +12,13 @@ import { PaidSection, PreviewLines } from "../shared/LockedSection";
  * One card each rather than a list, because these are three separate
  * observations about two different people — a bulleted run of them reads as one
  * verdict delivered in three parts.
+ *
+ * The first card is the one the free page already revealed, which the prompt
+ * requires and the section is sold on ("all 3"). Left unmarked it reads as the
+ * buyer's money going on something they had five minutes ago, so it is labelled
+ * as already seen and the other two are labelled new — the value in card one is
+ * the "why this matters" underneath it, which is genuinely new, and saying so
+ * out loud costs less than hoping nobody notices.
  */
 function Preview() {
   return (
@@ -54,6 +61,9 @@ export function UnsaidThingsPaid({
         <div className="space-y-3">
           {things.map((item, i) => {
             const aboutP1 = item.about === "partner1";
+            // Index 0 is the previewed one by contract with the prompt, which
+            // is told to lead with the line the free page already showed.
+            const previewed = i === 0;
             return (
               <div
                 key={i}
@@ -61,15 +71,28 @@ export function UnsaidThingsPaid({
                   aboutP1
                     ? "bg-[var(--color-p1-soft)]"
                     : "bg-[var(--color-p2-soft)]"
-                }`}
+                } ${previewed ? "opacity-90" : "ring-1 ring-accent-200"}`}
               >
-                <p
-                  className={`text-xs font-semibold uppercase tracking-wide ${
-                    aboutP1 ? "text-[var(--color-p1)]" : "text-[var(--color-p2)]"
-                  }`}
-                >
-                  About {aboutP1 ? p1Name : p2Name}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p
+                    className={`flex-1 text-xs font-semibold uppercase tracking-wide ${
+                      aboutP1
+                        ? "text-[var(--color-p1)]"
+                        : "text-[var(--color-p2)]"
+                    }`}
+                  >
+                    About {aboutP1 ? p1Name : p2Name}
+                  </p>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
+                      previewed
+                        ? "bg-white/70 text-slate-400"
+                        : "bg-accent-500 text-white"
+                    }`}
+                  >
+                    {previewed ? "Already seen" : "New"}
+                  </span>
+                </div>
                 <p className="mt-2 text-[15px] font-bold leading-relaxed text-slate-900">
                   {item.thing}
                 </p>

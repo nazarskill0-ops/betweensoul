@@ -455,6 +455,7 @@ function ResultContent() {
             <GreenFlagsWatchouts data={free.flags} />
             <YouVsPartner
               sliders={free.sliders}
+              locked={!unlocked}
               p1Name={p1Name}
               p2Name={p2Name}
             />
