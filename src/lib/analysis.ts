@@ -1,7 +1,7 @@
 import { HAIKU, generateJson } from "@/lib/claude";
 import {
   validateRadar,
-  validateScenariosQuestion,
+  validateScenarios,
   validateScoreDynamic,
   validateSlidersGaps,
   validateUnsaidFlags,
@@ -9,7 +9,7 @@ import {
 import {
   baseSystemPrompt,
   freeRadarPrompt,
-  freeScenariosQuestionPrompt,
+  freeScenariosPrompt,
   freeScoreDynamicPrompt,
   freeSlidersGapsPrompt,
   freeUnsaidFlagsPrompt,
@@ -18,13 +18,13 @@ import { FreeSections, TranscriptData } from "@/lib/types";
 import { logPassCost } from "@/lib/usage";
 
 /**
- * The free report — eleven sections from five Haiku requests, fired the moment
+ * The free report — nine sections from five Haiku requests, fired the moment
  * the test is submitted.
  *
- * Five rather than one because eleven sections do not fit in a single 2000
- * token response, and rather than eleven because sections that must agree with
- * each other have to be written together: the radar and the strength/tension
- * drawn from it, the sliders and the perception gap that read off the same
+ * Five rather than one because the sections do not fit in a single 2000 token
+ * response, and rather than nine because sections that must agree with each
+ * other have to be written together: the radar and the strength/tension drawn
+ * from it, the sliders and the perception gap that read off the same
  * comparisons.
  *
  * The score goes first and the other four run concurrently behind it. That
@@ -85,7 +85,7 @@ export async function generateFreeReport(
     `[free] scored ${overall}/100 in ${Date.now() - startedAt}ms; four more requests to go`,
   );
 
-  const [radar, slidersGaps, unsaidFlags, scenariosQuestion] = await Promise.all([
+  const [radar, slidersGaps, unsaidFlags, scenarios] = await Promise.all([
     request(
       "radar",
       freeRadarPrompt(input, overall),
@@ -94,11 +94,7 @@ export async function generateFreeReport(
     ),
     request("sliders", freeSlidersGapsPrompt(input, overall), validateSlidersGaps),
     request("unsaid", freeUnsaidFlagsPrompt(input, overall), validateUnsaidFlags),
-    request(
-      "scenarios",
-      freeScenariosQuestionPrompt(input, overall),
-      validateScenariosQuestion,
-    ),
+    request("scenarios", freeScenariosPrompt(input, overall), validateScenarios),
   ]);
 
   console.log(`[free] all five requests done in ${Date.now() - startedAt}ms`);
@@ -109,6 +105,6 @@ export async function generateFreeReport(
     ...radar,
     ...slidersGaps,
     ...unsaidFlags,
-    ...scenariosQuestion,
+    ...scenarios,
   };
 }

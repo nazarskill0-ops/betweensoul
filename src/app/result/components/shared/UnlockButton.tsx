@@ -37,7 +37,7 @@ interface UnlockState {
 /**
  * There is one purchase on this page, and everything that offers it — ten
  * blurred sections, the bar at the bottom, the CTA at the end — opens the same
- * modal. Threading that through ten sections as props would be noise, so it
+ * modal. Threading that through nine sections as props would be noise, so it
  * rides on context.
  */
 const UnlockContext = createContext<UnlockState>({

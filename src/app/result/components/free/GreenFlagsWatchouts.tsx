@@ -2,44 +2,49 @@ import { Flags } from "@/lib/types";
 import { SectionCard } from "../shared/SectionCard";
 
 /**
- * Position 13 — the flags.
+ * Position 5 — the flags, as chips.
  *
- * The watch-outs get the same visual weight as the green flags, not a warning
- * treatment: they are patterns to notice, and the report says so in as many
- * words. Styling them as alarms would contradict the copy.
+ * Two bulleted columns read as a list to be worked through; chips read as a
+ * verdict to be glanced at, which is what these are. Nothing explains them,
+ * here or later — each line has to stand up on its own, and the prompt is
+ * written to that.
+ *
+ * The watch-outs are amber and stop there. There is no red tier, on purpose:
+ * the analysis prompts are forbidden from using the words "red flag" about a
+ * fifteen-question quiz, and a chip that looks like an alarm makes the claim
+ * the copy is careful not to.
  */
+function Chip({ tone, children }: { tone: "green" | "amber"; children: string }) {
+  const style =
+    tone === "green"
+      ? "bg-green-50 text-green-800 ring-green-600/10"
+      : "bg-amber-50 text-amber-800 ring-amber-600/10";
+
+  return (
+    <li
+      className={`inline-flex items-start gap-1.5 rounded-full ${style} px-3.5 py-1.5 text-sm font-medium ring-1`}
+    >
+      <span aria-hidden>{tone === "green" ? "🟢" : "🟡"}</span>
+      {children}
+    </li>
+  );
+}
+
 export function GreenFlagsWatchouts({ data }: { data: Flags }) {
   return (
     <SectionCard title="Green Flags & Watch-outs" emoji="🚩">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
-            Green flags
-          </p>
-          <ul className="mt-3 space-y-2">
-            {data.greenFlags.map((flag) => (
-              <li key={flag} className="flex gap-2.5 text-[15px] text-slate-700">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-green-500" />
-                {flag}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
-            Worth watching
-          </p>
-          <ul className="mt-3 space-y-2">
-            {data.watchOuts.map((item) => (
-              <li key={item} className="flex gap-2.5 text-[15px] text-slate-700">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <ul className="flex flex-wrap gap-2">
+        {data.greenFlags.map((flag) => (
+          <Chip key={flag} tone="green">
+            {flag}
+          </Chip>
+        ))}
+        {data.watchOuts.map((item) => (
+          <Chip key={item} tone="amber">
+            {item}
+          </Chip>
+        ))}
+      </ul>
     </SectionCard>
   );
 }

@@ -1,32 +1,30 @@
 import {
-  BiggestStrength,
-  BiggestTension,
   ConflictFingerprint,
   CoupleDynamic,
   CoupleScore,
   DIMENSION_IDS,
   DIMENSION_LABELS,
-  DimensionId,
   Flags,
   FullPerceptionGap,
+  Highlight,
   HowYouSeeEachOther,
   IfNothingChanges,
   LoveStyles,
+  PartnerRef,
   PerceptionGap,
   Radar,
+  RiskLevel,
   SCENARIO_IDS,
   SCENARIO_LABELS,
   SLIDER_QUESTIONS,
   ScenarioAnalysis,
-  ScenarioId,
   ScenarioPreview,
-  SevenDayReset,
+  ScenarioStatus,
   Slider,
   TheAnswer,
-  TheQuestion,
+  UnsaidThingFull,
   UnsaidThings,
   WhatKeepsYouTogether,
-  XRayDimension,
 } from "@/lib/types";
 
 /**
@@ -341,8 +339,6 @@ export function validateScoreDynamic(raw: string): ScoreDynamicResult {
     coupleDynamic: requireStrings(dynamic, "coupleDynamic", [
       "name",
       "description",
-      "whatWorks",
-      "whereItGetsDifficult",
     ] as const),
   };
 }
@@ -351,8 +347,8 @@ export function validateScoreDynamic(raw: string): ScoreDynamicResult {
 
 export interface RadarResult {
   radar: Radar;
-  biggestStrength: BiggestStrength;
-  biggestTension: BiggestTension;
+  biggestStrength: Highlight;
+  biggestTension: Highlight;
 }
 
 export function validateRadar(raw: string): RadarResult {
@@ -373,10 +369,6 @@ export function validateRadar(raw: string): RadarResult {
     ...requireStrings(aligned[i], `radar.dimensions.${id}`, ["insight"] as const),
   }));
 
-  const { interconnection } = requireStrings(radarRaw, "radar", [
-    "interconnection",
-  ] as const);
-
   // The model is asked to point strength and tension at its own highest and
   // lowest dimension and does not reliably do it, so the extremes are taken
   // from the scores themselves. The prose stays; only the target is corrected.
@@ -388,15 +380,12 @@ export function validateRadar(raw: string): RadarResult {
   const tensionRaw = requireObject(data, "biggestTension");
 
   return {
-    radar: { dimensions, interconnection },
+    radar: { dimensions },
     biggestStrength: {
       dimensionId: highest.id,
       dimensionName: highest.name,
       score: highest.score,
-      ...requireStrings(strengthRaw, "biggestStrength", [
-        "explanation",
-        "whyItMatters",
-      ] as const),
+      ...requireStrings(strengthRaw, "biggestStrength", ["explanation"] as const),
     },
     biggestTension: {
       dimensionId: lowest.id,
@@ -460,124 +449,134 @@ export interface UnsaidFlagsResult {
   flags: Flags;
 }
 
-function unsaidSide(source: Obj, field: string) {
-  const side = requireObject(source, field);
-  const shown = requireTextList(side, "shown", 1).slice(0, 2);
-  return { shown, hasLocked: true };
-}
-
 export function validateUnsaidFlags(raw: string): UnsaidFlagsResult {
   const data = parseJsonObject(raw);
 
   const unsaidRaw = requireObject(data, "unsaidThings");
   const flagsRaw = requireObject(data, "flags");
 
+  const text = requireStrings(unsaidRaw, "unsaidThings", [
+    "shown",
+    "lockedTeaser",
+  ] as const);
+
+  // "partner2", "Partner 2", the name itself with a 2 in it — anything else
+  // falls to partner 1. This only picks which colour the line is shown in, and
+  // the wrong colour is a better outcome than a failed report.
+  const about = String(unsaidRaw.about ?? "").includes("2")
+    ? "partner2"
+    : "partner1";
+
   return {
-    unsaidThings: {
-      partner1: unsaidSide(unsaidRaw, "partner1"),
-      partner2: unsaidSide(unsaidRaw, "partner2"),
-    },
+    unsaidThings: { about, ...text },
+    // Capped as well as floored: the chips are a glance, and nine of them is a
+    // list again. Four and three is the most the section can carry.
     flags: {
-      greenFlags: requireTextList(flagsRaw, "greenFlags", 3).slice(0, 5),
+      greenFlags: requireTextList(flagsRaw, "greenFlags", 3).slice(0, 4),
       watchOuts: requireTextList(flagsRaw, "watchOuts", 1).slice(0, 3),
     },
   };
 }
 
-/* --------------------- free 5: scenarios + the question ------------------- */
+/* ----------------------------- free 5: scenarios -------------------------- */
 
-export interface ScenariosQuestionResult {
+export interface ScenariosResult {
   scenarios: ScenarioPreview[];
-  theQuestion: TheQuestion;
 }
 
-export function validateScenariosQuestion(raw: string): ScenariosQuestionResult {
+/** Unrecognised statuses read as "watch" — the badge that claims the least. */
+function scenarioStatus(value: unknown): ScenarioStatus {
+  const normalized = normalizeId(value);
+  if (normalized === "good") return "good";
+  if (normalized === "risk") return "risk";
+  return "watch";
+}
+
+export function validateScenarios(raw: string): ScenariosResult {
   const data = parseJsonObject(raw);
 
   const aligned = alignToIds(requireArray(data, "scenarios"), SCENARIO_IDS, "scenarios");
   const scenarios = SCENARIO_IDS.map((id, i) => ({
     id,
     name: SCENARIO_LABELS[id],
+    status: scenarioStatus(aligned[i].status),
     ...requireStrings(aligned[i], `scenarios.${id}`, ["teaser"] as const),
   }));
 
-  return {
-    scenarios,
-    theQuestion: requireStrings(requireObject(data, "theQuestion"), "theQuestion", [
-      "question",
-      "hook",
-    ] as const),
-  };
+  return { scenarios };
 }
 
-/* ---------------------------- paid 1: full x-ray -------------------------- */
+/* -------------------------- paid: shared helpers -------------------------- */
 
-const XRAY_FIELDS = [
-  "whatWeSee",
-  "whatAnswersSuggest",
-  "whereYouDiffer",
-  "whatCouldHelp",
-] as const;
-
-/** Scores come from the radar the free report already showed, never re-read. */
-export function validateXRay(
-  raw: string,
-  radarScores: Record<DimensionId, number>,
-): XRayDimension[] {
-  const data = parseJsonObject(raw);
-  const aligned = alignToIds(requireArray(data, "fullXRay"), DIMENSION_IDS, "fullXRay");
-
-  return DIMENSION_IDS.map((id, i) => ({
-    dimensionId: id,
-    dimensionName: DIMENSION_LABELS[id],
-    score: radarScores[id],
-    ...requireStrings(aligned[i], `fullXRay.${id}`, XRAY_FIELDS),
-  }));
+/** Anything that isn't a recognised level reads as the middle one. */
+function riskLevel(value: unknown): RiskLevel {
+  const normalized = normalizeId(value);
+  if (normalized === "low") return "low";
+  if (normalized === "high") return "high";
+  return "moderate";
 }
 
-/* ------------------ paid 2: all gaps + how you see each other ------------- */
+/** Same rule as the free half: only an explicit 2 means partner 2. */
+function partnerRef(value: unknown): PartnerRef {
+  return String(value ?? "").includes("2") ? "partner2" : "partner1";
+}
 
-export interface GapsViewResult {
+function requireObjectAt(source: unknown, field: string): Obj {
+  if (typeof source !== "object" || source === null || Array.isArray(source)) {
+    fail(`${field} is not an object`);
+  }
+  return source as Obj;
+}
+
+/* ------------------ paid 1: unsaid things + every gap --------------------- */
+
+export interface UnsaidGapsResult {
+  unsaidThings: UnsaidThingFull[];
   allPerceptionGaps: FullPerceptionGap[];
-  howYouSeeEachOther: HowYouSeeEachOther;
 }
 
-export function validateGapsView(raw: string): GapsViewResult {
+export function validateUnsaidGaps(raw: string): UnsaidGapsResult {
   const data = parseJsonObject(raw);
 
-  const allPerceptionGaps = requireArray(data, "allPerceptionGaps").map((entry, i) => {
-    const item = entry as Obj;
-    if (typeof item !== "object" || item === null) {
-      fail(`allPerceptionGaps[${i}] is not an object`);
-    }
+  /**
+   * Three is what the section is sold as, and the count is in its own title.
+   * A run that returns four is trimmed; one that returns two fails, because
+   * showing a buyer two things under a heading promising three is the one
+   * outcome worth refusing — the caller retries, then falls back to Haiku.
+   */
+  const things = requireArray(data, "unsaidThings").map((entry, i) => {
+    const item = requireObjectAt(entry, `unsaidThings[${i}]`);
+    return {
+      about: partnerRef(item.about),
+      ...requireStrings(item, `unsaidThings[${i}]`, [
+        "thing",
+        "whyThisMatters",
+      ] as const),
+    };
+  });
+  if (things.length < 3) fail("unsaidThings needs 3 items");
+
+  const gaps = requireArray(data, "allPerceptionGaps").map((entry, i) => {
+    const item = requireObjectAt(entry, `allPerceptionGaps[${i}]`);
     return requireStrings(item, `allPerceptionGaps[${i}]`, [
       "topic",
       "partner1Said",
       "partner2Said",
-      "whatThisMayMean",
       "whyItMatters",
-      "conversationToHave",
     ] as const);
   });
 
-  return {
-    allPerceptionGaps,
-    howYouSeeEachOther: requireStrings(
-      requireObject(data, "howYouSeeEachOther"),
-      "howYouSeeEachOther",
-      ["herViewOfHim", "hisViewOfHer", "whatBothMiss"] as const,
-    ),
-  };
+  return { unsaidThings: things.slice(0, 3), allPerceptionGaps: gaps };
 }
 
-/* ----------------- paid 3: conflict fingerprint + projection -------------- */
+/* ---------------- paid 2: conflict fingerprint + love styles -------------- */
 
-export interface ConflictFutureResult {
+export interface ConflictLoveResult {
   conflictFingerprint: ConflictFingerprint;
-  ifNothingChanges: IfNothingChanges;
+  loveStyles: LoveStyles;
 }
 
-export function validateConflictFuture(raw: string): ConflictFutureResult {
+export function validateConflictLove(raw: string): ConflictLoveResult {
   const data = parseJsonObject(raw);
 
   return {
@@ -590,96 +589,111 @@ export function validateConflictFuture(raw: string): ConflictFutureResult {
         "escalation",
         "withdrawal",
         "aftermath",
-        "pattern",
-        "insight",
+        "repeat",
       ] as const,
     ),
-    ifNothingChanges: requireStrings(
-      requireObject(data, "ifNothingChanges"),
-      "ifNothingChanges",
-      ["likelyStrengths", "pressurePoints", "whatBecomesMoreImportant"] as const,
-    ),
-  };
-}
-
-/* ------------------- paid 4: love styles + what keeps you ----------------- */
-
-export interface LoveAnchorsResult {
-  loveStyles: LoveStyles;
-  whatKeepsYouTogether: WhatKeepsYouTogether;
-  unsaidThingsUnlocked: { partner1: string; partner2: string };
-}
-
-export function validateLoveAnchors(raw: string): LoveAnchorsResult {
-  const data = parseJsonObject(raw);
-
-  const keepsRaw = requireObject(data, "whatKeepsYouTogether");
-
-  return {
     loveStyles: requireStrings(requireObject(data, "loveStyles"), "loveStyles", [
       "partner1Shows",
       "partner1FeelsLovedBy",
+      "partner1Gap",
       "partner2Shows",
       "partner2FeelsLovedBy",
-      "mismatch",
+      "partner2Gap",
     ] as const),
-    whatKeepsYouTogether: {
-      anchors: requireTextList(keepsRaw, "anchors", 3).slice(0, 5),
-      ...requireStrings(keepsRaw, "whatKeepsYouTogether", [
-        "evidence",
-        "isItEnough",
-      ] as const),
-    },
-    unsaidThingsUnlocked: requireStrings(
-      requireObject(data, "unsaidThingsUnlocked"),
-      "unsaidThingsUnlocked",
-      ["partner1", "partner2"] as const,
-    ),
   };
 }
 
-/* ---------------- paid 5: scenario lab + reset + the answer --------------- */
+/* ------------------ paid 3: how you see each other + scenarios ------------ */
 
-export interface ScenarioResetAnswerResult {
+export interface MirrorScenarioResult {
+  howYouSeeEachOther: HowYouSeeEachOther;
   scenarioLab: ScenarioAnalysis[];
-  sevenDayReset: SevenDayReset;
+}
+
+export function validateMirrorScenario(raw: string): MirrorScenarioResult {
+  const data = parseJsonObject(raw);
+
+  const mirror = requireObject(data, "howYouSeeEachOther");
+
+  const aligned = alignToIds(
+    requireArray(data, "scenarioLab"),
+    SCENARIO_IDS,
+    "scenarioLab",
+  );
+
+  return {
+    howYouSeeEachOther: {
+      // Three lines is the design; a fourth is dropped rather than allowed to
+      // turn a facing pair of bullet lists into an uneven one.
+      partner1SeesPartner2: requireTextList(
+        mirror,
+        "partner1SeesPartner2",
+        2,
+      ).slice(0, 3),
+      partner2SeesPartner1: requireTextList(
+        mirror,
+        "partner2SeesPartner1",
+        2,
+      ).slice(0, 3),
+      ...requireStrings(mirror, "howYouSeeEachOther", ["surprise"] as const),
+    },
+    scenarioLab: SCENARIO_IDS.map((id, i) => ({
+      id,
+      name: SCENARIO_LABELS[id],
+      risk: riskLevel(aligned[i].risk),
+      ...requireStrings(aligned[i], `scenarioLab.${id}`, ["analysis"] as const),
+    })),
+  };
+}
+
+/* -------------- paid 4: projection + what keeps you together -------------- */
+
+export interface FutureResult {
+  ifNothingChanges: IfNothingChanges;
+  whatKeepsYouTogether: WhatKeepsYouTogether;
+}
+
+export function validateFuture(raw: string): FutureResult {
+  const data = parseJsonObject(raw);
+
+  const projection = requireObject(data, "ifNothingChanges");
+  const anchors = requireObject(data, "whatKeepsYouTogether");
+
+  return {
+    ifNothingChanges: {
+      ...requireStrings(projection, "ifNothingChanges", [
+        "sixMonths",
+        "twelveMonths",
+        "turningPoint",
+      ] as const),
+      strain: riskLevel(projection.strain),
+    },
+    whatKeepsYouTogether: {
+      ...requireStrings(anchors, "whatKeepsYouTogether", [
+        "mainForce",
+        "watchOutFor",
+        "isItEnough",
+      ] as const),
+      alsoHolding: requireTextList(anchors, "alsoHolding", 1).slice(0, 3),
+    },
+  };
+}
+
+/* ------------------------------ paid 5: the answer ------------------------ */
+
+export interface AnswerResult {
   theAnswer: TheAnswer;
 }
 
-export function validateScenarioResetAnswer(raw: string): ScenarioResetAnswerResult {
+export function validateAnswer(raw: string): AnswerResult {
   const data = parseJsonObject(raw);
 
-  const aligned = alignToIds(requireArray(data, "scenarioLab"), SCENARIO_IDS, "scenarioLab");
-  const scenarioLab = SCENARIO_IDS.map((id: ScenarioId, i) => ({
-    id,
-    name: SCENARIO_LABELS[id],
-    compatibility: requireScore(aligned[i], `scenarioLab.${id}`, "compatibility"),
-    ...requireStrings(aligned[i], `scenarioLab.${id}`, [
-      "strength",
-      "risk",
-      "whatYoudStruggleWith",
-      "whatWouldHelp",
-    ] as const),
-  }));
-
-  const answerRaw = requireObject(data, "theAnswer");
-
   return {
-    scenarioLab,
-    sevenDayReset: requireStrings(
-      requireObject(data, "sevenDayReset"),
-      "sevenDayReset",
-      ["day1Question", "day2Action", "day3Date", "whyThisWorks"] as const,
-    ),
-    theAnswer: {
-      ...requireStrings(answerRaw, "theAnswer", [
-        "synthesis",
-        "questionToDiscussTonight",
-      ] as const),
-      conversationStarters: requireTextList(answerRaw, "conversationStarters", 1).slice(
-        0,
-        3,
-      ),
-    },
+    theAnswer: requireStrings(requireObject(data, "theAnswer"), "theAnswer", [
+      "shortAnswer",
+      "verdict",
+      "biggestOpportunity",
+      "conversationToHave",
+    ] as const),
   };
 }

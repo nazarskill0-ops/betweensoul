@@ -12,16 +12,14 @@ import { partnerPaletteStyle } from "@/lib/partnerColors";
 import { CoupleScore } from "./components/free/CoupleScore";
 import { CoupleDynamic } from "./components/free/CoupleDynamic";
 import { RelationshipRadar } from "./components/free/RelationshipRadar";
-import { BiggestStrength } from "./components/free/BiggestStrength";
-import { BiggestTension } from "./components/free/BiggestTension";
+import { SuperpowerPressurePoint } from "./components/free/SuperpowerPressurePoint";
+import { GreenFlagsWatchouts } from "./components/free/GreenFlagsWatchouts";
 import { YouVsPartner } from "./components/free/YouVsPartner";
+import { ScenarioPreview } from "./components/free/ScenarioPreview";
 import { PerceptionGapFree } from "./components/free/PerceptionGapFree";
 import { UnsaidThings } from "./components/free/UnsaidThings";
-import { GreenFlagsWatchouts } from "./components/free/GreenFlagsWatchouts";
-import { ScenarioPreview } from "./components/free/ScenarioPreview";
-import { TheQuestion } from "./components/free/TheQuestion";
 
-import { FullXRay } from "./components/paid/FullXRay";
+import { UnsaidThingsPaid } from "./components/paid/UnsaidThingsPaid";
 import { AllPerceptionGaps } from "./components/paid/AllPerceptionGaps";
 import { ConflictFingerprint } from "./components/paid/ConflictFingerprint";
 import { LoveStyles } from "./components/paid/LoveStyles";
@@ -29,7 +27,6 @@ import { HowYouSeeEachOther } from "./components/paid/HowYouSeeEachOther";
 import { ScenarioLab } from "./components/paid/ScenarioLab";
 import { IfNothingChanges } from "./components/paid/IfNothingChanges";
 import { WhatKeepsYouTogether } from "./components/paid/WhatKeepsYouTogether";
-import { SevenDayReset } from "./components/paid/SevenDayReset";
 import { TheAnswer } from "./components/paid/TheAnswer";
 
 import { PaywallCTA } from "./components/PaywallCTA";
@@ -45,9 +42,9 @@ const MAX_POLLS = 120;
  *
  * This was a minute, and a minute is wrong: that figure came from the free
  * half, which is five short Haiku requests. The paid half is five Sonnet ones,
- * the largest of them an eight-thousand-token X-ray, with a Haiku retry behind
- * any that fail — routinely longer than a minute, which is why the poll above
- * is allowed four of them and the route itself is given five.
+ * with a Haiku retry behind any that fail — routinely longer than a minute,
+ * which is why the poll above is allowed four of them and the route itself is
+ * given five.
  *
  * So buyers were being shown "something went wrong" while their report was
  * still being written, and then watching it arrive anyway. It now matches the
@@ -114,7 +111,7 @@ function ResultContent() {
   const unlockRequested = useRef(false);
   /**
    * Generation didn't finish in time. The payment is fine — this is only about
-   * the ten sections behind it — so the wording never questions the purchase.
+   * the nine sections behind it — so the wording never questions the purchase.
    */
   const [unlockFailed, setUnlockFailed] = useState(false);
   /** Bumped by the retry button, to restart a poll chain that has stopped. */
@@ -404,7 +401,7 @@ function ResultContent() {
             )}
 
             {/*
-              The payment went through; only the writing of the ten sections
+              The payment went through; only the writing of the nine sections
               didn't. Saying so plainly matters — a buyer who reads this as a
               failed charge goes looking for their money instead of tapping the
               one button that fixes it.
@@ -427,44 +424,68 @@ function ResultContent() {
               </div>
             )}
 
-            {/* Block 1 — first impression, no interruptions */}
+            {/*
+              Nine free sections, then nine paid ones, each half in its own
+              fixed order.
+
+              The two halves used to be interleaved, each padlock sitting under
+              the free section that raised its question. That stopped being
+              possible when both orders were fixed independently: the paid half
+              now opens with the three unsaid things, which answers the *last*
+              of the nine free sections, so pairing them off would have meant
+              breaking one of the two orders.
+
+              The seam works in its favour. The free half ends by showing one of
+              three things and blurring two; the paid half begins by naming all
+              three. A reader arrives at the first padlock having just been told
+              exactly what is behind it.
+
+              Free 1-3 — first impression, no interruptions and nothing to buy.
+            */}
             <CoupleScore data={free.coupleScore} p1Name={p1Name} p2Name={p2Name} />
             <CoupleDynamic data={free.coupleDynamic} />
             <RelationshipRadar data={free.radar} />
 
-            {/* Block 2 — the good news, the problem, then the explanation */}
-            <BiggestStrength data={free.biggestStrength} />
-            <BiggestTension data={free.biggestTension} />
-            <FullXRay
-              id="full-xray"
-              data={paidSections?.fullXRay}
-              generating={generating}
+            {/* Free 4-6 — the pattern named, the flags, the comparison */}
+            <SuperpowerPressurePoint
+              strength={free.biggestStrength}
+              tension={free.biggestTension}
+              locked={!unlocked}
             />
-
-            {/* Block 3 — the shareable stuff */}
+            <GreenFlagsWatchouts data={free.flags} />
             <YouVsPartner
               sliders={free.sliders}
+              locked={!unlocked}
               p1Name={p1Name}
               p2Name={p2Name}
             />
+
+            {/* Free 7-9 — three futures of five, one gap, one of three things */}
+            <ScenarioPreview scenarios={free.scenarios} locked={!unlocked} />
             <PerceptionGapFree
               data={free.perceptionGap}
               p1Name={p1Name}
               p2Name={p2Name}
               locked={!unlocked}
             />
-            <AllPerceptionGaps
-              data={paidSections?.allPerceptionGaps}
-              generating={generating}
-              totalGapsFound={free.perceptionGap.totalGapsFound}
+            <UnsaidThings
+              data={free.unsaidThings}
+              locked={!unlocked}
               p1Name={p1Name}
               p2Name={p2Name}
             />
 
-            {/* Block 4 — getting personal */}
-            <UnsaidThings
-              data={free.unsaidThings}
-              unlocked={paidSections?.unsaidThingsUnlocked}
+            {/* Paid 1-9 */}
+            <UnsaidThingsPaid
+              data={paidSections?.unsaidThings}
+              generating={generating}
+              p1Name={p1Name}
+              p2Name={p2Name}
+            />
+            <AllPerceptionGaps
+              data={paidSections?.allPerceptionGaps}
+              generating={generating}
+              totalGapsFound={free.perceptionGap.totalGapsFound}
               p1Name={p1Name}
               p2Name={p2Name}
             />
@@ -478,18 +499,12 @@ function ResultContent() {
               p1Name={p1Name}
               p2Name={p2Name}
             />
-
-            {/* Block 5 — flags and perspectives */}
-            <GreenFlagsWatchouts data={free.flags} />
             <HowYouSeeEachOther
               data={paidSections?.howYouSeeEachOther}
               generating={generating}
               p1Name={p1Name}
               p2Name={p2Name}
             />
-
-            {/* Block 6 — the future */}
-            <ScenarioPreview scenarios={free.scenarios} locked={!unlocked} />
             <ScenarioLab data={paidSections?.scenarioLab} generating={generating} />
             <IfNothingChanges
               data={paidSections?.ifNothingChanges}
@@ -497,13 +512,6 @@ function ResultContent() {
             />
             <WhatKeepsYouTogether
               data={paidSections?.whatKeepsYouTogether}
-              generating={generating}
-            />
-
-            {/* Block 7 — the finale */}
-            <TheQuestion data={free.theQuestion} locked={!unlocked} />
-            <SevenDayReset
-              data={paidSections?.sevenDayReset}
               generating={generating}
             />
             <TheAnswer data={paidSections?.theAnswer} generating={generating} />

@@ -1,12 +1,22 @@
 import { PerceptionGap } from "@/lib/types";
-import { Insight, Prose, SectionCard } from "../shared/SectionCard";
+import { Insight, SectionCard } from "../shared/SectionCard";
+import { PaywallHook } from "../shared/PaywallHook";
 
 /**
  * Position 8 — one gap, shown in full.
  *
  * The count of what's left is the tease, and it is honest: the number comes
  * from how many gaps the model actually found in their answers, not from a
- * fixed "and 4 more" written into the page.
+ * fixed "and 4 more" written into the page. When it found only the one, the
+ * hook disappears rather than promising nothing.
+ *
+ * Both sides keep their names and their colours instead of "you" and "them".
+ * Two people are reading this on one phone, and "you" belongs to whichever of
+ * them is holding it.
+ *
+ * Headed 🔀 rather than the 👀 this section is drawn with elsewhere: the paid
+ * "How You Really See Each Other" already carries 👀, and two sections on one
+ * page under one glyph read as the same section twice.
  */
 export function PerceptionGapFree({
   data,
@@ -31,7 +41,7 @@ export function PerceptionGapFree({
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl bg-[var(--color-p1-soft)] p-4">
                 <p className="text-xs font-semibold text-[var(--color-p1)]">
-                  {p1Name} feels:
+                  {p1Name}:
                 </p>
                 <p className="mt-1.5 text-[15px] leading-relaxed text-slate-700">
                   {gap.partner1Said}
@@ -39,7 +49,7 @@ export function PerceptionGapFree({
               </div>
               <div className="rounded-xl bg-[var(--color-p2-soft)] p-4">
                 <p className="text-xs font-semibold text-[var(--color-p2)]">
-                  {p2Name} feels:
+                  {p2Name}:
                 </p>
                 <p className="mt-1.5 text-[15px] leading-relaxed text-slate-700">
                   {gap.partner2Said}
@@ -47,18 +57,22 @@ export function PerceptionGapFree({
               </div>
             </div>
 
-            <Insight label="Why this matters">
-              <Prose text={gap.aiComment} />
+            <Insight label="What this might mean">
+              <p className="text-[15px] leading-relaxed text-slate-600">
+                {gap.aiComment}
+              </p>
             </Insight>
           </div>
         ))}
       </div>
 
       {locked && remaining > 0 && (
-        <p className="mt-5 border-t border-slate-100 pt-4 text-[15px] font-medium text-slate-500">
-          🔒 {remaining} more perception {remaining === 1 ? "gap" : "gaps"} found in
-          your answers
-        </p>
+        <PaywallHook
+          question={`There ${remaining === 1 ? "is" : "are"} ${remaining} more ${
+            remaining === 1 ? "difference" : "differences"
+          } in your answers.`}
+          cta="🔒 See all perception gaps"
+        />
       )}
     </SectionCard>
   );

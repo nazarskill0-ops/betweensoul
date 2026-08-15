@@ -3,9 +3,11 @@ import {
   DIMENSION_LABELS,
   FreeSections,
   PaidSections,
+  RiskLevel,
   SCENARIO_IDS,
   SCENARIO_LABELS,
   SLIDER_QUESTIONS,
+  ScenarioStatus,
 } from "@/lib/types";
 
 /**
@@ -14,7 +16,7 @@ import {
  *
  * Deliberately uneven: the scores spread from 41 to 88 and the sliders lean
  * both ways, so the page is exercised the way a real report would exercise it
- * rather than by eleven identical mid-range numbers.
+ * rather than by a set of identical mid-range numbers.
  */
 
 const DIMENSION_MOCK: Record<
@@ -75,13 +77,31 @@ export function buildMockFreeReport(p1: string, p2: string): FreeSections {
   const highest = ranked[0];
   const lowest = ranked[ranked.length - 1];
 
-  const sliderPositions = [32, 71, 78, 45, 24, 63];
-  const teasers: Record<(typeof SCENARIO_IDS)[number], string> = {
-    living_together: `${p2}'s need for solitude and ${p1}'s need for contact would meet in the same square footage, which is either the fix or the fight.`,
-    long_distance: "Your trust scores suggest you'd handle the distance better than most couples do.",
-    financial_stress: "You've never had to disagree about money under pressure, so this one is genuinely untested.",
-    major_life_change: "The pattern where one of you decides and the other adjusts would get expensive here.",
-    having_a_child: "Sleep deprivation would land hard on a conflict style that already relies on having time to cool off.",
+  const sliderPositions = [32, 71, 78, 45, 24];
+  const scenarioMock: Record<
+    (typeof SCENARIO_IDS)[number],
+    { status: ScenarioStatus; teaser: string }
+  > = {
+    living_together: {
+      status: "watch",
+      teaser: `${p2}'s need for solitude would meet ${p1}'s need for contact in one flat.`,
+    },
+    long_distance: {
+      status: "good",
+      teaser: "Your trust scores suggest you'd handle the distance better than most.",
+    },
+    financial_stress: {
+      status: "risk",
+      teaser: "Money under pressure lands straight on the argument you already avoid.",
+    },
+    major_life_change: {
+      status: "watch",
+      teaser: "The pattern where one of you decides and the other adjusts would get expensive.",
+    },
+    having_a_child: {
+      status: "risk",
+      teaser: "Sleep deprivation would hit a conflict style that needs time to cool off.",
+    },
   };
 
   return {
@@ -95,27 +115,20 @@ export function buildMockFreeReport(p1: string, p2: string): FreeSections {
     coupleDynamic: {
       name: "The Anchor & The Spark",
       description: `${p1} pushes toward resolution and novelty; ${p2} steadies things and waits. In the day to day this reads as balance, and in an argument it reads as one of you chasing and one of you retreating.`,
-      whatWorks: `${p1} gets you both out of ruts. ${p2} keeps the household from running on adrenaline, and your answers about the last five years suggest that's kept you steady through at least one rough patch.`,
-      whereItGetsDifficult: `The same difference that balances you stops working under pressure. ${p1} reads ${p2}'s silence as indifference; ${p2} reads ${p1}'s urgency as an attack.`,
     },
-    radar: {
-      dimensions,
-      interconnection:
-        "Your high trust sits right next to your low conflict score, which is the interesting part: the problem isn't that you don't feel safe with each other, it's that you feel safe enough to postpone the hard conversation indefinitely.",
-    },
+    radar: { dimensions },
     biggestStrength: {
       dimensionId: highest.id,
       dimensionName: highest.name,
       score: highest.score,
-      explanation: `Neither of you marked a single boundary question as a dealbreaker, and you described each other's privacy in almost identical terms. That's rare — most couples disagree on at least two of those.`,
-      whyItMatters:
-        "Trust at this level is what lets a couple survive a bad month. It's the thing you'd be rebuilding from if anything else broke.",
+      explanation:
+        "Neither of you marked a single boundary question as a dealbreaker.",
     },
     biggestTension: {
       dimensionId: lowest.id,
       dimensionName: lowest.name,
       score: lowest.score,
-      explanation: `Your answers about the last real fight didn't match: one of you called it hours, the other called it days. That gap usually means one of you thinks it's over while the other is still in it.`,
+      explanation: `${p1} called your last fight hours long; ${p2} called it days.`,
     },
     sliders: SLIDER_QUESTIONS.map((question, i) => ({
       question,
@@ -134,141 +147,170 @@ export function buildMockFreeReport(p1: string, p2: string): FreeSections {
       totalGapsFound: 4,
     },
     unsaidThings: {
-      partner1: {
-        shown: [
-          `${p1} may need more reassurance than they let on, judging by how often "being understood" came up.`,
-          `${p1} may be quietly keeping score of who apologizes first.`,
-        ],
-        hasLocked: true,
-      },
-      partner2: {
-        shown: [
-          `${p2} may be more affected by tone during arguments than they show.`,
-          `${p2} may want more time alone without it meaning anything about the relationship.`,
-        ],
-        hasLocked: true,
-      },
+      about: "partner1",
+      shown: `${p1} may need more reassurance than they let on, judging by how often "being understood" came up.`,
+      lockedTeaser:
+        "One of you is holding something back about how the last argument actually landed.",
     },
     flags: {
       greenFlags: [
-        "Strong mutual trust",
-        "Shared sense of humor",
+        "You laugh together easily",
+        "Neither of you keeps secrets",
         "Aligned on the next five years",
-        "Neither is keeping secrets",
+        "You handle jealousy well",
       ],
       watchOuts: [
-        "Different expectations around personal space",
-        "Arguments end without either of you naming what happened",
+        "You tend to avoid hard conversations",
+        "Arguments end without anyone naming what happened",
       ],
     },
     scenarios: SCENARIO_IDS.map((id) => ({
       id,
       name: SCENARIO_LABELS[id],
-      teaser: teasers[id],
+      status: scenarioMock[id].status,
+      teaser: scenarioMock[id].teaser,
     })),
-    theQuestion: {
-      question: `If ${p1} stopped being the one who reaches out first after a fight, would ${p2} step in — or would the silence just get longer?`,
-      hook: "Your answers suggest there may be more to this question than either of you expects.",
-    },
   };
 }
 
+const SCENARIO_ANALYSIS_MOCK: Record<
+  (typeof SCENARIO_IDS)[number],
+  { risk: RiskLevel; analysis: (p1: string, p2: string) => string }
+> = {
+  living_together: {
+    risk: "moderate",
+    analysis: (p1, p2) =>
+      `The domestic side would go better than either of you expects: you agree about mess, money for groceries and who cooks, which is where most couples find their first real fight. What would not survive contact is solitude. ${p2} recovers alone and would have nowhere to do it, and ${p1} would read a closed door as a verdict rather than as a nap. The fix is unglamorous — one room, or one hour, that belongs to whoever needs it that evening.`,
+  },
+  long_distance: {
+    risk: "low",
+    analysis: (p1, p2) =>
+      `Distance mostly punishes couples who need proximity to feel secure, and neither of you does. Your answers about privacy and loyalty line up almost exactly, so the usual corrosion — checking, guessing, keeping score of replies — has nothing to feed on. What you would notice is the loss of the ordinary evenings you both named as the best part, which no amount of calling replaces. ${p1} would want to schedule contact and ${p2} would want it to stay spontaneous, and that is the negotiation, not trust.`,
+  },
+  financial_stress: {
+    risk: "high",
+    analysis: (p1, p2) =>
+      `Money is the one pressure you have never actually been tested by, and it arrives with a deadline attached — which is the specific thing your conflict style cannot absorb. ${p1} would want to decide tonight; ${p2} would want to think and come back to it, and the delay would read as avoidance rather than as caution. Within two rounds you would not be arguing about the expense but about who takes this seriously. Deciding in advance who has the final call on what size of spend would take most of the heat out of it.`,
+  },
+  major_life_change: {
+    risk: "moderate",
+    analysis: (p1, p2) =>
+      `A move or a new job would be decided the way things already get decided here: ${p1} proposes with momentum, ${p2} agrees rather than argues, and neither of you notices that agreeing was not the same as wanting. That works until the change costs something, at which point the one who adapted has a grievance with nowhere to sit. You are unusually good at the practical half — logistics, timelines, money — so the risk is not chaos. It is a quiet ledger that only opens two years later.`,
+  },
+  having_a_child: {
+    risk: "high",
+    analysis: (p1, p2) =>
+      `Sleep deprivation removes the one thing your pattern depends on: time. Right now a fight ends because ${p2} gets space and ${p1} waits until morning, and a newborn deletes both. The division of labour would probably be fair, judging by how you already split the invisible work, but fairness is not the thing that breaks here. It is that you would be having the same unfinished argument on four hours' sleep, several times a week, with no morning to reset it in.`,
+  },
+};
+
 export function buildMockPaidSections(p1: string, p2: string): PaidSections {
   return {
-    fullXRay: DIMENSION_IDS.map((id) => ({
-      dimensionId: id,
-      dimensionName: DIMENSION_LABELS[id],
-      score: DIMENSION_MOCK[id].score,
-      whatWeSee: `On ${DIMENSION_LABELS[id].toLowerCase()}, your answers point the same way often enough that this isn't guesswork. Both of you described the same situations, just from opposite sides of them.`,
-      whatAnswersSuggest: `${p1} answered this one quickly and concretely; ${p2} hedged. That difference in certainty tends to matter more than the content of either answer.`,
-      whereYouDiffer: `${p1} treats this as something you solve together. ${p2} treats it as something to be managed privately and reported on afterwards.`,
-      whatCouldHelp: `When ${p2} goes quiet here, try asking "are you processing or pulling away?" — it gives them an exit from silence that isn't a confrontation.`,
-    })),
+    unsaidThings: [
+      {
+        about: "partner1",
+        thing: `${p1} may need more reassurance than they let on, judging by how often "being understood" came up.`,
+        whyThisMatters: `Asking for reassurance directly would feel to ${p1} like admitting the relationship isn't secure, so it comes out as questions about small things instead. ${p2} answers the small thing and the real question stays open.`,
+      },
+      {
+        about: "partner1",
+        thing: `${p1} may have started keeping count of who reaches out first after a fight.`,
+        whyThisMatters:
+          "A tally nobody has mentioned is the kind of thing that stays harmless for a long time and then arrives all at once, usually during an argument about something else entirely.",
+      },
+      {
+        about: "partner2",
+        thing: `${p2} may want to be pursued rather than managed, and may not have the words for the difference.`,
+        whyThisMatters: `${p1} reads ${p2}'s quiet as a problem to solve and moves in with questions. What the answers suggest ${p2} actually wants is to be wanted without being asked to explain themselves first.`,
+      },
+    ],
     allPerceptionGaps: [
       {
         topic: "How long a fight actually lasts",
         partner1Said: `${p1} said the tension clears within hours.`,
         partner2Said: `${p2} said it carries into the next day.`,
-        whatThisMayMean:
-          "You are not disagreeing about facts — you are describing two different experiences of the same evening. One of you exits the fight when the shouting stops; the other exits when they feel repaired.",
         whyItMatters:
-          "It explains why the same argument returns: it was never actually finished for one of you.",
-        conversationToHave: "When do you feel like a fight is actually over for you?",
+          "One of you exits a fight when the shouting stops; the other exits when they feel repaired. It explains why the same argument returns — it was never actually finished for one of you.",
       },
       {
         topic: "Who needs more space",
         partner1Said: `${p1} described time apart as something that happens when life gets busy.`,
         partner2Said: `${p2} described it as something they actively need.`,
-        whatThisMayMean:
-          "Space means recovery for one of you and distance for the other, so the same evening apart gets read two different ways.",
         whyItMatters:
-          "Left unnamed, one of you will keep apologizing for a need and the other will keep bracing for rejection.",
-        conversationToHave: "What does a good night apart look like to you?",
+          "Space means recovery for one of you and distance for the other. Left unnamed, one of you keeps apologizing for a need and the other keeps bracing for rejection.",
+      },
+      {
+        topic: "What counts as a plan",
+        partner1Said: `${p1} treats a mentioned idea as something you have agreed to do.`,
+        partner2Said: `${p2} treats it as something you have agreed to think about.`,
+        whyItMatters:
+          "Half your disappointments start here, and neither of you has done anything wrong by their own definition — which is exactly why it never gets resolved.",
+      },
+      {
+        topic: "Being known",
+        partner1Said: `${p1} believes ${p2} knows them completely.`,
+        partner2Said: `${p2} described still finding out things about ${p1}.`,
+        whyItMatters:
+          "One of you feels finished being explained and the other is still listening. That asymmetry is quiet, and it decides who does the asking for the next few years.",
       },
     ],
-    howYouSeeEachOther: {
-      herViewOfHim: `${p1} sees ${p2} as steady and a little unreachable — someone who is clearly present but rarely volunteers what's underneath.`,
-      hisViewOfHer: `${p2} sees ${p1} as warm and relentless, in the specific sense that ${p1} does not let a thing go until it's been talked through.`,
-      whatBothMiss:
-        "Neither of you seems to notice that you are each doing the same thing — trying to protect the relationship — in a language the other doesn't read as protection.",
-    },
     conflictFingerprint: {
       trigger: `It rarely starts with the topic. It starts when ${p1} senses distance and moves to close it, usually at the worst possible hour.`,
       reaction: `${p1} gets more direct and more urgent. ${p2} gets shorter, flatter, and eventually stops answering in full sentences.`,
-      escalation: `The content stops mattering around the ten-minute mark. From there you are arguing about whether ${p2} is even in the conversation.`,
-      withdrawal: `${p2} leaves the room or the thread. ${p1} interprets that as the end of the relationship rather than the end of the evening.`,
-      aftermath: `${p1} reaches out first, usually the next morning, and the specific thing that started it never gets named again.`,
-      pattern:
-        "Pursue, retreat, escalate, exit, patch — and because the patch never names the cause, the cycle keeps its starting conditions intact.",
-      insight: `The cycle survives because it works, just barely. ${p1} gets contact back and ${p2} gets the argument to stop, so neither of you has ever had a reason to change the move that costs you both the most.`,
-    },
-    ifNothingChanges: {
-      likelyStrengths:
-        "Trust and humor look durable. Your answers suggest these are not conditional on the relationship going well, which means they'll still be there in a bad month.",
-      pressurePoints: `The conflict pattern is likely to get quieter rather than louder. ${p1} may stop raising things at all, and ${p2} may read that silence as progress.`,
-      whatBecomesMoreImportant:
-        "Naming a fight as finished — out loud, by both of you — becomes the thing that decides how the next few years feel.",
+      escalation: `Around the ten-minute mark the content stops mattering. From there you are arguing about whether ${p2} is even in the conversation.`,
+      withdrawal: `${p2} leaves the room or the thread. ${p1} reads that as the end of the relationship rather than the end of the evening.`,
+      aftermath: `${p1} reaches out first, usually the next morning, and the thing that actually started it never gets named again.`,
+      repeat: `You reconcile by outlasting it rather than by closing it, so the next one starts from exactly the same place. Nobody has ever said out loud what would count as finished.`,
     },
     loveStyles: {
-      partner1Shows: `${p1} shows love by paying attention out loud: noticing, asking, following up on things said in passing a week ago.`,
+      partner1Shows: `${p1} shows love by paying attention out loud: noticing, asking, following up on something said in passing a week ago.`,
       partner1FeelsLovedBy: `${p1} feels loved when ${p2} volunteers something unprompted — a plan, a worry, anything that wasn't extracted.`,
-      partner2Shows: `${p2} shows love by handling things: the logistics, the errand nobody mentioned, the problem that quietly stopped being a problem.`,
-      partner2FeelsLovedBy: `${p2} feels loved when the pressure comes off — when time together doesn't come with a conversation attached.`,
-      mismatch: `${p1} is offering attention and ${p2} is offering relief, and each of you keeps giving the thing you'd most want to receive.`,
+      partner1Gap: `${p1} gives attention and wants disclosure, which means the harder ${p1} tries, the more it reads to ${p2} as pressure.`,
+      partner2Shows: `${p2} shows love by handling things: the logistics, the errand nobody mentioned, the problem that quietly stopped being one.`,
+      partner2FeelsLovedBy: `${p2} feels loved when the pressure comes off — when time together doesn't have a conversation attached to it.`,
+      partner2Gap: `${p2} gives relief and wants ease, so the thing ${p2} does most carefully is the thing ${p1} is least likely to notice.`,
     },
-    whatKeepsYouTogether: {
-      anchors: ["Trust neither of you questions", "Shared humor", "A future you both describe the same way"],
-      evidence: `Both of you answered the "why are you still together" question without hesitating, and neither answer was about obligation. ${p1} named the ordinary evenings; ${p2} named being known.`,
-      isItEnough:
-        "For now, yes — and that's a real answer, not a hedge. What your answers can't tell us is whether it survives the first thing that can't be fixed by waiting until morning.",
+    howYouSeeEachOther: {
+      partner1SeesPartner2: [
+        "Steady, and a little unreachable",
+        "Present, but rarely volunteers what's underneath",
+        "The calm one, which is sometimes lonely to be next to",
+      ],
+      partner2SeesPartner1: [
+        "Warm, and relentless about it",
+        "Doesn't let a thing go until it's been talked through",
+        "The one who notices everything, including things better left alone",
+      ],
+      surprise: `Neither of you seems to notice you are doing the same thing — trying to protect this — in a language the other doesn't read as protection.`,
     },
-    scenarioLab: SCENARIO_IDS.map((id, i) => ({
+    /**
+     * Five genuinely different paragraphs, not one repeated — the fixture is
+     * how the section gets reviewed, and a fixture that says the same thing
+     * five times hides exactly the failure this section is most prone to.
+     */
+    scenarioLab: SCENARIO_IDS.map((id) => ({
       id,
       name: SCENARIO_LABELS[id],
-      compatibility: [58, 81, 49, 62, 44][i],
-      strength: "Your trust means neither of you would be managing suspicion on top of the actual problem.",
-      risk: "The conflict pattern scales badly under sustained pressure — there's less room to wait it out.",
-      whatYoudStruggleWith: `${p2} would need more recovery time exactly when ${p1} would need more contact.`,
-      whatWouldHelp: "Agreeing in advance on what a time-out looks like, including who restarts the conversation and when.",
+      risk: SCENARIO_ANALYSIS_MOCK[id].risk,
+      analysis: SCENARIO_ANALYSIS_MOCK[id].analysis(p1, p2),
     })),
-    sevenDayReset: {
-      day1Question: `Ask ${p2}: "When we argue, what do you wish I did differently in the first two minutes?"`,
-      day2Action: `The next time ${p2} goes quiet, wait ten minutes and then say: "I'm not going anywhere. Take your time — I'm here when you're ready."`,
-      day3Date: "Something with a built-in ending and no agenda — a walk somewhere neither of you has been, phones away, no relationship talk allowed.",
-      whyThisWorks: `Each of these interrupts the same loop at a different point: the trigger, the retreat, and the part where you only spend unstructured time together when something is wrong.`,
+    ifNothingChanges: {
+      sixMonths: `Trust and humor hold — your answers suggest neither is conditional on things going well. The conflict pattern gets quieter rather than louder: ${p1} raises things slightly less often, and reads the drop in arguments as progress.`,
+      twelveMonths: `The quiet is the problem by now. ${p1} may have stopped raising things at all, and ${p2} may still believe the last year went well, which is the specific disagreement that is hardest to discover.`,
+      turningPoint: `It changes the first time a fight gets formally ended — both of you saying, out loud, that it is finished and why. That is a five-minute conversation you could have this week, and it is the only thing here that needs to happen before anything else does.`,
+      strain: "moderate",
+    },
+    whatKeepsYouTogether: {
+      mainForce: "Genuine trust, unprompted on both sides",
+      alsoHolding: ["Shared humor", "A future you both describe the same way"],
+      watchOutFor: `Comfort is doing more work here than either of you would admit. Some of what reads as peace is a fight neither of you wants to restart, and it would be easy to mistake one for the other for years.`,
+      isItEnough: `For now, yes — and that is a real answer, not a hedge. What your answers cannot tell us is whether it survives the first thing that cannot be fixed by waiting until morning.`,
     },
     theAnswer: {
-      synthesis: `This is a strong relationship with one unresolved mechanism. The trust is real, the humor is real, and the way you each describe the other is affectionate in a way that can't be faked on a quiz. What you haven't built is a way to finish an argument. Right now you end fights by outlasting them, which works until something arrives that can't be outlasted.`,
-      questionToDiscussTonight: "What would it take for each of us to feel like a fight is actually over?",
-      conversationStarters: [
-        "What's something I do during an argument that makes it harder for you?",
-        "When was the last time you felt completely understood by me?",
-        "What do you need from me in the hour after we fight?",
-      ],
-    },
-    unsaidThingsUnlocked: {
-      partner1: `${p1} may be quietly afraid that being the one who always reaches out first means they care more — and may have started keeping count.`,
-      partner2: `${p2} may want to be pursued rather than managed, and may not know how to ask for that without it sounding like a complaint.`,
+      shortAnswer: "Yes, but…",
+      verdict: `This is a strong match with one unresolved mechanism. The trust is real and the way you each describe the other is affectionate in a way that would be hard to fake on a quiz. What you have not built is a way to finish an argument.`,
+      biggestOpportunity: `Everything else here is already working, which means one change carries the whole report: learning to close a fight deliberately instead of outlasting it. Do that and the perception gap about how long fights last closes with it.`,
+      conversationToHave: `Tonight, ask each other: "What has to happen for a fight to be over for you?" — and let ${p2} answer first, because ${p1} will fill the silence otherwise.`,
     },
   };
 }

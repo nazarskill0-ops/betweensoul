@@ -1,20 +1,25 @@
 /**
- * The ten paid sections, in one place.
+ * The nine paid sections, in one place.
  *
  * Each section component already knows its own heading and its own long teaser
  * — the copy that sits under the padlock and argues for the purchase. What
  * lives here is the copy that has to be written *about* a section from
  * somewhere else: the button on the blurred card, and the line in the modal's
- * list. Both are read by code that has no business importing ten section
+ * list. Both are read by code that has no business importing nine section
  * components to ask them what they are called.
  *
- * `cta` is deliberately about the section and never about the price. Ten cards
+ * `cta` is deliberately about the section and never about the price. Nine cards
  * each reading "Unlock Full Report — $9.99" was the problem this replaces:
- * repeated ten times down a page, one price reads as ten prices.
+ * repeated down a page, one price reads as nine prices.
+ *
+ * The titles are written to be said out loud rather than filed under a
+ * heading — "Would You Survive…?" rather than "Life Scenario Lab". The reader
+ * decides whether to pay from this list, and a clinical label reads as a table
+ * of contents for a document rather than as a thing they want to know.
  */
 
 export const PAID_SECTION_IDS = [
-  "fullXRay",
+  "unsaidThings",
   "allPerceptionGaps",
   "conflictFingerprint",
   "loveStyles",
@@ -22,7 +27,6 @@ export const PAID_SECTION_IDS = [
   "scenarioLab",
   "ifNothingChanges",
   "whatKeepsYouTogether",
-  "sevenDayReset",
   "theAnswer",
 ] as const;
 
@@ -39,15 +43,15 @@ export interface PaidSectionMeta {
 }
 
 export const PAID_SECTIONS: Record<PaidSectionId, PaidSectionMeta> = {
-  fullXRay: {
-    emoji: "🩻",
-    title: "Full Relationship X-Ray",
-    cta: "See all 8 dimensions in depth 🔒",
-    modalTeaser: "What your answers reveal across all 8 dimensions…",
+  unsaidThings: {
+    emoji: "🙊",
+    title: "Things They'd Never Say To Your Face",
+    cta: "See all 3 things 🔒",
+    modalTeaser: "All three things neither of you says out loud…",
   },
   allPerceptionGaps: {
     emoji: "🪞",
-    title: "All Perception Gaps",
+    title: "Every Perception Gap",
     cta: "See where you two disagree 🔒",
     modalTeaser: "Every place you see the relationship differently…",
   },
@@ -71,33 +75,27 @@ export const PAID_SECTIONS: Record<PaidSectionId, PaidSectionMeta> = {
   },
   scenarioLab: {
     emoji: "🧪",
-    title: "Life Scenario Lab",
+    title: "Would You Survive…?",
     cta: "See how you'd handle each one 🔒",
-    modalTeaser: "All five futures, scored — moving in, distance, kids…",
+    modalTeaser: "All five futures, rated — moving in, distance, kids…",
   },
   ifNothingChanges: {
     emoji: "⏳",
-    title: "If Nothing Changes",
+    title: "If Nothing Changes…",
     cta: "See where this is heading 🔒",
-    modalTeaser: "How your relationship evolves if nothing shifts…",
+    modalTeaser: "Six months, twelve months, and the turning point…",
   },
   whatKeepsYouTogether: {
-    emoji: "💚",
-    title: "What Keeps You Together (And Is It Enough?)",
+    emoji: "❤️",
+    title: "What's Actually Keeping You Together?",
     cta: "See what's really holding you 🔒",
-    modalTeaser: "Your strongest anchors — and whether they hold…",
-  },
-  sevenDayReset: {
-    emoji: "🗓️",
-    title: "Your 7-Day Relationship Reset",
-    cta: "Discover your growth areas 🔒",
-    modalTeaser: "One question, one thing to try, one date to go on…",
+    modalTeaser: "Love, comfort, habit or fear — named honestly…",
   },
   theAnswer: {
     emoji: "🕯️",
     title: "The Answer",
     cta: "Read our honest assessment 🔒",
-    modalTeaser: "Where you actually stand, said plainly…",
+    modalTeaser: "Whether you are actually a good match, said plainly…",
   },
 };
 
