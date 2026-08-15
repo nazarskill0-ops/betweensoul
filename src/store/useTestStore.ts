@@ -85,7 +85,7 @@ export const useTestStore = create<TestStore>()(
        * migrating (a half-finished test, at most), so a version mismatch drops
        * the state and starts clean.
        */
-      version: 5,
+      version: 6,
       migrate: () => undefined,
       /**
        * The report itself is deliberately absent. `reportId` already survives

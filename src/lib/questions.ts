@@ -11,6 +11,15 @@ export interface Choice {
   id: string;
   text: string;
   emoji?: string;
+  /**
+   * Multi-select only: an answer that rules the others out.
+   *
+   * "None of these" alongside three of these is not an answer, it is two
+   * answers — and the model reading the transcript has no way to tell which one
+   * the person meant. Picking one of these clears the rest; picking anything
+   * else clears this.
+   */
+  exclusive?: boolean;
 }
 
 export interface BlitzItem {
@@ -89,6 +98,11 @@ export const questions: Question[] = [
       { id: "c", text: "Go completely silent" },
       { id: "d", text: "Try to crack a joke or change the subject" },
       { id: "e", text: "Say something I'll probably regret later" },
+      // The escape hatch. Without it the question forces a confession nobody
+      // recognises, and "go completely silent" was collecting everyone who
+      // simply did not see themselves in the list — which is a different
+      // person from someone who genuinely goes quiet.
+      { id: "f", text: "None of these sound like me", exclusive: true },
     ],
   },
   {
@@ -135,7 +149,10 @@ export const questions: Question[] = [
       { id: "b4", statement: "Venting about your relationship to friends" },
       { id: "b5", statement: "Following/liking attractive people on social media" },
       { id: "b6", statement: "Sharing your live location with each other" },
-      { id: "b7", statement: 'Having a "work husband" or "work wife"' },
+      // b7 was 'Having a "work husband" or "work wife"'. The phrase means
+      // something different to everyone who reads it, so Fine-or-Dealbreaker
+      // was measuring how people interpret a slang term rather than where
+      // their boundary is. The id is retired rather than reused.
       { id: "b8", statement: "Keeping a savings account your partner doesn't know about" },
       { id: "b9", statement: "Sleeping in separate beds" },
       { id: "b10", statement: "Keeping an opposite-sex best friend" },
@@ -149,7 +166,11 @@ export const questions: Question[] = [
     id: "q7",
     type: "scale",
     text: "Where do you fall?",
-    subtitle: "Slide toward the side that sounds more like you",
+    // The middle four points carried no meaning at all: the ends were labelled
+    // and everything between them was a bare number, so a 4 could be "both",
+    // "neither" or "I'd rather not say". Naming the centre once here fixes it
+    // for all eight rows, which is cheaper than a label under every one.
+    subtitle: "Slide toward the side that sounds more like you — 4 is dead centre",
     answeredBy: "each",
     scaleItems: [
       { id: "s1", left: "Spontaneous every day", right: "Everything planned" },
@@ -158,8 +179,16 @@ export const questions: Question[] = [
       { id: "s4", left: "Total independence", right: "Do everything together" },
       { id: "s5", left: "Brutally honest", right: "Keep the peace" },
       { id: "s6", left: "Big city energy", right: "Quiet countryside life" },
-      { id: "s7", left: "Want kids", right: "Don't want kids" },
-      { id: "s8", left: "Passionate & intense", right: "Calm & stable" },
+      // "Want kids / Don't want kids" made the middle unreadable — a 4 looked
+      // like a contradiction rather than "still deciding".
+      { id: "s7", left: "Definitely want kids", right: "Definitely don't" },
+      // Without the last word this could be read as being about sex, about
+      // arguing, or about temperament. It is about none of those specifically.
+      {
+        id: "s8",
+        left: "Passionate & intense energy",
+        right: "Calm & stable energy",
+      },
     ],
   },
 
@@ -223,9 +252,9 @@ export const questions: Question[] = [
     id: "q12",
     type: "multi-select",
     text: "If you could secretly upgrade ONE area of your relationship — what would it be?",
-    subtitle: "Pick up to 3",
+    subtitle: "Pick up to 5",
     answeredBy: "each",
-    maxSelections: 3,
+    maxSelections: 5,
     choices: [
       { id: "a", text: "More trust", emoji: "🔒" },
       { id: "b", text: "More humor & fun", emoji: "😂" },
@@ -236,18 +265,29 @@ export const questions: Question[] = [
       { id: "g", text: "Better communication", emoji: "💬" },
       { id: "h", text: "More personal space", emoji: "🧘" },
       { id: "i", text: "Feeling understood", emoji: "🫂" },
-      { id: "j", text: "Nothing — wouldn't change a thing", emoji: "✅" },
+      {
+        id: "j",
+        text: "Nothing — wouldn't change a thing",
+        emoji: "✅",
+        exclusive: true,
+      },
     ],
   },
   {
     id: "q13",
     type: "text",
-    text: "One thing your partner does that they have NO idea drives you insane?",
+    // This used to ask for the thing their partner does that drives them
+    // insane, which is q2 with different wording — two of fifteen questions
+    // spent on the same complaint, and the second one read as being asked
+    // twice whether you are annoyed. This asks for the opposite thing: not
+    // what they want their partner to stop, but what they want them to know.
+    text: "What's one thing you wish your partner understood about you without having to explain?",
     answeredBy: "each",
     placeholder: {
-      partner1: 'e.g. "Chews SO loud" or "Always checks their phone mid-conversation"',
+      partner1:
+        'e.g. "That I need silence after work" or "That asking me \'what\'s wrong\' makes it worse"',
       partner2:
-        'e.g. "Takes 3 hours to pick a restaurant" or "Leaves cabinet doors open"',
+        'e.g. "That I\'m not upset, I\'m just thinking" or "That I need a plan before I can relax"',
     },
   },
 

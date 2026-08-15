@@ -16,11 +16,27 @@ function selectedIds(raw: string): string[] {
   return raw.split(",").filter(Boolean);
 }
 
-function toggleId(raw: string, id: string, max?: number): string {
+/**
+ * Toggles one id in a comma-separated selection.
+ *
+ * `exclusive` holds the ids that answer the question on their own — "none of
+ * these", "wouldn't change a thing". Picking one clears everything else, and
+ * picking anything else clears it, so the two can never be selected together
+ * and hand the model a contradiction to interpret.
+ */
+function toggleId(
+  raw: string,
+  id: string,
+  max?: number,
+  exclusive?: Set<string>,
+): string {
   const current = selectedIds(raw);
   if (current.includes(id)) return current.filter((v) => v !== id).join(",");
-  if (max && current.length >= max) return raw;
-  return [...current, id].join(",");
+  if (exclusive?.has(id)) return id;
+
+  const kept = exclusive ? current.filter((v) => !exclusive.has(v)) : current;
+  if (max && kept.length >= max) return kept.join(",");
+  return [...kept, id].join(",");
 }
 
 /** Every key a question writes — one for most, one per sub-item for blitz/scale. */
@@ -146,10 +162,11 @@ export default function QuestionsPage() {
     slot: "p1" | "p2",
     choiceId: string,
     max?: number,
+    exclusive?: Set<string>,
   ) =>
     updateDraft(key, (current) => ({
       ...current,
-      [slot]: toggleId(current[slot], choiceId, max),
+      [slot]: toggleId(current[slot], choiceId, max, exclusive),
     }));
 
   const isComplete = (key: string, value = get(key)) =>
@@ -293,7 +310,14 @@ export default function QuestionsPage() {
                   const raw = get(question.id)[slot];
                   const picked = selectedIds(raw);
                   const max = question.maxSelections;
-                  const atMax = max !== undefined && picked.length >= max;
+                  const exclusive = new Set(
+                    question.choices!.filter((c) => c.exclusive).map((c) => c.id),
+                  );
+                  // An exclusive pick never fills the quota — it replaces it —
+                  // so it must not grey out everything else on its way in.
+                  const atMax =
+                    max !== undefined &&
+                    picked.filter((id) => !exclusive.has(id)).length >= max;
 
                   return (
                     <div key={slot}>
@@ -315,9 +339,24 @@ export default function QuestionsPage() {
                             key={choice.id}
                             accent={slot}
                             selected={picked.includes(choice.id)}
-                            disabled={atMax && !picked.includes(choice.id)}
+                            // An exclusive option is never blocked by the
+                            // quota: it clears the others rather than joining
+                            // them, and greying it out at three-of-three left
+                            // "none of these" unreachable for exactly the
+                            // people most likely to want it.
+                            disabled={
+                              atMax &&
+                              !picked.includes(choice.id) &&
+                              !choice.exclusive
+                            }
                             onClick={() =>
-                              toggleChoice(question.id, slot, choice.id, max)
+                              toggleChoice(
+                                question.id,
+                                slot,
+                                choice.id,
+                                max,
+                                exclusive,
+                              )
                             }
                           >
                             <ChoiceLabel choice={choice} />
