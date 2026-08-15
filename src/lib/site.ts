@@ -17,6 +17,22 @@ export const SITE_DESCRIPTION =
   "Take a 15-question quiz with your partner and get an AI-powered compatibility report with personalized insights for your relationship.";
 
 /**
+ * The card image, 1200x630, shared by Open Graph and the Twitter card.
+ *
+ * Written relative and resolved against `metadataBase`, so the origin lives in
+ * exactly one place — the crawlers require an absolute URL and Next builds it
+ * from there. Every page that sets its own `openGraph` has to include this:
+ * Open Graph objects replace rather than merge, so a page that sets a title and
+ * nothing else would otherwise ship a card with no image at all.
+ */
+export const OG_IMAGE = {
+  url: "/og-image.png",
+  width: 1200,
+  height: 630,
+  alt: SITE_TITLE,
+};
+
+/**
  * Metadata for one of the three legal pages.
  *
  * Open Graph does not inherit from `title` and `description` — it inherits the
@@ -45,11 +61,13 @@ export function pageMetadata({
       siteName: SITE_NAME,
       type: "website" as const,
       url: `${SITE_URL}${path}`,
+      images: [OG_IMAGE],
     },
     twitter: {
       card: "summary_large_image" as const,
       title,
       description,
+      images: [OG_IMAGE.url],
     },
   };
 }

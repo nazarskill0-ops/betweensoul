@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { CookieConsent } from "@/components/CookieConsent";
 import { SiteFooter } from "@/components/SiteFooter";
 import {
+  OG_IMAGE,
   SITE_DESCRIPTION,
   SITE_NAME,
   SITE_TITLE,
@@ -32,17 +33,44 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: SITE_TITLE,
   description: SITE_DESCRIPTION,
+  manifest: "/manifest.json",
+  /**
+   * The files in `public/`, declared rather than discovered.
+   *
+   * `src/app/favicon.ico` used to sit here doing this job by convention, and
+   * it was still the framework's default black triangle — the site has been
+   * shipping someone else's logo in the tab. Deleting it hands `/favicon.ico`
+   * back to `public/`, which is where the rest of the set lives.
+   *
+   * The .ico is a single 16x16 image, so the 32x32 PNG beside it is not
+   * redundant: browsers that prefer PNG take the crisp one for retina tabs and
+   * bookmark bars, and the ico stays for the ones that only ever ask for it.
+   */
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "16x16" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   openGraph: {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     siteName: SITE_NAME,
     type: "website",
     url: SITE_URL,
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
+    images: [OG_IMAGE.url],
   },
 };
 
