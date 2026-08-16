@@ -1,6 +1,8 @@
+import { LegalDocument, type LegalSection } from "@/components/legal/LegalDocument";
+
 export const metadata = { title: "Політика конфіденційності — Calmi" };
 
-const SECTIONS = [
+const SECTIONS: LegalSection[] = [
   {
     h: "1. Загальні положення",
     p: [
@@ -26,9 +28,7 @@ const SECTIONS = [
       "Інформація про статус ФОП / підприємницької діяльності",
       "Коротка інформація про себе (якщо надана)",
     ],
-    pAfter: [
-      "Ми не збираємо платіжну інформацію на цьому етапі.",
-    ],
+    pAfter: ["Ми не збираємо платіжну інформацію на цьому етапі."],
   },
   {
     h: "3. З якою метою ми обробляємо дані",
@@ -48,9 +48,8 @@ const SECTIONS = [
     p: [
       "Дані, надіслані через форму, передаються та зберігаються через сервіс Tally (tally.so) — третю сторону, яка виступає технічним обробником даних. Tally дотримується стандартів GDPR.",
       "Ми не продаємо, не передаємо та не розкриваємо ваші персональні дані іншим третім особам без вашої явної згоди, крім випадків, передбачених законодавством України.",
-    ],
-    highlight:
       "Ваші дані зберігаються лише до моменту запуску платформи або до отримання вашого запиту на видалення — залежно від того, що настане раніше.",
+    ],
   },
   {
     h: "5. Ваші права як суб'єкта даних",
@@ -81,66 +80,29 @@ const SECTIONS = [
       "Ми залишаємо за собою право вносити зміни до цієї Політики конфіденційності. У разі суттєвих змін ми повідомимо вас електронним листом, якщо ви залишили свій email. Актуальна версія завжди доступна на цій сторінці.",
     ],
   },
+  {
+    h: "8. Контакти для запитів щодо даних",
+    p: [
+      "Якщо у вас є запитання щодо обробки ваших персональних даних або ви хочете скористатись будь-яким зі своїх прав — напишіть нам:",
+    ],
+    lines: [
+      <>
+        Email:{" "}
+        <a href="mailto:calmi0620@gmail.com" className="text-sage underline">
+          calmi0620@gmail.com
+        </a>
+      </>,
+    ],
+    pAfter: ["Ми відповімо протягом 2 робочих днів."],
+  },
 ];
 
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto max-w-2xl px-5 py-20 md:px-12">
-      <div className="text-xs font-semibold uppercase tracking-wide text-sage">
-        Юридична інформація
-      </div>
-      <h1 className="font-display text-3xl md:text-4xl">
-        Політика конфіденційності
-      </h1>
-      <p className="mb-10 mt-2 text-sm text-ink-muted">
-        Остання редакція: липень 2026 року
-      </p>
-
-      {SECTIONS.map((s) => (
-        <div key={s.h} className="mb-4 rounded-2xl bg-white p-8">
-          <h2 className="mb-3 font-display text-lg font-bold">{s.h}</h2>
-          {s.p.map((t) => (
-            <p key={t} className="mb-2.5 text-sm leading-relaxed text-ink-muted">
-              {t}
-            </p>
-          ))}
-          {s.ul && (
-            <ul className="mb-2.5 list-disc space-y-1 pl-5">
-              {s.ul.map((li) => (
-                <li key={li} className="text-sm leading-relaxed text-ink-muted">
-                  {li}
-                </li>
-              ))}
-            </ul>
-          )}
-          {s.pAfter?.map((t) => (
-            <p key={t} className="text-sm leading-relaxed text-ink-muted">
-              {t}
-            </p>
-          ))}
-          {s.highlight && (
-            <div className="mt-3 rounded-r-lg border-l-[3px] border-sage bg-sage-light px-4.5 py-3.5 text-sm">
-              {s.highlight}
-            </div>
-          )}
-        </div>
-      ))}
-
-      <div className="mb-4 rounded-2xl bg-ink p-8 text-white">
-        <h2 className="mb-3 font-display text-lg">
-          Контакти для запитів щодо даних
-        </h2>
-        <p className="mb-2 text-sm leading-relaxed text-white/60">
-          Якщо у вас є запитання щодо обробки ваших персональних даних або ви
-          хочете скористатись будь-яким зі своїх прав — напишіть нам:
-        </p>
-        <p className="text-sm text-white/60">
-          Email: <a href="mailto:calmi0620@gmail.com" className="text-sage hover:underline">calmi0620@gmail.com</a>
-        </p>
-        <p className="mt-3 text-xs text-white/60">
-          Ми відповімо протягом 2 робочих днів.
-        </p>
-      </div>
-    </main>
+    <LegalDocument
+      title="Політика конфіденційності"
+      updated="Остання редакція: липень 2026 року"
+      sections={SECTIONS}
+    />
   );
 }

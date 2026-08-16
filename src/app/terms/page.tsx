@@ -1,6 +1,8 @@
+import { LegalDocument, type LegalSection } from "@/components/legal/LegalDocument";
+
 export const metadata = { title: "Умови використання — Calmi" };
 
-const SECTIONS = [
+const SECTIONS: LegalSection[] = [
   {
     h: "1. Про цей сайт",
     p: [
@@ -29,9 +31,8 @@ const SECTIONS = [
     h: "4. Заявка на партнерство",
     p: [
       "Заповнення форми на сайті не є офіційним договором і не гарантує автоматичного партнерства. Заявка означає вашу зацікавленість — ми розглянемо її і зв'яжемось з вами для обговорення умов співпраці.",
-    ],
-    highlight:
       "Calmi перебуває на етапі бета-запуску. Умови співпраці, комісії та функціонал платформи можуть змінюватись до офіційного запуску.",
+    ],
   },
   {
     h: "5. Відповідальність",
@@ -52,58 +53,62 @@ const SECTIONS = [
       "Ми залишаємо за собою право змінювати ці умови в будь-який момент без попереднього повідомлення. Актуальна версія завжди доступна на цій сторінці. Продовження використання сайту після змін означає вашу згоду з новими умовами.",
     ],
   },
+  {
+    h: "8. Питання щодо умов",
+    p: ["Якщо у вас є запитання — напишіть нам:"],
+    lines: [
+      <>
+        Email:{" "}
+        <a href="mailto:calmi0620@gmail.com" className="text-sage underline">
+          calmi0620@gmail.com
+        </a>
+      </>,
+    ],
+    pAfter: ["Ми відповімо протягом 2 робочих днів."],
+  },
+  {
+    h: "9. Оплата послуг",
+    p: [
+      "Оплата консультацій здійснюється онлайн банківськими картками Visa та MasterCard через платіжну систему WayForPay.",
+    ],
+  },
+  {
+    h: "10. Повернення коштів та скасування сесій",
+    p: [
+      "Клієнт має право скасувати заброньовану сесію не пізніше ніж за 24 години до її початку — у такому випадку кошти повертаються автоматично в повному обсязі.",
+      "У разі скасування менш ніж за 24 години до початку сесії або неявки клієнта кошти не повертаються.",
+      "Якщо сесію скасовує психолог — кошти повертаються клієнту автоматично незалежно від часу скасування.",
+      "Повернення коштів здійснюється через платіжну систему WayForPay на картку, з якої була здійснена оплата.",
+    ],
+  },
+  {
+    h: "11. Контактна інформація",
+    lines: [
+      "Фізична особа-підприємець Трак Назарій Васильович",
+      "ІПН: 3938110393",
+      "Адреса реєстрації: 77760, Івано-Франківська обл., Івано-Франківський р-н, село Горохолина, вул. Українська, будинок 184",
+      <>
+        Телефон:{" "}
+        <a href="tel:+380996151334" className="text-sage underline">
+          +380 (99) 615 13 34
+        </a>
+      </>,
+      <>
+        Електронна пошта:{" "}
+        <a href="mailto:support@calmi.in.ua" className="text-sage underline">
+          support@calmi.in.ua
+        </a>
+      </>,
+    ],
+  },
 ];
 
 export default function TermsPage() {
   return (
-    <main className="mx-auto max-w-2xl px-5 py-20 md:px-12">
-      <div className="text-xs font-semibold uppercase tracking-wide text-sage">
-        Юридична інформація
-      </div>
-      <h1 className="font-display text-3xl md:text-4xl">
-        Умови використання
-      </h1>
-      <p className="mb-10 mt-2 text-sm text-ink-muted">
-        Остання редакція: липень 2026 року
-      </p>
-
-      {SECTIONS.map((s) => (
-        <div key={s.h} className="mb-4 rounded-2xl bg-white p-8">
-          <h2 className="mb-3 font-display text-lg font-bold">{s.h}</h2>
-          {s.p?.map((t) => (
-            <p key={t} className="mb-2.5 text-sm leading-relaxed text-ink-muted">
-              {t}
-            </p>
-          ))}
-          {s.ul && (
-            <ul className="list-disc space-y-1 pl-5">
-              {s.ul.map((li) => (
-                <li key={li} className="text-sm leading-relaxed text-ink-muted">
-                  {li}
-                </li>
-              ))}
-            </ul>
-          )}
-          {s.highlight && (
-            <div className="mt-3 rounded-r-lg border-l-[3px] border-sage bg-sage-light px-4.5 py-3.5 text-sm">
-              {s.highlight}
-            </div>
-          )}
-        </div>
-      ))}
-
-      <div className="mb-4 rounded-2xl bg-ink p-8 text-white">
-        <h2 className="mb-3 font-display text-lg">Питання щодо умов</h2>
-        <p className="mb-2 text-sm leading-relaxed text-white/60">
-          Якщо у вас є запитання — напишіть нам:
-        </p>
-        <p className="text-sm text-white/60">
-          Email: <a href="mailto:calmi0620@gmail.com" className="text-sage hover:underline">calmi0620@gmail.com</a>
-        </p>
-        <p className="mt-3 text-xs text-white/60">
-          Ми відповімо протягом 2 робочих днів.
-        </p>
-      </div>
-    </main>
+    <LegalDocument
+      title="Умови використання"
+      updated="Остання редакція: липень 2026 року"
+      sections={SECTIONS}
+    />
   );
 }
