@@ -119,19 +119,13 @@ CRITICAL RULES:
 7. Partner 1 is "${p1}", Partner 2 is "${p2}". Use their names naturally.
 8. All text must be in English, written for a US audience.
 
-SCORE CALIBRATION (MANDATORY):
-Your scores MUST use the full 0-100 range based on what the answers actually show.
-- 85-100: Exceptional. Clear evidence of strong alignment, mutual understanding, and healthy patterns.
-- 70-84: Strong. Good foundation with minor friction points.
-- 55-69: Mixed. Real strengths exist alongside real concerns.
-- 40-54: Concerning. Significant patterns that need attention.
-- 25-39: Struggling. Multiple areas of disconnect or tension.
-- 0-24: Critical. Fundamental misalignment or harmful patterns.
-DO NOT default to the 35-55 range. Most couples should land clearly ABOVE or BELOW 50.
-A couple that agrees on most things, communicates well, and shows affection = 75-90.
-A couple with constant fighting, trust issues, and different goals = 15-35.
-Mid-range (40-60) is ONLY for genuinely ambiguous cases.
-Score honestly rather than defaulting to a safe middle. The one exception: where the answers point at the very bottom of the range, do not go below 25 — a couple who took a quiz together deserves a reading they can act on, not a verdict.
+SCORING RULES (MANDATORY — these apply to EVERY number you produce: the overall score, the three sub-scores, and all eight radar dimensions):
+- The range is 15-97. Never go below 15 — a score near zero reads as a verdict rather than an insight. Never write exactly 100 either.
+- Do not cluster in the 40-75 zone. Use the whole range: strong matches 82-97, decent matches 60-80, struggling matches 40-58, serious problems 15-38.
+- A couple that agrees on most things, communicates well and shows affection belongs in the 80s or 90s. A couple with constant fighting, trust problems and different goals belongs in the 20s or 30s. The middle is for couples who are genuinely mixed, not for you to be safe in.
+- DECIDE THE READING FIRST, THEN THE NUMBER. Work out what the answers actually show, write that down, and only then choose the figure that matches it. Never pick a round number and reason backwards to justify it.
+- THE LAST DIGIT MUST VARY. Left alone, models produce scores ending in 0, 2, 5 and 8 almost every time — 72, 78, 38, 42 — which is a tic, not a measurement. 51, 37, 83, 69, 91, 27, 43 and 76 are exactly as valid as 70 or 40, and across a set of scores the final digits should look unremarkable rather than repeated.
+- Two scores in the same report should rarely be identical. These are different dimensions; if several land on the same figure you have not separated them.
 
 LANGUAGE: Always generate the report in English, regardless of what language the partners used in their answers. The quiz interface is in English and the audience is US-based.
 
@@ -169,14 +163,16 @@ export function freeScoreDynamicPrompt(input: TranscriptData): string {
     input,
     `Generate the couple score and couple dynamic.
 
+Work in this order: read the answers, decide what they show, write the insight, and only then put numbers on it. The fields below are deliberately in that order — the insight comes first because the four scores have to match a reading you have already made, not the other way round.
+
 Return JSON:
 {
   "coupleScore": {
-    "overall": <number 0-100>,
-    "connection": <number 0-100>,
-    "stability": <number 0-100>,
-    "chemistry": <number 0-100>,
-    "insight": "<1-2 sentences — one specific observation about THIS couple based on their answers>"
+    "insight": "<1-2 sentences — one specific observation about THIS couple based on their answers. Write this BEFORE choosing any of the numbers below.>",
+    "overall": <number 15-97, matching the insight you just wrote>,
+    "connection": <number 15-97>,
+    "stability": <number 15-97>,
+    "chemistry": <number 15-97>
   },
   "coupleDynamic": {
     "name": "<dynamic name from the list below, copied exactly>",
@@ -187,7 +183,7 @@ Return JSON:
 Available dynamics (choose the BEST fit based on answers — do not invent new ones):
 ${dynamics}
 
-The four scores are separate readings, not variations on one number — connection, stability and chemistry should differ from each other wherever the answers differ.
+The four scores are separate readings, not variations on one number — connection, stability and chemistry should differ from each other wherever the answers differ, and should not all end in the same digit.
 
 The "insight" in coupleScore must be specific to THIS couple.
 BAD: "You have a good connection but some areas need work."
@@ -196,13 +192,16 @@ GOOD: "You clearly enjoy each other's company, but your answers about conflict s
 }
 
 export function freeRadarPrompt(input: TranscriptData, overall: number): string {
+  // Insight before score, deliberately: JSON is written top to bottom, so a
+  // schema with the number first gets a number guessed before anything has
+  // been read, and the sentence underneath then argues for it.
   const dimensions = DIMENSION_IDS.map(
     (id) =>
       `    {
       "id": "${id}",
       "name": "${DIMENSION_LABELS[id]}",
-      "score": <number 0-100>,
-      "insight": "<1-2 sentences specific to this couple>"
+      "insight": "<1-2 sentences specific to this couple — write this first>",
+      "score": <number 15-97, matching that insight>
     }`,
   ).join(",\n");
 
@@ -229,7 +228,8 @@ ${dimensions}
 
 IMPORTANT:
 - Return all 8 dimensions, with these exact ids, in this order.
-- The 8 scores must spread. If several dimensions land within a few points of each other, you have not read the answers closely enough.
+- For each dimension: write the insight, then score it. Eight numbers chosen first and explained afterwards all come out looking the same.
+- The 8 scores must spread. If several dimensions land within a few points of each other, you have not read the answers closely enough — and if most of them end in the same digit, you are producing a habit rather than a reading.
 - Each dimension insight must be specific. BAD: "You communicate well." GOOD: "You both value honesty, but one of you prefers directness in a way the other may read as blunt."
 - The two explanations are one sentence each. Not two.
 - Do NOT name the dimension or repeat its score in either explanation. The page prints the name and the number directly above, from the radar itself; these two sentences are the only place the reader is told what happened, so spending half of one on "Trust — 88" wastes it. Write the observation, not the label. BAD: "Trust is your strongest area at 88." GOOD: "Neither of you marked a single boundary question as a dealbreaker."`,
@@ -270,6 +270,7 @@ ${sliders}
 }
 
 SLIDER RULES:
+- These are positions between two people, not scores, so the SCORING RULES range does not apply to them: 50 here means "evenly balanced" and is a perfectly good answer.
 - Position 0 means partner 1 fully matches the trait, 50 is even, 100 means partner 2 fully matches.
 - Return all five, in the order given, with the question text copied exactly.
 - Do NOT make all sliders 50. Differentiate based on actual answers.
