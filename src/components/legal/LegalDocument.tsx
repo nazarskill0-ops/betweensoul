@@ -7,6 +7,8 @@ import type { ReactNode } from "react";
 */
 
 export type LegalSection = {
+  /** Якір для прямого посилання на розділ (напр. /terms#refund). */
+  id?: string;
   /** Підзаголовок секції — жирний текст, ліворуч. */
   h: string;
   p?: string[];
@@ -35,7 +37,7 @@ export function LegalDocument({
         <p className="mt-3 text-center text-sm text-ink-muted">{updated}</p>
 
         {sections.map((section) => (
-          <section key={section.h} className="mt-10">
+          <section key={section.h} id={section.id} className="mt-10 scroll-mt-24">
             <h2 className="text-lg font-bold text-ink">{section.h}</h2>
 
             {section.p?.map((text) => (

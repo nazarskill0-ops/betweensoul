@@ -73,19 +73,34 @@ export function AppFooter() {
               Юридична інформація
             </div>
             <div className="flex flex-col gap-3">
-              <FooterLink href="/terms" label="Умови користування" />
+              <FooterLink href="/terms" label="Умови використання (оферта)" />
               <FooterLink href="/privacy" label="Політика конфіденційності" />
+              <FooterLink href="/terms#refund" label="Повернення коштів" />
             </div>
 
             <div className="mt-8 mb-3 text-xs font-medium uppercase tracking-wide text-ink-muted">
               Зв'язатися з нами
             </div>
-            <a
-              href="mailto:support@calmi.in.ua"
-              className="block text-sm text-ink transition-colors hover:text-sage"
-            >
-              support@calmi.in.ua
-            </a>
+            {/*
+              Реквізити продавця у футері — вимога платіжної системи: контактні
+              дані мають бути доступні з будь-якої сторінки, а не лише в тексті
+              оферти. Повний набір (ІПН, адреси) — у розділі 16 /terms.
+            */}
+            <div className="flex flex-col gap-2 text-sm text-ink-muted">
+              <span>ФОП Трак Назарій Васильович</span>
+              <a
+                href="tel:+380996151334"
+                className="text-ink transition-colors hover:text-sage"
+              >
+                +380 (99) 615 13 34
+              </a>
+              <a
+                href="mailto:support@calmi.in.ua"
+                className="text-ink transition-colors hover:text-sage"
+              >
+                support@calmi.in.ua
+              </a>
+            </div>
           </div>
         </div>
 
