@@ -87,7 +87,6 @@ export function AppFooter() {
               оферти. Повний набір (ІПН, адреси) — у розділі 16 /terms.
             */}
             <div className="flex flex-col gap-2 text-sm text-ink-muted">
-              <span>ФОП Трак Назарій Васильович</span>
               <a
                 href="tel:+380996151334"
                 className="text-ink transition-colors hover:text-sage"
